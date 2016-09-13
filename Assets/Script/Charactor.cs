@@ -20,13 +20,13 @@ public class Charactor{
     /*
     what will happend when the charactor is hit(taken damage)
     */
-    public void OnHit() { }
+    public virtual void OnHit() { }
     /*
     what will happend when the charactor is move
     */
-    public void Move(float dirX, float dirZ) { }
+    public virtual void Move(float dirX, float dirZ) { }
     /*
     what will happend when the charactor is attacking
     */
-    public void Attack() { }
+    public virtual void Attack() { }
 }
