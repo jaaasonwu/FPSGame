@@ -8,13 +8,13 @@ public class Charactor{
     // the charactor's level
     protected int level { get; set; }
     // the charactor's current HP
-    protected float HP { get; set; }
+    protected float hp { get; set; }
     // the charator's current speed
     protected float speed { get; set; }
-    public Charactor(int level, float HP, float speed)
+    public Charactor(int level, float hp, float speed)
     {
         this.level = level;
-        this.HP = HP;
+        this.hp = hp;
         this.speed = speed;
     }
     /*
