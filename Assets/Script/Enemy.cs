@@ -6,11 +6,11 @@ using System.Collections.Generic;
 
 public class Enemy : MonoBehaviour, ICharactor {
     // the charactor's level
-    protected int level { get; set; }
+    protected int level;
     // the charactor's current HP
-    protected float hp { get; set; }
+    protected float hp;
     // the charactor's current movement speed
-    protected float moveSpeed { get; set; }
+    protected float moveSpeed;
     // the charactor's rotate speed
     protected float rotateSpeed;
     // how far will the player attract the enemy
@@ -27,6 +27,12 @@ public class Enemy : MonoBehaviour, ICharactor {
     protected List<Player> players;
     // the player which is hated by the enemy
     private Player hatedPlayer;
+    // below is the booleans that control the animation
+    public bool isWalking;
+    public bool isRunning;
+    public bool isGettingHit;
+    public bool isDead;
+    public bool isAttacking;
     /*
     for test
     */
@@ -39,12 +45,15 @@ public class Enemy : MonoBehaviour, ICharactor {
         players = new List<Player>();
         hatedPlayer = null;
         // for test
-        Innitialize(1, 100, 5, 90, 20, 20, 40, 1, new Vector3(60, 0.5f, 70));
+        Innitialize(1, 100, 5, 90, 20, 20, 40, 10, new Vector3(60, 0.5f, 70));
         AddPlayer(testPlayer);
+        //for test end
     }
     void Update()
     {
+        isGettingHit = false;
         Hate();
+        Attack();
     }
     void FixedUpdate()
     {
@@ -78,11 +87,19 @@ public class Enemy : MonoBehaviour, ICharactor {
     public void OnHit(float damage)
     {
         this.hp -= damage;
+        isGettingHit = true;
         // call the animation then
     }
     public void Attack()
     {
-
+        // attack if a player is hated and in attack range
+        if (hatedPlayer != null &&
+            (hatedPlayer.transform.position-transform.position).magnitude<attackRange)
+        {
+            isAttacking = true;
+            return;
+        }
+        isAttacking = false;
     }
     public void Move()
     {
@@ -96,6 +113,8 @@ public class Enemy : MonoBehaviour, ICharactor {
             {
                 transform.LookAt(spawnPoint);
                 rb.MovePosition(pos + transform.forward * moveSpeed * Time.deltaTime);
+                isWalking = true;
+                return;
             }
             pos += transform.forward*moveSpeed*Time.deltaTime;
             // if pass the normal active range, change direction
@@ -104,12 +123,15 @@ public class Enemy : MonoBehaviour, ICharactor {
                 Quaternion rot = transform.rotation;
                 Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime, Vector3.up);
                 rb.MoveRotation(rot * q);
+                isWalking = false;
+                isRunning = false;
                 return;
             }
             else
             // otherwise just move
             {
                 rb.MovePosition(pos);
+                isWalking = true;
                 return;
             }
         }
@@ -126,11 +148,14 @@ public class Enemy : MonoBehaviour, ICharactor {
             
             // move forward
             Vector3 newPos = pos + transform.forward * moveSpeed * Time.deltaTime;
-            if ((newPos - spawnPoint).magnitude > attractedActiveRange)
+            // when attacking, don't move, when out of attracted active range, don't move
+            if ((newPos - spawnPoint).magnitude > attractedActiveRange || isAttacking)
             {
+                isRunning = false;
                 return;
             }
             rb.MovePosition(newPos);
+            isRunning = true;
         }
     }
     /*
