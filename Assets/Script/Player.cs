@@ -3,8 +3,10 @@ using System.Collections;
 
 public class Player : MonoBehaviour {
     // Weapon weapons = Weapon[];
+    public GameObject weapon;
     int exp;
     int maxHp;
+
 
 	// Use this for initialization
 	void Start () {
@@ -14,15 +16,20 @@ public class Player : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-	
+
 	}
 
-    int GetExp()
+    void attack ()
+    {
+
+    }
+
+    int GetExp ()
     {
         return 0;
     }
 
-    int GetMaxHp()
+    int GetMaxHp ()
     {
         return 0;
     }
