@@ -1,7 +1,12 @@
-﻿using UnityEngine;
+﻿/*
+Created by Hoayu Zhai zhaih@student.unimelb.edu.au
+the scripts controll the mummy's animation
+*/
+
+using UnityEngine;
 using System.Collections;
 
-public class SkeletonAnimController : MonoBehaviour {
+public class MummyAnimController : MonoBehaviour {
 
     private Enemy enemy;
     private Animator anim;
@@ -28,6 +33,7 @@ public class SkeletonAnimController : MonoBehaviour {
     {
         if (dead)
             return;
+        // Dead has highest priority
         if (enemy.isDead)
         {
             anim.SetBool("isDead", true);
@@ -35,6 +41,9 @@ public class SkeletonAnimController : MonoBehaviour {
             Destroy(this.gameObject, 5);
             return;
         }
+
+        // change the animator's boolean only if the boolean
+        // inside Enemy class are changed
         if (isAttacking != enemy.isAttacking)
         {
             anim.SetBool("isAttacking", enemy.isAttacking);
@@ -50,12 +59,15 @@ public class SkeletonAnimController : MonoBehaviour {
             isRunning = enemy.isRunning;
             anim.SetBool("isRunning", isRunning);
         }
-        if (isWalking != enemy.isWalking )
+        if (isWalking != enemy.isWalking)
         {
             isWalking = enemy.isWalking;
             anim.SetBool("isWalking", isWalking);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Walk"))
+
+        // set the in state boolean to avoid recursively enter
+        // the state
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("walk"))
         {
             anim.SetBool("inWalking", true);
             anim.SetBool("inRunning", false);
@@ -63,7 +75,7 @@ public class SkeletonAnimController : MonoBehaviour {
             anim.SetBool("inGettingHit", false);
             anim.SetBool("inDead", false);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Run"))
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("run"))
         {
             anim.SetBool("inRunning", true);
             anim.SetBool("inWalking", false);
@@ -71,7 +83,7 @@ public class SkeletonAnimController : MonoBehaviour {
             anim.SetBool("inGettingHit", false);
             anim.SetBool("inDead", false);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Death"))
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("death"))
         {
             anim.SetBool("inDead", true);
             anim.SetBool("inRunning", false);
@@ -79,7 +91,7 @@ public class SkeletonAnimController : MonoBehaviour {
             anim.SetBool("inGettingHit", false);
             anim.SetBool("inWalking", false);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("attack"))
         {
             anim.SetBool("inAttacking", true);
             anim.SetBool("inRunning", false);
@@ -87,7 +99,7 @@ public class SkeletonAnimController : MonoBehaviour {
             anim.SetBool("inGettingHit", false);
             anim.SetBool("inDead", false);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Damage"))
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("hit"))
         {
             anim.SetBool("inGettingHit", true);
             anim.SetBool("inRunning", false);

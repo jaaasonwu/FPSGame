@@ -24,7 +24,7 @@ public class Enemy : MonoBehaviour, ICharactor {
     // born point
     protected Vector3 spawnPoint;
     // the players
-    protected List<Player> players;
+    protected List<Player> players = new List<Player>();
     // the player which is hated by the enemy
     private Player hatedPlayer;
     // below is the booleans that control the animation
@@ -42,12 +42,7 @@ public class Enemy : MonoBehaviour, ICharactor {
     */
     void Start()
     {
-        players = new List<Player>();
         hatedPlayer = null;
-        // for test
-        Innitialize(1, 100, 5, 90, 20, 20, 40, 10, new Vector3(60, 0.5f, 70));
-        AddPlayer(testPlayer);
-        //for test end
     }
     void Update()
     {
@@ -75,6 +70,19 @@ public class Enemy : MonoBehaviour, ICharactor {
         this.normalActiveRange = normalActiveRange;
         this.attractedActiveRange = attractedActiveRange;
         this.attackRange = attackRange;
+        this.spawnPoint = spawnPoint;
+    }
+    // a override version of Innitialize using EnemyInfo class
+    public void Innitialize(int level, EnemyInfo info, Vector3 spawnPoint)
+    {
+        this.level = level;
+        this.hp = info.baseHP;
+        this.moveSpeed = info.moveSpeed;
+        this.rotateSpeed = info.rotateSpeed;
+        this.hateRange = info.hateRange;
+        this.normalActiveRange = info.normalActiveRange;
+        this.attractedActiveRange = info.attractedActiveRange;
+        this.attackRange = info.attackRange;
         this.spawnPoint = spawnPoint;
     }
     /*
@@ -108,6 +116,8 @@ public class Enemy : MonoBehaviour, ICharactor {
         // if no player is hated, just walk around
         if (hatedPlayer == null)
         {
+            // run iff a player is hated
+            isRunning = false;
             // if position is outside the normal active range, go towards the spawn point
             if ((pos - spawnPoint).magnitude > normalActiveRange)
             {
@@ -124,7 +134,6 @@ public class Enemy : MonoBehaviour, ICharactor {
                 Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime, Vector3.up);
                 rb.MoveRotation(rot * q);
                 isWalking = false;
-                isRunning = false;
                 return;
             }
             else
