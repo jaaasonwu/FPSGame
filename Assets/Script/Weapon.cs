@@ -48,9 +48,9 @@ public class Weapon : MonoBehaviour {
             // Set the shoot ray from the center of the screen
             Transform playerTrans = GetComponentInParent<Transform>();
             Vector3 playerPos = playerTrans.position;
-            Vector3 PlayerDir = playerTrans.forward;
+            Vector3 playerDir = playerTrans.forward;
             shootRay.origin = playerPos;
-            shootRay.direction = PlayerDir;
+            shootRay.direction = playerDir;
         }
 
         // When the player is not allowed to shoot
