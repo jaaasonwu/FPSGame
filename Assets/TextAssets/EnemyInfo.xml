@@ -8,6 +8,7 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
   </Enemy>
   <Enemy name="Skeleton">
     <baseHP>90</baseHP>
@@ -17,6 +18,7 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
   </Enemy>
   <Enemy name="Mummy">
     <baseHP>80</baseHP>
@@ -26,5 +28,6 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
   </Enemy>
 </Enemies>

@@ -21,6 +21,8 @@ public class Enemy : MonoBehaviour, ICharactor {
     protected float attractedActiveRange;
     // how far will the player trigger the attack
     protected float attackRange;
+    // the attack damage of enemy
+    protected float attackDamage;
     // born point
     protected Vector3 spawnPoint;
     // the players
@@ -62,7 +64,7 @@ public class Enemy : MonoBehaviour, ICharactor {
     */
 	public void Innitialize(int level, float hp, float moveSpeed,float rotateSpeed,
         float hateRange, float normalActiveRange, float attractedActiveRange,
-        float attackRange, Vector3 spawnPoint
+        float attackRange,float attackDamage, Vector3 spawnPoint
         ) 
     {
         this.level = level;
@@ -73,6 +75,7 @@ public class Enemy : MonoBehaviour, ICharactor {
         this.normalActiveRange = normalActiveRange;
         this.attractedActiveRange = attractedActiveRange;
         this.attackRange = attackRange;
+        this.attackDamage = attackDamage;
         this.spawnPoint = spawnPoint;
         this.lastPos = spawnPoint;
     }
@@ -87,6 +90,7 @@ public class Enemy : MonoBehaviour, ICharactor {
         this.normalActiveRange = info.normalActiveRange;
         this.attractedActiveRange = info.attractedActiveRange;
         this.attackRange = info.attackRange;
+        this.attackDamage = info.attackDamage;
         this.spawnPoint = spawnPoint;
     }
     /*
@@ -100,6 +104,10 @@ public class Enemy : MonoBehaviour, ICharactor {
     {
         this.hp -= damage;
         isGettingHit = true;
+        if (this.hp < 0)
+        {
+            isDead = true;
+        }
         // call the animation then
     }
     public void Attack()
