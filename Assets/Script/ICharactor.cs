@@ -12,7 +12,7 @@ public interface ICharactor{
     /*
     what will happend when the charactor is move
     */
-    void Move(float dirX, float dirZ);
+    void Move();
     /*
     what will happend when the charactor is attacking
     */

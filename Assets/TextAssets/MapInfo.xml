@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Maps>
+  <Map name="Map01">
+    <SpawnPoints>
+      <SpawnPoint>
+        <x>70</x>
+        <y>0</y>
+        <z>50</z>
+      </SpawnPoint>
+      <SpawnPoint>
+        <x>120</x>
+        <y>0</y>
+        <z>100</z>
+      </SpawnPoint>
+    </SpawnPoints>
+  </Map>
+</Maps>
