@@ -1,11 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Player : MonoBehaviour {
+public class Player : MonoBehaviour, ICharactor {
     // Weapon weapons = Weapon[];
-    public GameObject weapon;
+    public Weapon weapon;
     int exp;
-    int maxHp;
+    float hp;
+    float maxHp;
 
 
 	// Use this for initialization
@@ -16,12 +17,25 @@ public class Player : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            Attack();
+        }
+    }
 
-	}
-
-    void attack ()
+    public void Attack ()
     {
+        weapon.Attack();
+    }
+    
+    public void Move(float x, float y)
+    {
+        return;
+    }
 
+    public void OnHit(float damage)
+    {
+        hp -= damage;
     }
 
     int GetExp ()

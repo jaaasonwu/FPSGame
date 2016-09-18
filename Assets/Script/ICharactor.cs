@@ -8,7 +8,7 @@ public interface ICharactor{
     /*
     what will happend when the charactor is hit(taken damage)
     */
-    void OnHit();
+    void OnHit(float damage);
     /*
     what will happend when the charactor is move
     */

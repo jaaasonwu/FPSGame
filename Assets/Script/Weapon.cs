@@ -1,7 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Shooting : MonoBehaviour {
+public class Weapon : MonoBehaviour {
     public float attackInterval;
     public float damage;
     public float range;
@@ -21,25 +21,27 @@ public class Shooting : MonoBehaviour {
 	void Update () {
         timer += Time.deltaTime;
 
-        if (Input.GetKey(KeyCode.Mouse0) && timer >= attackInterval)
-        {
-            barrelEnd = GameObject.FindWithTag("BarrelEnd");
-            attack();
-        }
-        if (timer > attackInterval * 0.05)
+       
+        if (timer > attackInterval * 0.1)
         {
             gunLine.enabled = false;
         }
     }
 
-    void attack()
+    public void Attack()
     {
-        timer = 0f;
+        if (timer >= attackInterval)
+        {
+            barrelEnd = GameObject.FindWithTag("BarrelEnd");
+            timer = 0f;
 
-       
-        gunLine.enabled = true;
-        gunLine.SetPosition(0, barrelEnd.transform.position);
-        gunLine.SetPosition(1, barrelEnd.transform.position + transform.forward * range);
+            gunLine.enabled = true;
+            gunLine.SetPosition(0, barrelEnd.transform.position);
+            gunLine.SetPosition(1, barrelEnd.transform.position + transform.forward * range);
+        } else
+        {
+            return;
+        }
         
     }
 }
