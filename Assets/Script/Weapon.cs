@@ -24,7 +24,7 @@ public class Weapon : MonoBehaviour {
         // update the time for attack interval check
         timer += Time.deltaTime;
       
-        if (timer > attackInterval * 0.1)
+        if (timer > 0.05)
         {
             gunLine.enabled = false;
         }
@@ -51,6 +51,15 @@ public class Weapon : MonoBehaviour {
             Vector3 playerDir = playerTrans.forward;
             shootRay.origin = playerPos;
             shootRay.direction = playerDir;
+
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask))
+            {
+                if (shootHit.collider.tag == "Enemy")
+                {
+                    Enemy enemy = shootHit.collider.GetComponent<Enemy>();
+                    enemy.OnHit(damage);
+                }
+            }
         }
 
         // When the player is not allowed to shoot
