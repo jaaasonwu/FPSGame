@@ -24,7 +24,7 @@ public class Weapon : MonoBehaviour {
         // update the time for attack interval check
         timer += Time.deltaTime;
       
-        if (timer > attackInterval * 0.1)
+        if (timer > 0.05)
         {
             gunLine.enabled = false;
         }
@@ -48,9 +48,18 @@ public class Weapon : MonoBehaviour {
             // Set the shoot ray from the center of the screen
             Transform playerTrans = GetComponentInParent<Transform>();
             Vector3 playerPos = playerTrans.position;
-            Vector3 PlayerDir = playerTrans.forward;
+            Vector3 playerDir = playerTrans.forward;
             shootRay.origin = playerPos;
-            shootRay.direction = PlayerDir;
+            shootRay.direction = playerDir;
+
+            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask))
+            {
+                if (shootHit.collider.tag == "Enemy")
+                {
+                    Enemy enemy = shootHit.collider.GetComponent<Enemy>();
+                    enemy.OnHit(damage);
+                }
+            }
         }
 
         // When the player is not allowed to shoot

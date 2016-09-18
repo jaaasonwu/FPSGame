@@ -28,7 +28,7 @@ public class Player : MonoBehaviour, ICharactor {
         weapon.Attack();
     }
     
-    public void Move(float x, float y)
+    public void Move()
     {
         return;
     }
