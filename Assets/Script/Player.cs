@@ -45,6 +45,6 @@ public class Player : MonoBehaviour, ICharactor {
 
     int GetMaxHp ()
     {
-        return 0;
+        return 100;
     }
 }
