@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Enemies>
+  <Enemy name="Cactus">
+    <baseHP>100</baseHP>
+    <moveSpeed>5</moveSpeed>
+    <rotateSpeed>90</rotateSpeed>
+    <hateRange>20</hateRange>
+    <normalActiveRange>20</normalActiveRange>
+    <attractedActiveRange>40</attractedActiveRange>
+    <attackRange>3</attackRange>
+  </Enemy>
+  <Enemy name="Skeleton">
+    <baseHP>90</baseHP>
+    <moveSpeed>5</moveSpeed>
+    <rotateSpeed>90</rotateSpeed>
+    <hateRange>20</hateRange>
+    <normalActiveRange>20</normalActiveRange>
+    <attractedActiveRange>40</attractedActiveRange>
+    <attackRange>3</attackRange>
+  </Enemy>
+  <Enemy name="Mummy">
+    <baseHP>80</baseHP>
+    <moveSpeed>5</moveSpeed>
+    <rotateSpeed>90</rotateSpeed>
+    <hateRange>20</hateRange>
+    <normalActiveRange>20</normalActiveRange>
+    <attractedActiveRange>40</attractedActiveRange>
+    <attackRange>3</attackRange>
+  </Enemy>
+</Enemies>
