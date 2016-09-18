@@ -23,7 +23,7 @@ public class SpawnEnemy : MonoBehaviour {
             Path.Combine(Application.dataPath, EnemyInfoContainer.INFO_PATH));
         mapInfo = MapInfoContainer.Load("Map01",
             Path.Combine(Application.dataPath, MapInfoContainer.INFO_PATH));
-        count = 10;
+        count = 3;
 	}
 	
 	// Update is called once per frame
@@ -31,6 +31,8 @@ public class SpawnEnemy : MonoBehaviour {
         if (count > 0)
         {
             SpawnCactus();
+            SpawnSkeleton();
+            SpawnMummy();
             count-=1;
         }
 	}
@@ -55,7 +57,7 @@ public class SpawnEnemy : MonoBehaviour {
         enemy.Innitialize(1, enemyInfos.enemyInfos["Skeleton"], spawnPoint);
         enemy.AddPlayer(player);
     }
-    public void MummySkeleton()
+    public void SpawnMummy()
     {
         int pos = Random.Range(0, mapInfo.spawnPoints.Count);
         Vector3 spawnPoint = mapInfo.spawnPoints[pos];
