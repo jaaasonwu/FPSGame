@@ -31,7 +31,7 @@ public class Enemy : ICharactor {
         this.normalActiveRange = normalActiveRange;
         this.attractedActiveRange = attractedActiveRange;
     }
-    public void OnHit()
+    public void OnHit(float damage)
     {
 
     }
