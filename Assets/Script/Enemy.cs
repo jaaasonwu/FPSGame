@@ -25,6 +25,9 @@ public class Enemy : MonoBehaviour, ICharactor {
     protected Vector3 spawnPoint;
     // the players
     protected List<Player> players = new List<Player>();
+    // the varible that to record the last position of the enemy,
+    // in order to know whether the enemy is stucked
+    private Vector3 lastPos;
     // the player which is hated by the enemy
     private Player hatedPlayer;
     // below is the booleans that control the animation
@@ -71,6 +74,7 @@ public class Enemy : MonoBehaviour, ICharactor {
         this.attractedActiveRange = attractedActiveRange;
         this.attackRange = attackRange;
         this.spawnPoint = spawnPoint;
+        this.lastPos = spawnPoint;
     }
     // a override version of Innitialize using EnemyInfo class
     public void Innitialize(int level, EnemyInfo info, Vector3 spawnPoint)
@@ -118,6 +122,19 @@ public class Enemy : MonoBehaviour, ICharactor {
         {
             // run iff a player is hated
             isRunning = false;
+            // first check if the enemy is stucked
+            if ((pos - lastPos).magnitude < moveSpeed * Time.deltaTime -0.01)
+            {
+                lastPos = pos;
+                Quaternion rot = transform.rotation;
+                Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime
+                    * Random.Range(0.5f, 2.5f), Vector3.up);
+                rb.MoveRotation(rot * q);
+                rb.MovePosition(pos + moveSpeed * Time.deltaTime * transform.forward);
+                isWalking = true;
+                return;
+            }
+            lastPos = pos;
             // if position is outside the normal active range, go towards the spawn point
             if ((pos - spawnPoint).magnitude > normalActiveRange)
             {
@@ -127,12 +144,9 @@ public class Enemy : MonoBehaviour, ICharactor {
                 return;
             }
             pos += transform.forward*moveSpeed*Time.deltaTime;
-            // if pass the normal active range, change direction
+            // if pass the normal active range, just stop
             if ((pos - spawnPoint).magnitude > normalActiveRange)
             {
-                Quaternion rot = transform.rotation;
-                Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime, Vector3.up);
-                rb.MoveRotation(rot * q);
                 isWalking = false;
                 return;
             }
@@ -140,6 +154,10 @@ public class Enemy : MonoBehaviour, ICharactor {
             // otherwise just move
             {
                 rb.MovePosition(pos);
+                Quaternion rot = transform.rotation;
+                Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime
+                    * Random.Range(0.1f, 1f), Vector3.up);
+                rb.MoveRotation(rot * q);
                 isWalking = true;
                 return;
             }

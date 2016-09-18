@@ -45,4 +45,23 @@ public class SpawnEnemy : MonoBehaviour {
         enemy.Innitialize(1, enemyInfos.enemyInfos["Cactus"], spawnPoint);
         enemy.AddPlayer(player);
     }
+
+    public void SpawnSkeleton()
+    {
+        int pos = Random.Range(0, mapInfo.spawnPoints.Count);
+        Vector3 spawnPoint = mapInfo.spawnPoints[pos];
+        GameObject cactusClone = Instantiate(skeleton, spawnPoint, Quaternion.identity) as GameObject;
+        Enemy enemy = cactusClone.GetComponent<Enemy>();
+        enemy.Innitialize(1, enemyInfos.enemyInfos["Skeleton"], spawnPoint);
+        enemy.AddPlayer(player);
+    }
+    public void MummySkeleton()
+    {
+        int pos = Random.Range(0, mapInfo.spawnPoints.Count);
+        Vector3 spawnPoint = mapInfo.spawnPoints[pos];
+        GameObject cactusClone = Instantiate(mummy, spawnPoint, Quaternion.identity) as GameObject;
+        Enemy enemy = cactusClone.GetComponent<Enemy>();
+        enemy.Innitialize(1, enemyInfos.enemyInfos["Mummy"], spawnPoint);
+        enemy.AddPlayer(player);
+    }
 }
