@@ -12,7 +12,7 @@ public class Player : MonoBehaviour, ICharactor {
 	// Use this for initialization
 	void Start () {
         exp = GetExp();
-        maxHp = GetMaxHp();
+        hp = GetMaxHp();
 	}
 	
 	// Update is called once per frame
@@ -36,6 +36,7 @@ public class Player : MonoBehaviour, ICharactor {
     public void OnHit(float damage)
     {
         hp -= damage;
+        print(hp);
     }
 
     int GetExp ()
