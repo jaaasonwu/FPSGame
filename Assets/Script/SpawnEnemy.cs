@@ -55,7 +55,7 @@ public class SpawnEnemy : MonoBehaviour {
         enemy.Innitialize(1, enemyInfos.enemyInfos["Skeleton"], spawnPoint);
         enemy.AddPlayer(player);
     }
-    public void MummySkeleton()
+    public void SpawnMummy()
     {
         int pos = Random.Range(0, mapInfo.spawnPoints.Count);
         Vector3 spawnPoint = mapInfo.spawnPoints[pos];
