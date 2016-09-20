@@ -8,7 +8,8 @@ public class ItemController : MonoBehaviour {
 
 	public enum EffectList{
 		SpeedBuff,
-		DamageUpBuff
+		DamageUpBuff,
+		Heal
 	};
 
 	/*
@@ -30,6 +31,12 @@ public class ItemController : MonoBehaviour {
 	private ItemEffect identify(GameObject child){
 		if (child.name.Equals(EffectList.SpeedBuff.ToString())) {
 			return (ItemEffect)child.GetComponent<SpeedBuff> ();
+		}
+		if (child.name.Equals(EffectList.DamageUpBuff.ToString())) {
+			return (ItemEffect)child.GetComponent<DamageUpBuff> ();
+		}
+		if (child.name.Equals(EffectList.Heal.ToString())) {
+			return (ItemEffect)child.GetComponent<Heal> ();
 		}
 		return null;
 	}
