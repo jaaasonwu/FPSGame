@@ -33,4 +33,17 @@ public class ItemController : MonoBehaviour {
 		}
 		return null;
 	}
+
+
+	public float timeToDestroy = 120.0f;
+	/*
+	itemcontrollr update the item model and
+	we set item to destroy after 2 min
+	*/
+	void Update(){
+		timeToDestroy -= Time.deltaTime;
+		if (timeToDestroy <= 0) {
+			Destroy (gameObject);
+		}
+	}
 }
