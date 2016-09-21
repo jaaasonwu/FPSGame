@@ -21,6 +21,14 @@ public class Enemy : MonoBehaviour, ICharactor {
     protected float attractedActiveRange;
     // how far will the player trigger the attack
     protected float attackRange;
+    // the attack damage of enemy
+    protected float attackDamage;
+    // attack interval
+    protected float attackSpeed;
+    // attack time count
+    private float attackCount;
+    // attack method
+    private IEnemyAttack attackMethod;
     // born point
     protected Vector3 spawnPoint;
     // the players
@@ -46,37 +54,23 @@ public class Enemy : MonoBehaviour, ICharactor {
     void Start()
     {
         hatedPlayer = null;
+        attackCount = 0;
     }
     void Update()
     {
+        if (isDead)
+            return;
         isGettingHit = false;
         Hate();
         Attack();
     }
     void FixedUpdate()
     {
+        if (isDead)
+            return;
         Move();
     }
-    /*
-    innitialize the class
-    */
-	public void Innitialize(int level, float hp, float moveSpeed,float rotateSpeed,
-        float hateRange, float normalActiveRange, float attractedActiveRange,
-        float attackRange, Vector3 spawnPoint
-        ) 
-    {
-        this.level = level;
-        this.hp = hp;
-        this.moveSpeed = moveSpeed;
-        this.rotateSpeed = rotateSpeed;
-        this.hateRange = hateRange;
-        this.normalActiveRange = normalActiveRange;
-        this.attractedActiveRange = attractedActiveRange;
-        this.attackRange = attackRange;
-        this.spawnPoint = spawnPoint;
-        this.lastPos = spawnPoint;
-    }
-    // a override version of Innitialize using EnemyInfo class
+    // Innitialize using EnemyInfo class
     public void Innitialize(int level, EnemyInfo info, Vector3 spawnPoint)
     {
         this.level = level;
@@ -87,7 +81,13 @@ public class Enemy : MonoBehaviour, ICharactor {
         this.normalActiveRange = info.normalActiveRange;
         this.attractedActiveRange = info.attractedActiveRange;
         this.attackRange = info.attackRange;
+        this.attackDamage = info.attackDamage;
+        this.attackSpeed = info.attackSpeed;
         this.spawnPoint = spawnPoint;
+        if (info.attackMethod == "Melee")
+        {
+            this.attackMethod = new EnemyMeleeAttack();
+        }
     }
     /*
     When a player is created, record it
@@ -100,6 +100,10 @@ public class Enemy : MonoBehaviour, ICharactor {
     {
         this.hp -= damage;
         isGettingHit = true;
+        if (this.hp < 0)
+        {
+            isDead = true;
+        }
         // call the animation then
     }
     public void Attack()
@@ -108,7 +112,13 @@ public class Enemy : MonoBehaviour, ICharactor {
         if (hatedPlayer != null &&
             (hatedPlayer.transform.position-transform.position).magnitude<attackRange)
         {
+            if (attackCount > attackSpeed)
+            {
+                attackCount = 0;
+                attackMethod.Attack(attackDamage, hatedPlayer);
+            }
             isAttacking = true;
+            attackCount += Time.deltaTime;
             return;
         }
         isAttacking = false;

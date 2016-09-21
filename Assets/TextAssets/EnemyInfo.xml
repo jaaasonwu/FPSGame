@@ -8,6 +8,9 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
+    <attackSpeed>1</attackSpeed>
+    <attackMethod>Melee</attackMethod>
   </Enemy>
   <Enemy name="Skeleton">
     <baseHP>90</baseHP>
@@ -17,6 +20,9 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
+    <attackSpeed>1</attackSpeed>
+    <attackMethod>Melee</attackMethod>
   </Enemy>
   <Enemy name="Mummy">
     <baseHP>80</baseHP>
@@ -26,5 +32,8 @@
     <normalActiveRange>20</normalActiveRange>
     <attractedActiveRange>40</attractedActiveRange>
     <attackRange>3</attackRange>
+    <attackDamage>10</attackDamage>
+    <attackSpeed>1</attackSpeed>
+    <attackMethod>Melee</attackMethod>
   </Enemy>
 </Enemies>
