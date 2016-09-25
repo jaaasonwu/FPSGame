@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -7,57 +7,70 @@ using UnityStandardAssets.Characters.FirstPerson;
 // modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
 
 public class Player : MonoBehaviour, ICharactor {
-	// remeber to change DamageUpByRatio to change all weapon damage when enable weapons
-	//Weapon weapons = Weapon[];
-	public Weapon weapon;
-	int exp;
+    // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
+	public GameObject[] weapons;
+    GameObject weaponPrefab;
+    Weapon currentWeapon;
+    int exp;
+    private const int NUM_WEAPONS = 3;
 	[SerializeField] private float hp;
 	[SerializeField] private float maxHp;
-
+    [SerializeField] private int weaponNumber;
+	
 	//player's current buffs
 	public List<Buff> buffs;
 
 	// Use this for initialization
 	void Start () {
 		exp = GetExp();
-		maxHp = GetMaxHp();
+        maxHp = GetMaxHp();
+        weaponPrefab = Instantiate(weapons[weaponNumber]);
+        weaponPrefab.transform.parent = gameObject.transform;
+        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
+        weaponPrefab.transform.rotation = gameObject.transform.rotation;
+        currentWeapon = weaponPrefab.GetComponent<Weapon>();
 		this.buffs = new List<Buff>();
 	}
 
+
 	// Update is called once per frame
 	void Update () {
-		if (Input.GetKey(KeyCode.Mouse0))
-		{
-			Attack();
-		}
-
+        if (Input.GetKey(KeyCode.Mouse0))
+        {
+            Attack();
+        }
+		
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            NextWeapon();
+        }	
 		this.CheckBuffs ();
-	}
+    }
 
-	public void Attack ()
-	{
-		weapon.Attack();
-	}
+    public void Attack ()
+    {
+        currentWeapon.Attack();
+    }
+    
+    public void Move()
+    {
+        return;
+    }
 
-	public void Move()
-	{
-		return;
-	}
+    public void OnHit(float damage)
+    {
+        hp -= damage;
+    }
 
-	public void OnHit(float damage)
-	{
-		hp -= damage;
-	}
+    int GetExp ()
+    {
+        return 0;
+    }
 
-	int GetExp ()
-	{
-		return 0;
-	}
-
-	int GetMaxHp ()
-	{
-		return 100;
-	}
+    int GetMaxHp ()
+    {
+        return 100;
+    }
 
 	// methods used to modify player stats
 	private void CheckBuffs(){
@@ -112,11 +125,29 @@ public class Player : MonoBehaviour, ICharactor {
 
 	// formula new damage = old damage *(100% + percentage)
 	public void DamageUpByRatio(float percent){
-		this.weapon.damage *= 1.0f + (percent / 100);
+		this.currentWeapon.damage *= 1.0f + (percent / 100);
 	}
 
 	// formula new damage = old damge /(100% + percentage)
 	public void DamageResetByRatio(float percent){
-		this.weapon.damage /= 1.0f + (percent / 100);
+		this.currentWeapon.damage /= 1.0f + (percent / 100);
 	}
+
+    public void NextWeapon()
+    {
+        if (weaponNumber == NUM_WEAPONS - 1)
+        {
+            weaponNumber = 0;
+        }
+        else
+        {
+            weaponNumber++;
+        }
+        Destroy(weaponPrefab);
+        weaponPrefab = Instantiate(weapons[weaponNumber]);
+        weaponPrefab.transform.parent = gameObject.transform;
+        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
+        weaponPrefab.transform.rotation = gameObject.transform.rotation;
+        currentWeapon = weaponPrefab.GetComponent<Weapon>();
+    }
 }
