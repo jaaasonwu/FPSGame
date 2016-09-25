@@ -35,8 +35,11 @@ public class EnemyInfoContainer {
                 enemyInfo.rotateSpeed = float.Parse(enemy["rotateSpeed"].InnerText);
                 enemyInfo.hateRange = float.Parse(enemy["hateRange"].InnerText);
                 enemyInfo.attackRange = float.Parse(enemy["attackRange"].InnerText);
+                enemyInfo.attackDamage = float.Parse(enemy["attackDamage"].InnerText);
                 enemyInfo.normalActiveRange = float.Parse(enemy["normalActiveRange"].InnerText);
                 enemyInfo.attractedActiveRange = float.Parse(enemy["attractedActiveRange"].InnerText);
+                enemyInfo.attackSpeed = float.Parse(enemy["attackSpeed"].InnerText);
+                enemyInfo.attackMethod = enemy["attackMethod"].InnerText;
                 infos.enemyInfos[name] = enemyInfo;
             }
             return infos;

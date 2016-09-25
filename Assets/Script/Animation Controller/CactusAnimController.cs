@@ -26,15 +26,13 @@ public class CactusAnimController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        if (dead)
-            return;
         // Dead has highest priority
         if (enemy.isDead)
         {
             anim.SetBool("isDead", true);
+            if (!dead)
+                Destroy(this.gameObject, 5);
             dead = true;
-            Destroy(this.gameObject, 5);
-            return;
         }
         // change the animator's boolean only if the boolean
         // inside Enemy class are changed
@@ -62,13 +60,6 @@ public class CactusAnimController : MonoBehaviour {
             anim.SetBool("inGettingHit", false);
             anim.SetBool("inDead", false);
         }
-        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Dead"))
-        {
-            anim.SetBool("inDead", true);
-            anim.SetBool("inAttacking", false);
-            anim.SetBool("inGettingHit", false);
-            anim.SetBool("inWalking", false);
-        }
         if (anim.GetCurrentAnimatorStateInfo(0).IsName("Attack"))
         {
             anim.SetBool("inAttacking", true);
@@ -82,6 +73,14 @@ public class CactusAnimController : MonoBehaviour {
             anim.SetBool("inAttacking", false);
             anim.SetBool("inWalking", false);
             anim.SetBool("inDead", false);
+        }
+        if (anim.GetCurrentAnimatorStateInfo(0).IsName("Dead"))
+        {
+            anim.SetBool("inDead", true);
+            anim.SetBool("inRunning", false);
+            anim.SetBool("inAttacking", false);
+            anim.SetBool("inWalking", false);
+            anim.SetBool("inGettingHit", false);
         }
     }
 }
