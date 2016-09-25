@@ -4,6 +4,7 @@
 
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityStandardAssets.CrossPlatformInput;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -12,6 +13,7 @@ public class Player : MonoBehaviour, ICharactor
 {
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
     public GameObject[] weapons;
+    public int id;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     int exp;
@@ -49,10 +51,13 @@ public class Player : MonoBehaviour, ICharactor
             NextWeapon ();
         }	
         this.CheckBuffs ();
-        Messages.PlayerMoveMessage moveMsg = 
-            new Messages.PlayerMoveMessage (
-                id, transform.position, transform.rotation);
-        mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
+        FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
+        if (isMoving ()) {
+            Messages.PlayerMoveMessage moveMsg = 
+                new Messages.PlayerMoveMessage (
+                    id, transform.position, transform.rotation);
+            mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
+        }
     }
 
     public void Attack ()
@@ -83,6 +88,14 @@ public class Player : MonoBehaviour, ICharactor
     public void SetNetworkClient (NetworkClient mClient)
     {
         this.mClient = mClient;
+    }
+
+    // function to check whether the player is moving
+    public bool isMoving ()
+    {
+        float horizontal = CrossPlatformInputManager.GetAxis ("Horizontal");
+        float vertical = CrossPlatformInputManager.GetAxis ("Vertical");
+        return (horizontal != 0 || vertical != 0);
     }
 
     // methods used to modify player stats
