@@ -6,7 +6,7 @@ using System.Collections;
 public class SpeedBuff : Buff {
 	//speedup will last for 5 seconds with 100% increase speed
 	private float durationTime = 5.0f;
-	private float speedBoostRatio = 1.0f;
+	private float speedBoostRatio = 100.0f;
 
 	public override void UpdateBuff (Player player){
 		this.ReduceTime ();
@@ -20,10 +20,10 @@ public class SpeedBuff : Buff {
 		this.SetDuration (durationTime);
 		this.ResetTime();
 		// modify player's speedratio
-		player.speedRatio += speedBoostRatio;
+		player.SpeedUpByRatio(speedBoostRatio);
 	}
 
 	public override void FinishBuff(Player player){
-		player.speedRatio -= speedBoostRatio;
+		player.SpeedResetByRatio (speedBoostRatio);
 	}
 }

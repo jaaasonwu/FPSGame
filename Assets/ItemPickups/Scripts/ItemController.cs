@@ -8,7 +8,8 @@ public class ItemController : MonoBehaviour {
 
 	public enum EffectList{
 		SpeedBuff,
-		DamageUpBuff
+		DamageUpBuff,
+		Heal
 	};
 
 	/*
@@ -31,6 +32,25 @@ public class ItemController : MonoBehaviour {
 		if (child.name.Equals(EffectList.SpeedBuff.ToString())) {
 			return (ItemEffect)child.GetComponent<SpeedBuff> ();
 		}
+		if (child.name.Equals(EffectList.DamageUpBuff.ToString())) {
+			return (ItemEffect)child.GetComponent<DamageUpBuff> ();
+		}
+		if (child.name.Equals(EffectList.Heal.ToString())) {
+			return (ItemEffect)child.GetComponent<Heal> ();
+		}
 		return null;
+	}
+
+
+	public float timeToDestroy = 120.0f;
+	/*
+	itemcontrollr update the item model and
+	we set item to destroy after 2 min
+	*/
+	void Update(){
+		timeToDestroy -= Time.deltaTime;
+		if (timeToDestroy <= 0) {
+			Destroy (gameObject);
+		}
 	}
 }

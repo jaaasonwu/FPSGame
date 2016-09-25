@@ -26,4 +26,7 @@ public class EnemyInfo {
 
     public float attackDamage;
 
+    public float attackSpeed;
+
+    public string attackMethod;
 }
