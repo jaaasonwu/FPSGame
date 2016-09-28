@@ -168,9 +168,10 @@ public class GameController : MonoBehaviour
             Debug.Log ("own a not instantiated player");
         }
         player.GetComponent<FirstPersonController> ().enabled = true;
-        player.GetComponent<Camera> ().enabled = true;
-        player.GetComponent<AudioSource> ().enabled = true;
-        player.GetComponent<FlareLayer> ().enabled = true;
+        player.GetComponentInChildren<Camera> ().enabled = true;
+        player.GetComponentInChildren<AudioListener> ().enabled = true;
+        player.GetComponentInChildren<FlareLayer> ().enabled = true;
+        player.GetComponentInChildren<Skybox> ().enabled = true;
         controlledPlayer = player;
         player.GetComponentInChildren<Player> ().isLocal = true;
         player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
