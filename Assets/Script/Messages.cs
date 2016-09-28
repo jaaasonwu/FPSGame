@@ -60,7 +60,7 @@ public class Messages
         public int enemyIndex;
         public const short msgId = 102;
 
-        public NewEnemyMessage (int id, int index, int spawnPoint)
+        public NewEnemyMessage (int id, int index, Vector3 spawnPoint)
         {
             this.id = id;
             this.enemyIndex = index;
