@@ -36,6 +36,7 @@ public class Messages
     {
         public Vector3 spawnPoint;
         public int id;
+        // when pass owner message, use this id
         public const short ownerMsgId = 101;
 
         public NewPlayerMessage (int id, Vector3 spawnPoint)
@@ -47,6 +48,23 @@ public class Messages
         public NewPlayerMessage ()
         {
             
+        }
+    }
+
+    // message used to tell the client to spawn an enemy
+    public class NewEnemyMessage: MessageBase
+    {
+        public int id;
+        public Vector3 spawnPoint;
+        // index in enemy prefab list in Game Controller
+        public int enemyIndex;
+        public const short msgId = 102;
+
+        public NewEnemyMessage (int id, int index, int spawnPoint)
+        {
+            this.id = id;
+            this.enemyIndex = index;
+            this.spawnPoint = spawnPoint;
         }
     }
 }

@@ -13,6 +13,13 @@ public class GameController : MonoBehaviour
 {
     public bool isServer;
     public GameObject playerPrefab;
+    /*
+     * prefabs of enemies
+     * index 0 for cactus
+     * 1 for Mummy
+     * 2 for Skeleton
+     */
+    public GameObject[] enemyPrefabs;
 
     bool isStart = true;
     NetworkClient mClient;
@@ -25,14 +32,14 @@ public class GameController : MonoBehaviour
     // Use this for initialization
     void Start ()
     {
-        SetUpServer ();
-        SetUpLocalClient ();
     }
 	
     // Update is called once per frame
     void Update ()
     {
-	
+        if (isStart) {
+            SetUpNetwork ();
+        }
     }
 
     /*
@@ -42,9 +49,10 @@ public class GameController : MonoBehaviour
     {
         if (Input.GetKey (KeyCode.I)) {
             SetUpServer ();
+            SetUpLocalClient ();
         }
         if (Input.GetKey (KeyCode.O)) {
-            SetUpClient ("127.0.0.1");
+            SetUpClient ("10.0.0.71");
         }
     }
     /*
@@ -73,6 +81,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
         mClient.Connect (address, PORT);
+        isStart = false;
     }
 
     /*
@@ -86,6 +95,7 @@ public class GameController : MonoBehaviour
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+        isStart = false;
     }
 
     /*
@@ -192,5 +202,13 @@ public class GameController : MonoBehaviour
         GameObject player = players [moveMsg.id];
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
+    }
+
+    /* 
+     * client receive message to spawn the enemy
+     */
+    void OnSpawnEnemy (NetworkMessage msg)
+    {
+        
     }
 }

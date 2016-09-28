@@ -47,6 +47,7 @@ public class Enemy : MonoBehaviour, ICharactor
     public bool isGettingHit;
     public bool isDead;
     public bool isAttacking;
+    public bool inServer = false;
 
     void Start ()
     {
@@ -59,15 +60,17 @@ public class Enemy : MonoBehaviour, ICharactor
         if (isDead)
             return;
         isGettingHit = false;
-        Hate ();
         Attack ();
+        if (inServer)
+            Hate ();
     }
 
     void FixedUpdate ()
     {
         if (isDead)
             return;
-        Move ();
+        if (inServer)
+            Move ();
     }
     // Innitialize using EnemyInfo class
     public void Innitialize (int level, Vector3 spawnPoint)
