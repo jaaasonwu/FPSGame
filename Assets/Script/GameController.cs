@@ -5,6 +5,7 @@
 
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -25,8 +26,7 @@ public class GameController : MonoBehaviour
     void Start ()
     {
         SetUpServer ();
-        mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-            OnClientReceivePlayerPosition);
+        SetUpLocalClient ();
     }
 	
     // Update is called once per frame
@@ -56,17 +56,7 @@ public class GameController : MonoBehaviour
         NetworkServer.Listen (PORT);
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
-        mClient = ClientScene.ConnectLocalServer ();
-        mClient.RegisterHandler (MsgType.Connect, OnConnected);
-        controlledPlayer = Instantiate (playerPrefab, 
-            new Vector3 (50, 1, 20),
-            Quaternion.Euler (new Vector3 (0, 0, 0)))
-            as GameObject;
-        Player player = controlledPlayer.GetComponentInChildren<Player> ();
-        player.id = idCount;
-        idCount++;
-        player.SetNetworkClient (mClient);
-        players [player.id] = controlledPlayer;
+        NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
         isStart = false;
     }
 
@@ -76,27 +66,127 @@ public class GameController : MonoBehaviour
      */
     void SetUpClient (string address)
     {
-        
+        mClient = new NetworkClient ();
+        mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
+            OnClientReceivePlayerPosition);
+        mClient.RegisterHandler (MsgType.Connect, OnConnected);
+        mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
+        mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+        mClient.Connect (address, PORT);
     }
 
+    /*
+     * set up local client
+     */
+    void SetUpLocalClient ()
+    {
+        mClient = ClientScene.ConnectLocalServer ();
+        mClient.RegisterHandler (MsgType.Connect, OnConnected);
+        mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
+            OnClientReceivePlayerPosition);
+        mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
+        mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+    }
+
+    /*
+     * after connected to the server, the client send a message to 
+     * call server to add the player
+     */
     void OnConnected (NetworkMessage msg)
     {
         Debug.Log ("connected to server");
+        // -1 in id means not allocated
+        Messages.NewPlayerMessage newPlayer = new
+            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+        mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
+    /*
+     * after server receive the message to spawn the player, it 
+     * instantiate the model of player and then send the ownership 
+     * certification to the client who own that player
+     */
+    void OnServerAddPlayer (NetworkMessage msg)
+    {
+        Messages.NewPlayerMessage newPlayerMsg =
+            msg.ReadMessage<Messages.NewPlayerMessage> ();
+        GameObject playerClone = 
+            Instantiate (playerPrefab, newPlayerMsg.spawnPoint,
+                Quaternion.Euler (new Vector3 (0, 0, 0)))
+            as GameObject;
+        playerClone.GetComponentInChildren<Player> ().id = idCount;
+        players [idCount] = playerClone;
+        newPlayerMsg.id = idCount;
+        idCount++;
+        NetworkServer.SendToAll (MsgType.AddPlayer, newPlayerMsg);
+        NetworkServer.SendToClient (msg.conn.connectionId,
+            Messages.NewPlayerMessage.ownerMsgId, newPlayerMsg);
+    }
+
+    /*
+     * when client received the add player message, they would instantiate a 
+     * player
+     */
+
+    void OnClientAddPlayer (NetworkMessage msg)
+    {
+        // if is local player, skip
+        if (isServer)
+            return;
+        Messages.NewPlayerMessage newPlayerMsg =
+            msg.ReadMessage<Messages.NewPlayerMessage> ();
+        GameObject playerClone = 
+            Instantiate (playerPrefab, newPlayerMsg.spawnPoint,
+                Quaternion.Euler (new Vector3 (0, 0, 0)))
+            as GameObject;
+        playerClone.GetComponentInChildren<Player> ().id = newPlayerMsg.id;
+        // register player
+        players [newPlayerMsg.id] = playerClone;
+
+    }
+
+    /*
+     * when client received owner message, they attach the first person controller
+     * script to the player GameObject
+     */
+    void OnOwner (NetworkMessage msg)
+    {
+        Messages.NewPlayerMessage newPlayerMsg = 
+            msg.ReadMessage<Messages.NewPlayerMessage> ();
+        GameObject player = players [newPlayerMsg.id];
+        if (player == null) {
+            Debug.Log ("own a not instantiated player");
+        }
+        player.GetComponent<FirstPersonController> ().enabled = true;
+        controlledPlayer = player;
+        player.GetComponentInChildren<Player> ().isLocal = true;
+        player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
+    }
+
+    /*
+     * server side update the player's position
+     */
     void OnServerReceivePlayerPosition (NetworkMessage msg)
     {
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         GameObject player = players [moveMsg.id];
-        player.transform.position = moveMsg.position;
-        player.transform.rotation = moveMsg.rotation;
+        if (msg.conn.connectionId != mClient.connection.connectionId) {
+            player.transform.position = moveMsg.position;
+            player.transform.rotation = moveMsg.rotation;
+        }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);
     }
 
+    /*
+     * client side update the player's position
+     */
     void OnClientReceivePlayerPosition (NetworkMessage msg)
     {
+        // if it is connected to local server, do not need this step
+        if (isServer)
+            return;
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         GameObject player = players [moveMsg.id];

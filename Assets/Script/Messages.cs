@@ -23,8 +23,28 @@ public class Messages
             this.position = position;
             this.rotation = rotation;
         }
-
+        // default constructor
         public PlayerMoveMessage ()
+        {
+            
+        }
+    }
+
+    // message used to generate the new player's information
+    // this use the message id MsgType.AddPlayer
+    public class NewPlayerMessage : MessageBase
+    {
+        public Vector3 spawnPoint;
+        public int id;
+        public const short ownerMsgId = 101;
+
+        public NewPlayerMessage (int id, Vector3 spawnPoint)
+        {
+            this.id = id;
+            this.spawnPoint = spawnPoint;
+        }
+        // default constructor
+        public NewPlayerMessage ()
         {
             
         }

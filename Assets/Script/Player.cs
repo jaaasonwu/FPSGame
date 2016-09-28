@@ -14,6 +14,8 @@ public class Player : MonoBehaviour, ICharactor
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
     public GameObject[] weapons;
     public int id;
+    // is the local player, means the player is controlled
+    public bool isLocal = false;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     int exp;
@@ -52,10 +54,11 @@ public class Player : MonoBehaviour, ICharactor
         }	
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
-        if (isMoving ()) {
+        if (isMoving () && isLocal) {
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
-                    id, transform.position - transform.localPosition, transform.rotation);
+                    id, transform.position - transform.localPosition,
+                    Quaternion.Euler (transform.rotation.eulerAngles - transform.localRotation.eulerAngles));
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
     }
