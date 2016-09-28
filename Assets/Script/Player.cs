@@ -55,7 +55,7 @@ public class Player : MonoBehaviour, ICharactor
         if (isMoving ()) {
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
-                    id, transform.position, transform.rotation);
+                    id, transform.position - transform.localPosition, transform.rotation);
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
     }
