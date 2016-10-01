@@ -14,8 +14,6 @@ public class PlayerLobbyInfo : MonoBehaviour {
 
 	// Use this for initialization
 	void Start () {
-		this.playerColor = Color.red;
-		this.playerName
 	}
 
 	private void ReadPlayer(){

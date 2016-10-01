@@ -11,7 +11,8 @@ using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
-    public bool isServer;
+    private bool isServer;
+    public string hostAddress;
     public GameObject playerPrefab;
     /*
      * prefabs of enemies
@@ -28,6 +29,10 @@ public class GameController : MonoBehaviour
     GameObject controlledPlayer;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
 
+    // for test
+    private bool addedPlayer = false;
+    // for test
+
     public const int PORT = 8001;
     // Use this for initialization
     void Start ()
@@ -40,6 +45,14 @@ public class GameController : MonoBehaviour
         if (isStart) {
             SetUpNetwork ();
         }
+        if (mClient != null && !addedPlayer) {
+            if (Input.GetKey (KeyCode.P)) {
+                Messages.NewPlayerMessage newPlayer = new
+                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+                mClient.Send (MsgType.AddPlayer, newPlayer);
+                addedPlayer = true;
+            }
+        }
     }
 
     /*
@@ -50,9 +63,11 @@ public class GameController : MonoBehaviour
         if (Input.GetKey (KeyCode.I)) {
             SetUpServer ();
             SetUpLocalClient ();
+            isServer = true;
         }
         if (Input.GetKey (KeyCode.O)) {
-            SetUpClient ("10.0.0.71");
+            SetUpClient (hostAddress);
+            isServer = false;
         }
     }
     /*
@@ -112,9 +127,9 @@ public class GameController : MonoBehaviour
     {
         Debug.Log ("connected to server");
         // -1 in id means not allocated
-        Messages.NewPlayerMessage newPlayer = new
-            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
-        mClient.Send (MsgType.AddPlayer, newPlayer);
+//        Messages.NewPlayerMessage newPlayer = new
+//            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+//        mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
     /*
@@ -178,9 +193,9 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<AudioListener> ().enabled = true;
         player.GetComponentInChildren<FlareLayer> ().enabled = true;
         player.GetComponentInChildren<Skybox> ().enabled = true;
-        controlledPlayer = player;
         player.GetComponentInChildren<Player> ().isLocal = true;
         player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
+        controlledPlayer = player;
     }
 
     /*
@@ -204,12 +219,12 @@ public class GameController : MonoBehaviour
      */
     void OnClientReceivePlayerPosition (NetworkMessage msg)
     {
-        // if it is connected to local server, do not need this step
-        if (isServer)
-            return;
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         GameObject player = players [moveMsg.id];
+        // do not update what is controlled by the client
+        if (player == controlledPlayer)
+            return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
     }

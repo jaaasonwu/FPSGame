@@ -14,8 +14,9 @@ public class AviationLobbyMain : MonoBehaviour {
 	[SerializeField]private InputField playerName;
 
 	// lay out necessary stuffs when enable the panel
-	public void OnEnabled(){
-	
+	public void OnEnable(){
+		addressToConnect.onEndEdit.RemoveAllListeners ();
+		playerName.onEndEdit.RemoveAllListeners ();
 	}
 
 	// responsible to establish self as local server with a create buttom
@@ -40,5 +41,4 @@ public class AviationLobbyMain : MonoBehaviour {
 			Debug.Log ("failed to switch panel");
 		}
 	}
-		
 }

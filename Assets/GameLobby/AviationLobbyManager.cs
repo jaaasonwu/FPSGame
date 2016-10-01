@@ -17,9 +17,6 @@ public class AviationLobbyManager : MonoBehaviour {
 	// whether mainpanel or lobbypanel should be active in the scene
 	private GameObject currPanel;
 
-	//Player infomation
-	public GameObject playerInfo;
-
 	void Start(){
 		s_lobbyManager = this;
 		mainPanel.SetActive (true);
