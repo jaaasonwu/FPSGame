@@ -202,6 +202,7 @@ public class Enemy : MonoBehaviour, ICharactor
         }
         // if hated player is changed, send to all the client
         if (p != hatedPlayer) {
+            print ("change hate to " + p.id);
             Messages.UpdateEnemyHate newMsg = 
                 new Messages.UpdateEnemyHate (this.id,
                     p == null ? -1 : p.id);
