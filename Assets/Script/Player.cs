@@ -16,6 +16,10 @@ public class Player : MonoBehaviour, ICharactor
     public int id;
     // is the local player, means the player is controlled
     public bool isLocal = false;
+    // the rate that client will send to server of player's location
+    public float updateRate = 0.05f;
+    // the time counter to count how many time is elapsed
+    private float updateCount;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     int exp;
@@ -39,12 +43,15 @@ public class Player : MonoBehaviour, ICharactor
         weaponPrefab.transform.rotation = gameObject.transform.rotation;
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         this.buffs = new List<Buff> ();
+        updateCount = 0;
     }
 
 
     // Update is called once per frame
     void Update ()
     {
+        if (!isLocal)
+            return;
         if (Input.GetKey (KeyCode.Mouse0)) {
             Attack ();
         }
@@ -54,13 +61,15 @@ public class Player : MonoBehaviour, ICharactor
         }	
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
-        if (isMoving () && isLocal) {
+        if (updateCount >= updateRate) {
+            updateCount = 0;
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
                     Quaternion.Euler (transform.rotation.eulerAngles - transform.localRotation.eulerAngles));
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
+        updateCount += Time.deltaTime;
     }
 
     public void Attack ()

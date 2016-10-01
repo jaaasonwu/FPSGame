@@ -11,7 +11,8 @@ using System.Collections.Generic;
 
 public class GameController : MonoBehaviour
 {
-    public bool isServer;
+    private bool isServer;
+    public string hostAddress;
     public GameObject playerPrefab;
     /*
      * prefabs of enemies
@@ -40,6 +41,13 @@ public class GameController : MonoBehaviour
         if (isStart) {
             SetUpNetwork ();
         }
+        if (mClient != null) {
+            if (Input.GetKey (KeyCode.P)) {
+                Messages.NewPlayerMessage newPlayer = new
+                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+                mClient.Send (MsgType.AddPlayer, newPlayer);
+            }
+        }
     }
 
     /*
@@ -50,9 +58,11 @@ public class GameController : MonoBehaviour
         if (Input.GetKey (KeyCode.I)) {
             SetUpServer ();
             SetUpLocalClient ();
+            isServer = true;
         }
         if (Input.GetKey (KeyCode.O)) {
-            SetUpClient ("10.0.0.71");
+            SetUpClient (hostAddress);
+            isServer = false;
         }
     }
     /*
@@ -106,9 +116,9 @@ public class GameController : MonoBehaviour
     {
         Debug.Log ("connected to server");
         // -1 in id means not allocated
-        Messages.NewPlayerMessage newPlayer = new
-            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
-        mClient.Send (MsgType.AddPlayer, newPlayer);
+//        Messages.NewPlayerMessage newPlayer = new
+//            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+//        mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
     /*
@@ -198,8 +208,8 @@ public class GameController : MonoBehaviour
      */
     void OnClientReceivePlayerPosition (NetworkMessage msg)
     {
-        // if it is connected to local server, do not need this step
-        if (isServer)
+        // do not update what is controlled by the client
+        if (mClient.connection == msg.conn)
             return;
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
