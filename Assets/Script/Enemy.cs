@@ -4,27 +4,30 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 
-public class Enemy : MonoBehaviour, ICharactor {
+public class Enemy : MonoBehaviour, ICharactor
+{
     // the charactor's level
     protected int level;
     // the charactor's current HP
-    protected float hp;
+    public float hp;
     // the charactor's current movement speed
-    protected float moveSpeed;
+    public float moveSpeed;
     // the charactor's rotate speed
-    protected float rotateSpeed;
+    public float rotateSpeed;
     // how far will the player attract the enemy
-    protected float hateRange;
+    public float hateRange;
     // how far will the enemy walk around its born point
-    protected float normalActiveRange;
+    public float normalActiveRange;
     // how far will the enemy follow the player once attracted
-    protected float attractedActiveRange;
+    public float attractedActiveRange;
     // how far will the player trigger the attack
-    protected float attackRange;
+    public float attackRange;
     // the attack damage of enemy
-    protected float attackDamage;
+    public float attackDamage;
     // attack interval
-    protected float attackSpeed;
+    public float attackSpeed;
+    // indicate whether enemy perform melee attack
+    public bool isMelee;
     // attack time count
     private float attackCount;
     // attack method
@@ -32,7 +35,7 @@ public class Enemy : MonoBehaviour, ICharactor {
     // born point
     protected Vector3 spawnPoint;
     // the players
-    protected List<Player> players = new List<Player>();
+    protected List<Player> players = new List<Player> ();
     // the varible that to record the last position of the enemy,
     // in order to know whether the enemy is stucked
     private Vector3 lastPos;
@@ -44,78 +47,66 @@ public class Enemy : MonoBehaviour, ICharactor {
     public bool isGettingHit;
     public bool isDead;
     public bool isAttacking;
-    /*
-    for test
-    */
-    public Player testPlayer;
-    /*
-    end for test
-    */
-    void Start()
+    public bool inServer = false;
+
+    void Start ()
     {
         hatedPlayer = null;
         attackCount = 0;
     }
-    void Update()
+
+    void Update ()
     {
         if (isDead)
             return;
         isGettingHit = false;
-        Hate();
-        Attack();
+        Attack ();
+        if (inServer)
+            Hate ();
     }
-    void FixedUpdate()
+
+    void FixedUpdate ()
     {
         if (isDead)
             return;
-        Move();
+        if (inServer)
+            Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Innitialize(int level, EnemyInfo info, Vector3 spawnPoint)
+    public void Innitialize (int level, Vector3 spawnPoint)
     {
         this.level = level;
-        this.hp = info.baseHP;
-        this.moveSpeed = info.moveSpeed;
-        this.rotateSpeed = info.rotateSpeed;
-        this.hateRange = info.hateRange;
-        this.normalActiveRange = info.normalActiveRange;
-        this.attractedActiveRange = info.attractedActiveRange;
-        this.attackRange = info.attackRange;
-        this.attackDamage = info.attackDamage;
-        this.attackSpeed = info.attackSpeed;
         this.spawnPoint = spawnPoint;
-        if (info.attackMethod == "Melee")
-        {
-            this.attackMethod = new EnemyMeleeAttack();
+        if (isMelee) {
+            this.attackMethod = new EnemyMeleeAttack ();
         }
     }
     /*
     When a player is created, record it
     */
-    public void AddPlayer(Player player)
+    public void AddPlayer (Player player)
     {
-        players.Add(player);
+        players.Add (player);
     }
-    public void OnHit(float damage)
+
+    public void OnHit (float damage)
     {
         this.hp -= damage;
         isGettingHit = true;
-        if (this.hp < 0)
-        {
+        if (this.hp < 0) {
             isDead = true;
         }
         // call the animation then
     }
-    public void Attack()
+
+    public void Attack ()
     {
         // attack if a player is hated and in attack range
         if (hatedPlayer != null &&
-            (hatedPlayer.transform.position-transform.position).magnitude<attackRange)
-        {
-            if (attackCount > attackSpeed)
-            {
+            (hatedPlayer.transform.position - transform.position).magnitude < attackRange) {
+            if (attackCount > attackSpeed) {
                 attackCount = 0;
-                attackMethod.Attack(attackDamage, hatedPlayer);
+                attackMethod.Attack (attackDamage, hatedPlayer);
             }
             isAttacking = true;
             attackCount += Time.deltaTime;
@@ -123,93 +114,83 @@ public class Enemy : MonoBehaviour, ICharactor {
         }
         isAttacking = false;
     }
-    public void Move()
+
+    public void Move ()
     {
-        Rigidbody rb = this.gameObject.GetComponent<Rigidbody>();
+        Rigidbody rb = this.gameObject.GetComponent<Rigidbody> ();
         Vector3 pos = transform.position;
         // if no player is hated, just walk around
-        if (hatedPlayer == null)
-        {
+        if (hatedPlayer == null) {
             // run iff a player is hated
             isRunning = false;
             // first check if the enemy is stucked
-            if ((pos - lastPos).magnitude < moveSpeed * Time.deltaTime -0.01)
-            {
+            if ((pos - lastPos).magnitude < moveSpeed * Time.deltaTime - 0.01) {
                 lastPos = pos;
                 Quaternion rot = transform.rotation;
-                Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime
-                    * Random.Range(0.5f, 2.5f), Vector3.up);
-                rb.MoveRotation(rot * q);
-                rb.MovePosition(pos + moveSpeed * Time.deltaTime * transform.forward);
+                Quaternion q = Quaternion.AngleAxis (rotateSpeed * Time.deltaTime
+                               * Random.Range (0.5f, 2.5f), Vector3.up);
+                rb.MoveRotation (rot * q);
+                rb.MovePosition (pos + moveSpeed * Time.deltaTime * transform.forward);
                 isWalking = true;
                 return;
             }
             lastPos = pos;
             // if position is outside the normal active range, go towards the spawn point
-            if ((pos - spawnPoint).magnitude > normalActiveRange)
-            {
-                transform.LookAt(spawnPoint);
-                rb.MovePosition(pos + transform.forward * moveSpeed * Time.deltaTime);
+            if ((pos - spawnPoint).magnitude > normalActiveRange) {
+                transform.LookAt (spawnPoint);
+                rb.MovePosition (pos + transform.forward * moveSpeed * Time.deltaTime);
                 isWalking = true;
                 return;
             }
-            pos += transform.forward*moveSpeed*Time.deltaTime;
+            pos += transform.forward * moveSpeed * Time.deltaTime;
             // if pass the normal active range, just stop
-            if ((pos - spawnPoint).magnitude > normalActiveRange)
-            {
+            if ((pos - spawnPoint).magnitude > normalActiveRange) {
                 isWalking = false;
                 return;
-            }
-            else
-            // otherwise just move
-            {
-                rb.MovePosition(pos);
+            } else {            // otherwise just move
+                rb.MovePosition (pos);
                 Quaternion rot = transform.rotation;
-                Quaternion q = Quaternion.AngleAxis(rotateSpeed * Time.deltaTime
-                    * Random.Range(0.1f, 1f), Vector3.up);
-                rb.MoveRotation(rot * q);
+                Quaternion q = Quaternion.AngleAxis (rotateSpeed * Time.deltaTime
+                               * Random.Range (0.1f, 1f), Vector3.up);
+                rb.MoveRotation (rot * q);
                 isWalking = true;
                 return;
             }
         }
         // if there's a player is hated, follow him
-        else
-        {
+        else {
             // can't move out of attracted active range
             // turn to the direction of player
             Vector3 dir = hatedPlayer.transform.position - pos;
             dir.y = 0;
-            dir.Normalize();
-            Vector3 newDir = Vector3.RotateTowards(transform.forward, dir, rotateSpeed * Time.deltaTime, 0);
-            rb.rotation = Quaternion.LookRotation(newDir);
+            dir.Normalize ();
+            Vector3 newDir = Vector3.RotateTowards (transform.forward, dir, rotateSpeed * Time.deltaTime, 0);
+            rb.rotation = Quaternion.LookRotation (newDir);
             
             // move forward
             Vector3 newPos = pos + transform.forward * moveSpeed * Time.deltaTime;
             // when attacking, don't move, when out of attracted active range, don't move
-            if ((newPos - spawnPoint).magnitude > attractedActiveRange || isAttacking)
-            {
+            if ((newPos - spawnPoint).magnitude > attractedActiveRange || isAttacking) {
                 isRunning = false;
                 return;
             }
-            rb.MovePosition(newPos);
+            rb.MovePosition (newPos);
             isRunning = true;
         }
     }
     /*
     function that control the hate of enemy
     */
-    private void Hate()
+    private void Hate ()
     {
         Player p = null;
         float distance = hateRange;
-        for (int i = 0; i < players.Count; i++)
-        {
-            float dist = (transform.position - players[i].transform.position).magnitude;
+        for (int i = 0; i < players.Count; i++) {
+            float dist = (transform.position - players [i].transform.position).magnitude;
             // to get the closest player
-            if ( dist < distance)
-            {
+            if (dist < distance) {
                 distance = dist;
-                p = players[i];
+                p = players [i];
             }
         }
         hatedPlayer = p;
