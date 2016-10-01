@@ -2,6 +2,11 @@ using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
+using System;
+using System.IO;
+using UnityEngine.UI;
+using System.Xml;
+using System.Xml.Serialization;
 
 // created by JiaCheng Wu, jiachengw@student.unimelb.edu.au
 // modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
@@ -9,27 +14,36 @@ using UnityStandardAssets.Characters.FirstPerson;
 public class Player : MonoBehaviour, ICharactor {
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
 	public GameObject[] weapons;
+    public Slider healthSlider;
     GameObject weaponPrefab;
     Weapon currentWeapon;
-    int exp;
-    private const int NUM_WEAPONS = 3;
-	[SerializeField] private float hp;
-	[SerializeField] private float maxHp;
-    [SerializeField] private int weaponNumber;
+    private int level;
+    private int exp;
+    private int numAvailableWeapons;
+	private float hp;
+	private float maxHp;
+    private int weaponNumber;
+    private int ammo;
+    private Text ammoText;
 	
 	//player's current buffs
 	public List<Buff> buffs;
 
 	// Use this for initialization
 	void Start () {
-		exp = GetExp();
-        maxHp = GetMaxHp();
-        weaponPrefab = Instantiate(weapons[weaponNumber]);
-        weaponPrefab.transform.parent = gameObject.transform;
-        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
-        weaponPrefab.transform.rotation = gameObject.transform.rotation;
-        currentWeapon = weaponPrefab.GetComponent<Weapon>();
+        level = 1;
+        exp = 0;
+        hp = 100;
+        maxHp = 100;
+        weaponNumber = 0;
+        ammo = 500;
 		this.buffs = new List<Buff>();
+        ShowWeapon(weaponNumber);
+        
+
+        numAvailableWeapons = 3;
+        healthSlider.maxValue = maxHp;
+        healthSlider.value = hp;
 	}
 
 
@@ -60,16 +74,19 @@ public class Player : MonoBehaviour, ICharactor {
     public void OnHit(float damage)
     {
         hp -= damage;
+        healthSlider.value = hp;
     }
 
-    int GetExp ()
+    public void ShowWeapon(int weaponNumber)
     {
-        return 0;
-    }
-
-    int GetMaxHp ()
-    {
-        return 100;
+        weaponPrefab = Instantiate(weapons[weaponNumber]);
+        weaponPrefab.transform.parent = gameObject.transform;
+        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
+        weaponPrefab.transform.rotation = gameObject.transform.rotation;
+        currentWeapon = weaponPrefab.GetComponent<Weapon>();
+        currentWeapon.ammo = ammo;
+        ammoText = (Text)GameObject.FindGameObjectWithTag("AmmoText").GetComponent<Text>();
+        ammoText.text = "Ammo: " + currentWeapon.ammo;
     }
 
 	// methods used to modify player stats
@@ -88,6 +105,7 @@ public class Player : MonoBehaviour, ICharactor {
 		}
 	}
 
+    // Used to test if the player is colliding with an item
 	void OnTriggerEnter(Collider other){
 		if (other.gameObject.CompareTag ("Item"))
 		{
@@ -135,7 +153,7 @@ public class Player : MonoBehaviour, ICharactor {
 
     public void NextWeapon()
     {
-        if (weaponNumber == NUM_WEAPONS - 1)
+        if (weaponNumber == numAvailableWeapons - 1)
         {
             weaponNumber = 0;
         }
@@ -143,11 +161,77 @@ public class Player : MonoBehaviour, ICharactor {
         {
             weaponNumber++;
         }
+        ammo = currentWeapon.ammo;
         Destroy(weaponPrefab);
-        weaponPrefab = Instantiate(weapons[weaponNumber]);
-        weaponPrefab.transform.parent = gameObject.transform;
-        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
-        weaponPrefab.transform.rotation = gameObject.transform.rotation;
-        currentWeapon = weaponPrefab.GetComponent<Weapon>();
+        ShowWeapon(weaponNumber);
     }
+
+    // The function reads from the serialized data from the storage
+    public void Load()
+    {
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
+            FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Open);
+            PlayerData data = (PlayerData) serializer.Deserialize(file);
+
+            this.transform.parent.position = data.pos;
+            this.transform.parent.rotation = data.rot;
+            level = data.level;
+            exp = data.exp;
+            hp = data.hp;
+            healthSlider.value = hp;
+            maxHp = data.maxHp;
+            healthSlider.maxValue = maxHp;
+            weaponNumber = data.weaponNumber;
+            ammo = data.ammo;
+            Destroy(currentWeapon);
+            ShowWeapon(weaponNumber);
+
+            file.Close();
+        } 
+        else
+        {
+            level = 1;
+            exp = 0;
+            hp = 100;
+            maxHp = 100;
+            weaponNumber = 0;
+            currentWeapon.ammo = 500;
+        }
+    }
+
+    // This function serialize the data and save the data in the storage
+    public void Save()
+    {
+        XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
+        File.Delete(Application.persistentDataPath + "/playerinfo.dat");
+        FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Create);
+        
+        PlayerData data = new PlayerData();
+        data.pos = this.transform.parent.position;
+        data.rot = this.transform.parent.rotation;
+        data.level = level;
+        data.exp = exp;
+        data.hp = hp;
+        data.maxHp = maxHp;
+        data.weaponNumber = weaponNumber;
+        data.ammo = currentWeapon.ammo;
+
+        serializer.Serialize(file, data);
+        file.Close();
+    }
+}
+
+
+public class PlayerData
+{
+    public Vector3 pos;
+    public Quaternion rot;
+    public int level;
+    public int exp;
+    public float hp;
+    public float maxHp;
+    public int weaponNumber;
+    public int ammo;
 }
