@@ -28,15 +28,26 @@ public class GameController : MonoBehaviour
     int idCount = 0;
     GameObject controlledPlayer;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
+    Dictionary<int,GameObject> enemies = new Dictionary<int, GameObject> ();
+    // use to store the position of enemy spawn points
+    List<Vector3> enemySpawnPoints = new List<Vector3> ();
+    public float enemyGenerationInterval = 1;
+    private float generateCount = 0;
 
     // for test
     private bool addedPlayer = false;
+    public bool generateEnemy = false;
     // for test
 
     public const int PORT = 8001;
     // Use this for initialization
     void Start ()
     {
+        GameObject[] spawnPoints =
+            GameObject.FindGameObjectsWithTag ("SpawnPoint");
+        for (int i = 0; i < spawnPoints.Length; i++) {
+            enemySpawnPoints.Add (spawnPoints [i].transform.position);
+        }
     }
 	
     // Update is called once per frame
@@ -46,11 +57,22 @@ public class GameController : MonoBehaviour
             SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
-            if (Input.GetKey (KeyCode.P)) {
+            if (Input.GetKeyDown (KeyCode.P)) {
                 Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
                 mClient.Send (MsgType.AddPlayer, newPlayer);
                 addedPlayer = true;
+            }
+        }
+        if (Input.GetKeyDown (KeyCode.N)) {
+            generateEnemy = !generateEnemy;
+        }
+        if (generateEnemy) {
+            if (generateCount >= enemyGenerationInterval) {
+                SpawnEnemy ();
+                generateCount = 0;
+            } else {
+                generateCount += Time.deltaTime;
             }
         }
     }
@@ -60,12 +82,12 @@ public class GameController : MonoBehaviour
      */
     void SetUpNetwork ()
     {
-        if (Input.GetKey (KeyCode.I)) {
+        if (Input.GetKeyDown (KeyCode.I)) {
             SetUpServer ();
             SetUpLocalClient ();
             isServer = true;
         }
-        if (Input.GetKey (KeyCode.O)) {
+        if (Input.GetKeyDown (KeyCode.O)) {
             SetUpClient (hostAddress);
             isServer = false;
         }
@@ -95,6 +117,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+        mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
+        mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -110,6 +134,8 @@ public class GameController : MonoBehaviour
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+        mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
+        mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         isStart = false;
     }
 
@@ -223,11 +249,75 @@ public class GameController : MonoBehaviour
         player.transform.rotation = moveMsg.rotation;
     }
 
+    /*
+     * server spawn new enemy
+     */
+    void SpawnEnemy ()
+    {
+        // generate random enemy type and spawn points
+        int pos = Random.Range (0, enemySpawnPoints.Count);
+        int enemyIndex = Random.Range (0, enemyPrefabs.Length);
+        int level = 1;
+        // spawn
+        Vector3 spawnPoint = enemySpawnPoints [pos];
+        GameObject enemyClone = GameObject.Instantiate (enemyPrefabs [enemyIndex]
+            , spawnPoint, Quaternion.identity) as GameObject;
+        // innitialize enemy
+        Enemy enemy = enemyClone.GetComponent<Enemy> ();
+        enemy.Innitialize (idCount, level, spawnPoint);
+        idCount++;
+        foreach (GameObject player in players.Values) {
+            enemy.AddPlayer (player.GetComponentInChildren<Player> ());
+        }
+        enemy.inServer = true;
+        // send to client
+        Messages.NewEnemyMessage newMsg = 
+            new Messages.NewEnemyMessage (
+                enemyIndex, enemy.id, level, spawnPoint);
+        NetworkServer.SendToAll (Messages.NewEnemyMessage.msgId, newMsg);
+    }
+        
     /* 
      * client receive message to spawn the enemy
      */
     void OnSpawnEnemy (NetworkMessage msg)
     {
-        
+        // if is local player, skip
+        if (isServer)
+            return;
+        Messages.NewEnemyMessage enemyMsg = 
+            msg.ReadMessage<Messages.NewEnemyMessage> ();
+        GameObject newEnemy = 
+            Instantiate (enemyPrefabs [enemyMsg.enemyIndex],
+                enemyMsg.spawnPoint, Quaternion.Euler (new Vector3 (0, 0, 0)))
+            as GameObject;
+        newEnemy.GetComponent<Enemy> ().Innitialize (
+            enemyMsg.id, enemyMsg.level, enemyMsg.spawnPoint);
+        foreach (GameObject player in players.Values) {
+            newEnemy.GetComponent<Enemy> ().AddPlayer (
+                player.GetComponentInChildren<Player> ());
+        }
+        enemies [enemyMsg.id] = newEnemy;
+    }
+
+    /*
+     * client update the hate information of the enemy
+     */
+    void OnUpdateHate (NetworkMessage msg)
+    {
+        // skip local client
+        if (isServer)
+            return;
+        Messages.UpdateEnemyHate hateMsg =
+            msg.ReadMessage<Messages.UpdateEnemyHate> ();
+        Enemy enemy = enemies [hateMsg.enemyId].GetComponent<Enemy> ();
+        if (hateMsg.playerId == -1) {
+            enemy.SetHatePlayer (null);
+            return;
+        }
+        Player player = 
+            players [hateMsg.playerId].GetComponentInChildren<Player> ();
+        Debug.Log ("receive hate update to " + player.id);
+        enemy.SetHatePlayer (player);
     }
 }

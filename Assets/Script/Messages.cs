@@ -55,16 +55,42 @@ public class Messages
     public class NewEnemyMessage: MessageBase
     {
         public int id;
+        public int level;
         public Vector3 spawnPoint;
         // index in enemy prefab list in Game Controller
         public int enemyIndex;
         public const short msgId = 102;
 
-        public NewEnemyMessage (int id, int index, Vector3 spawnPoint)
+        public NewEnemyMessage (int index, int id, int level, Vector3 spawnPoint)
         {
             this.id = id;
+            this.level = level;
             this.enemyIndex = index;
             this.spawnPoint = spawnPoint;
+        }
+
+        public NewEnemyMessage ()
+        {
+            
+        }
+    }
+
+    public class UpdateEnemyHate : MessageBase
+    {
+        public int enemyId;
+        // if no player is hated, the id should be -1
+        public int playerId;
+        public const short msgId = 103;
+
+        public UpdateEnemyHate (int enemyId, int playerId)
+        {
+            this.enemyId = enemyId;
+            this.playerId = playerId;
+        }
+
+        public UpdateEnemyHate ()
+        {
+            
         }
     }
 }

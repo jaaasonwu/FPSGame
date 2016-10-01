@@ -1,11 +1,18 @@
 ﻿// created by Haoyu Zhai, zhaih@student.unimelb.edu.au
 // base class for enemy
+// enemy's behaviour is based on hate system, and will not be
+// exactly same as server, but their hate target will be 
+// synchronized so the overall behaviour will be similiar
+// of course, the hp will be synchronized as well
 using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
+    // enemy's id
+    public int id;
     // the charactor's level
     protected int level;
     // the charactor's current HP
@@ -41,6 +48,8 @@ public class Enemy : MonoBehaviour, ICharactor
     private Vector3 lastPos;
     // the player which is hated by the enemy
     private Player hatedPlayer;
+    // update rate for enemy
+    public float updateRate = 0.05f;
     // below is the booleans that control the animation
     public bool isWalking;
     public bool isRunning;
@@ -61,20 +70,25 @@ public class Enemy : MonoBehaviour, ICharactor
             return;
         isGettingHit = false;
         Attack ();
-        if (inServer)
+        if (inServer) {
             Hate ();
+            Messages.UpdateEnemyHate newMsg = 
+                new Messages.UpdateEnemyHate (id,
+                    hatedPlayer == null ? -1 : hatedPlayer.id);
+            NetworkServer.SendToAll (Messages.UpdateEnemyHate.msgId, newMsg);
+        }
     }
 
     void FixedUpdate ()
     {
         if (isDead)
             return;
-        if (inServer)
-            Move ();
+        Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Innitialize (int level, Vector3 spawnPoint)
+    public void Innitialize (int id, int level, Vector3 spawnPoint)
     {
+        this.id = id;
         this.level = level;
         this.spawnPoint = spawnPoint;
         if (isMelee) {
@@ -193,6 +207,11 @@ public class Enemy : MonoBehaviour, ICharactor
                 p = players [i];
             }
         }
+        hatedPlayer = p;
+    }
+
+    public void SetHatePlayer (Player p)
+    {
         hatedPlayer = p;
     }
 }
