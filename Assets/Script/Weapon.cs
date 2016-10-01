@@ -12,7 +12,7 @@ public class Weapon : MonoBehaviour
     RaycastHit shootHit;
     int shootableMask;
     LineRenderer gunLine;
-    GameObject barrelEnd;
+    public GameObject barrelEnd;
 
     // Use this for initialization
     void Awake ()
@@ -39,14 +39,6 @@ public class Weapon : MonoBehaviour
         // shoot again
         if (timer >= attackInterval) {
 
-            // choose the weapon's barrel end
-            GameObject[] barrelEnds = GameObject.FindGameObjectsWithTag ("barrelEnd");
-            foreach (GameObject end in barrelEnds) {
-                if (end.GetComponentInParent<Transform> ().gameObject
-                    == this.gameObject) {
-                    barrelEnd = end;
-                }
-            }
             timer = 0f;
 
             // Set the line renderer to make the line visible
