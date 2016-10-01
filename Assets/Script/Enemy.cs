@@ -48,6 +48,8 @@ public class Enemy : MonoBehaviour, ICharactor
     private Vector3 lastPos;
     // the player which is hated by the enemy
     private Player hatedPlayer;
+    // update rate for enemy
+    public float updateRate = 0.05f;
     // below is the booleans that control the animation
     public bool isWalking;
     public bool isRunning;
@@ -68,8 +70,12 @@ public class Enemy : MonoBehaviour, ICharactor
             return;
         isGettingHit = false;
         Attack ();
-        if (inServer)
+        if (inServer) {
             Hate ();
+            Messages.UpdateEnemyHate newMsg = 
+                new Messages.UpdateEnemyHate (id,
+                    hatedPlayer == null ? -1 : hatedPlayer.id);
+        }
     }
 
     void FixedUpdate ()
@@ -199,14 +205,6 @@ public class Enemy : MonoBehaviour, ICharactor
                 distance = dist;
                 p = players [i];
             }
-        }
-        // if hated player is changed, send to all the client
-        if (p != hatedPlayer) {
-            print ("change hate to " + p.id);
-            Messages.UpdateEnemyHate newMsg = 
-                new Messages.UpdateEnemyHate (this.id,
-                    p == null ? -1 : p.id);
-            NetworkServer.SendToAll (Messages.UpdateEnemyHate.msgId, newMsg);
         }
         hatedPlayer = p;
     }

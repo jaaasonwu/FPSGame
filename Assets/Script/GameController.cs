@@ -36,7 +36,7 @@ public class GameController : MonoBehaviour
 
     // for test
     private bool addedPlayer = false;
-    private bool generateEnemy = false;
+    public bool generateEnemy = false;
     // for test
 
     public const int PORT = 8001;
@@ -57,15 +57,15 @@ public class GameController : MonoBehaviour
             SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
-            if (Input.GetKey (KeyCode.P)) {
+            if (Input.GetKeyDown (KeyCode.P)) {
                 Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
                 mClient.Send (MsgType.AddPlayer, newPlayer);
                 addedPlayer = true;
             }
         }
-        if (Input.GetKey (KeyCode.N)) {
-            generateEnemy = true;
+        if (Input.GetKeyDown (KeyCode.N)) {
+            generateEnemy = !generateEnemy;
         }
         if (generateEnemy) {
             if (generateCount >= enemyGenerationInterval) {
@@ -82,12 +82,12 @@ public class GameController : MonoBehaviour
      */
     void SetUpNetwork ()
     {
-        if (Input.GetKey (KeyCode.I)) {
+        if (Input.GetKeyDown (KeyCode.I)) {
             SetUpServer ();
             SetUpLocalClient ();
             isServer = true;
         }
-        if (Input.GetKey (KeyCode.O)) {
+        if (Input.GetKeyDown (KeyCode.O)) {
             SetUpClient (hostAddress);
             isServer = false;
         }
