@@ -308,7 +308,6 @@ public class GameController : MonoBehaviour
         // skip local client
         if (isServer)
             return;
-        Debug.Log ("receive hate update");
         Messages.UpdateEnemyHate hateMsg =
             msg.ReadMessage<Messages.UpdateEnemyHate> ();
         Enemy enemy = enemies [hateMsg.enemyId].GetComponent<Enemy> ();
@@ -316,7 +315,9 @@ public class GameController : MonoBehaviour
             enemy.SetHatePlayer (null);
             return;
         }
-        Player player = players [hateMsg.playerId].GetComponent<Player> ();
+        Player player = 
+            players [hateMsg.playerId].GetComponentInChildren<Player> ();
+        Debug.Log ("receive hate update to " + player.id);
         enemy.SetHatePlayer (player);
     }
 }
