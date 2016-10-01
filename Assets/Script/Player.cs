@@ -18,8 +18,6 @@ public class Player : MonoBehaviour, ICharactor
 {
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
     public GameObject[] weapons;
-    // The slider that shows the hp
-    public Slider healthSlider;
 
     public int id;
     // is the local player, means the player is controlled
@@ -29,6 +27,8 @@ public class Player : MonoBehaviour, ICharactor
     // the time counter to count how many time is elapsed
     private float updateCount;
     private NetworkClient mClient;
+
+    Slider healthSlider;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     private int level;
@@ -54,11 +54,14 @@ public class Player : MonoBehaviour, ICharactor
         ammo = 500;
         this.buffs = new List<Buff>();
         ShowWeapon(weaponNumber);
-        
 
         numAvailableWeapons = 3;
-        healthSlider.maxValue = maxHp;
-        healthSlider.value = hp;
+        if (isLocal)
+        {
+            healthSlider = (Slider)GameObject.FindGameObjectWithTag("HealthSlider").GetComponent<Slider>();
+            healthSlider.maxValue = maxHp;
+            healthSlider.value = hp;
+        }
         updateCount = 0;
     }
 
