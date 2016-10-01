@@ -1,11 +1,18 @@
 ﻿// created by Haoyu Zhai, zhaih@student.unimelb.edu.au
 // base class for enemy
+// enemy's behaviour is based on hate system, and will not be
+// exactly same as server, but their hate target will be 
+// synchronized so the overall behaviour will be similiar
+// of course, the hp will be synchronized as well
 using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
+    // enemy's id
+    public int id;
     // the charactor's level
     protected int level;
     // the charactor's current HP
@@ -69,12 +76,12 @@ public class Enemy : MonoBehaviour, ICharactor
     {
         if (isDead)
             return;
-        if (inServer)
-            Move ();
+        Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Innitialize (int level, Vector3 spawnPoint)
+    public void Innitialize (int id, int level, Vector3 spawnPoint)
     {
+        this.id = id;
         this.level = level;
         this.spawnPoint = spawnPoint;
         if (isMelee) {
@@ -193,6 +200,18 @@ public class Enemy : MonoBehaviour, ICharactor
                 p = players [i];
             }
         }
+        // if hated player is changed, send to all the client
+        if (p != hatedPlayer) {
+            Messages.UpdateEnemyHate newMsg = 
+                new Messages.UpdateEnemyHate (this.id,
+                    p == null ? -1 : p.id);
+            NetworkServer.SendToAll (Messages.UpdateEnemyHate.msgId, newMsg);
+        }
+        hatedPlayer = p;
+    }
+
+    public void SetHatePlayer (Player p)
+    {
         hatedPlayer = p;
     }
 }
