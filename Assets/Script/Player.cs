@@ -28,7 +28,7 @@ public class Player : MonoBehaviour, ICharactor
     private float updateCount;
     private NetworkClient mClient;
 
-    Slider healthSlider;
+    public Slider healthSlider;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     private int level;
@@ -56,6 +56,7 @@ public class Player : MonoBehaviour, ICharactor
         ShowWeapon(weaponNumber);
 
         numAvailableWeapons = 3;
+        isLocal = true;
         if (isLocal)
         {
             healthSlider = (Slider)GameObject.FindGameObjectWithTag("HealthSlider").GetComponent<Slider>();
@@ -223,6 +224,8 @@ public class Player : MonoBehaviour, ICharactor
             FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Open);
             PlayerData data = (PlayerData) serializer.Deserialize(file);
 
+            id = data.id;
+            isLocal = data.isLocal;
             this.transform.parent.position = data.pos;
             this.transform.parent.rotation = data.rot;
             level = data.level;
@@ -233,7 +236,7 @@ public class Player : MonoBehaviour, ICharactor
             healthSlider.maxValue = maxHp;
             weaponNumber = data.weaponNumber;
             ammo = data.ammo;
-            Destroy(currentWeapon);
+            Destroy(weaponPrefab);
             ShowWeapon(weaponNumber);
 
             file.Close();
@@ -257,6 +260,8 @@ public class Player : MonoBehaviour, ICharactor
         FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Create);
         
         PlayerData data = new PlayerData();
+        data.id = id;
+        data.isLocal = isLocal;
         data.pos = this.transform.parent.position;
         data.rot = this.transform.parent.rotation;
         data.level = level;
@@ -274,6 +279,8 @@ public class Player : MonoBehaviour, ICharactor
 
 public class PlayerData
 {
+    public int id;
+    public Boolean isLocal;
     public Vector3 pos;
     public Quaternion rot;
     public int level;
