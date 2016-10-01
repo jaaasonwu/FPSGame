@@ -29,6 +29,10 @@ public class GameController : MonoBehaviour
     GameObject controlledPlayer;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
 
+    // for test
+    private bool addedPlayer = false;
+    // for test
+
     public const int PORT = 8001;
     // Use this for initialization
     void Start ()
@@ -41,11 +45,12 @@ public class GameController : MonoBehaviour
         if (isStart) {
             SetUpNetwork ();
         }
-        if (mClient != null) {
+        if (mClient != null && !addedPlayer) {
             if (Input.GetKey (KeyCode.P)) {
                 Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
                 mClient.Send (MsgType.AddPlayer, newPlayer);
+                addedPlayer = true;
             }
         }
     }
