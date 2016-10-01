@@ -22,6 +22,8 @@ public class AviationLobbyManager : MonoBehaviour {
 		mainPanel.SetActive (true);
 		currPanel = mainPanel;
 		lobbyPanel.SetActive (false);
+		GetComponent<Canvas>().enabled = true;
+		DontDestroyOnLoad(gameObject);
 	}
 
 	//open panel on screen return true if open successful
