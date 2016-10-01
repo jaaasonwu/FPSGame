@@ -40,7 +40,7 @@ public class Weapon : MonoBehaviour
         if (timer >= attackInterval) {
 
             // choose the weapon's barrel end
-            GameObject[] barrelEnds = GameObject.FindGameObjectsWithTag ("barrelEnds");
+            GameObject[] barrelEnds = GameObject.FindGameObjectsWithTag ("barrelEnd");
             foreach (GameObject end in barrelEnds) {
                 if (end.GetComponentInParent<Transform> ().gameObject
                     == this.gameObject) {

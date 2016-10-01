@@ -75,6 +75,7 @@ public class Enemy : MonoBehaviour, ICharactor
             Messages.UpdateEnemyHate newMsg = 
                 new Messages.UpdateEnemyHate (id,
                     hatedPlayer == null ? -1 : hatedPlayer.id);
+            NetworkServer.SendToAll (Messages.UpdateEnemyHate.msgId, newMsg);
         }
     }
 
