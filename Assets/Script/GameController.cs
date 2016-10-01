@@ -187,9 +187,9 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<AudioListener> ().enabled = true;
         player.GetComponentInChildren<FlareLayer> ().enabled = true;
         player.GetComponentInChildren<Skybox> ().enabled = true;
-        controlledPlayer = player;
         player.GetComponentInChildren<Player> ().isLocal = true;
         player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
+        controlledPlayer = player;
     }
 
     /*
@@ -213,12 +213,12 @@ public class GameController : MonoBehaviour
      */
     void OnClientReceivePlayerPosition (NetworkMessage msg)
     {
-        // do not update what is controlled by the client
-        if (mClient.connection == msg.conn)
-            return;
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         GameObject player = players [moveMsg.id];
+        // do not update what is controlled by the client
+        if (player == controlledPlayer)
+            return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
     }
