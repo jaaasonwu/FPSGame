@@ -19,6 +19,7 @@ public class Player : MonoBehaviour, ICharactor
     GameObject weaponPrefab;
     Weapon currentWeapon;
     int exp;
+	private int level;
     private const int NUM_WEAPONS = 3;
     private NetworkClient mClient;
     [SerializeField] private float hp;
@@ -182,4 +183,8 @@ public class Player : MonoBehaviour, ICharactor
         weaponPrefab.transform.rotation = gameObject.transform.rotation;
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
     }
+
+	public int getLevel(){
+		return this.level; 
+	}
 }

@@ -45,7 +45,7 @@ public class GameController : MonoBehaviour
     /*
      * to set up the network connection
      */
-    void SetUpNetwork ()
+    public void SetUpNetwork ()
     {
         if (Input.GetKey (KeyCode.I)) {
             SetUpServer ();
@@ -59,7 +59,7 @@ public class GameController : MonoBehaviour
      * set up the server, which is a local server and
      * a local client
      */
-    void SetUpServer ()
+    public void SetUpServer ()
     {
         NetworkServer.Listen (PORT);
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
@@ -72,7 +72,7 @@ public class GameController : MonoBehaviour
      * set up the client, which is just a client connect to server
      * somewhere else
      */
-    void SetUpClient (string address)
+    public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
@@ -87,7 +87,7 @@ public class GameController : MonoBehaviour
     /*
      * set up local client
      */
-    void SetUpLocalClient ()
+    public void SetUpLocalClient ()
     {
         mClient = ClientScene.ConnectLocalServer ();
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
@@ -97,6 +97,12 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
         isStart = false;
     }
+	/*
+	 * diconnect from current server
+	 */
+	public void Disconnect(){
+		mClient.Disconnect();
+	}
 
     /*
      * after connected to the server, the client send a message to 
