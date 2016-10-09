@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class Weapon : MonoBehaviour {
+public class Weapon : MonoBehaviour
+{
     public float attackInterval;
     public float damage;
     public float range;
@@ -11,60 +12,57 @@ public class Weapon : MonoBehaviour {
     RaycastHit shootHit;
     int shootableMask;
     LineRenderer gunLine;
-    GameObject barrelEnd;
+    public GameObject barrelEnd;
 
-	// Use this for initialization
-	void Awake () {
-        gunLine = GetComponent<LineRenderer>();
-        shootableMask = LayerMask.GetMask("Shootable");
-	}
+    // Use this for initialization
+    void Awake ()
+    {
+        gunLine = GetComponent<LineRenderer> ();
+        shootableMask = LayerMask.GetMask ("Shootable");
+    }
 	
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update ()
+    {
         // update the time for attack interval check
         timer += Time.deltaTime;
       
-        if (timer > 0.05)
-        {
+        if (timer > 0.05) {
             gunLine.enabled = false;
         }
     }
 
     // The attack method called by player to show a line and cast a ray
-    public void Attack()
+    public void Attack ()
     {
         // When the attack interval is passed and the player is allowed to
         // shoot again
-        if (timer >= attackInterval)
-        {
-            barrelEnd = GameObject.FindWithTag("BarrelEnd");
+        if (timer >= attackInterval) {
+
             timer = 0f;
 
             // Set the line renderer to make the line visible
             gunLine.enabled = true;
-            gunLine.SetPosition(0, barrelEnd.transform.position);
-            gunLine.SetPosition(1, barrelEnd.transform.position + transform.forward * range);
+            gunLine.SetPosition (0, barrelEnd.transform.position);
+            gunLine.SetPosition (1, barrelEnd.transform.position + transform.forward * range);
 
             // Set the shoot ray from the center of the screen
-            Transform playerTrans = GetComponentInParent<Transform>();
+            Transform playerTrans = GetComponentInParent<Transform> ();
             Vector3 playerPos = playerTrans.position;
             Vector3 playerDir = playerTrans.forward;
             shootRay.origin = playerPos;
             shootRay.direction = playerDir;
 
-            if (Physics.Raycast(shootRay, out shootHit, range, shootableMask))
-            {
-                if (shootHit.collider.tag == "Enemy")
-                {
-                    Enemy enemy = shootHit.collider.GetComponent<Enemy>();
-                    enemy.OnHit(damage);
+            if (Physics.Raycast (shootRay, out shootHit, range, shootableMask)) {
+                if (shootHit.collider.tag == "Enemy") {
+                    Enemy enemy = shootHit.collider.GetComponent<Enemy> ();
+                    enemy.OnHit (damage);
                 }
             }
         }
 
         // When the player is not allowed to shoot
-        else
-        {
+        else {
             return;
         }
         
