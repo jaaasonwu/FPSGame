@@ -54,7 +54,7 @@ public class GameController : MonoBehaviour
             }
         }
     }
-
+		
     /*
      * to set up the network connection
      */
@@ -70,6 +70,21 @@ public class GameController : MonoBehaviour
             isServer = false;
         }
     }
+
+	public void StartAsLocalServer(){
+		SetUpServer ();
+		SetUpLocalClient ();
+		isServer = true;
+	}
+
+	public void StartAsJoinClient(string hostAddress,int port){
+		SetUpClient (hostAddress,port);
+		isServer = false;
+	}
+
+	public int GetPort(){
+		return NetworkServer.listenPort;
+	}
     /*
      * set up the server, which is a local server and
      * a local client
@@ -98,6 +113,18 @@ public class GameController : MonoBehaviour
         mClient.Connect (address, PORT);
         isStart = false;
     }
+
+	public void SetUpClient (string address, int port)
+	{
+		mClient = new NetworkClient ();
+		mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
+			OnClientReceivePlayerPosition);
+		mClient.RegisterHandler (MsgType.Connect, OnConnected);
+		mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
+		mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.Connect (address, port);
+		isStart = false;
+	}
 
     /*
      * set up local client

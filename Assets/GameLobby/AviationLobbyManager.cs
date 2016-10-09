@@ -26,7 +26,9 @@ public class AviationLobbyManager : MonoBehaviour {
 		DontDestroyOnLoad(gameObject);
 	}
 
-	//open panel on screen return true if open successful
+	/*
+	 * open panel on screen return true if open successful
+	 */
 	public bool OpenPanel(GameObject newPanel){
 		if (newPanel != null) {
 			newPanel.SetActive(true);		
@@ -35,7 +37,9 @@ public class AviationLobbyManager : MonoBehaviour {
 		return false;
 	}
 
-	//Close panel on screen return true if close successful
+	/*
+	 * Close panel on screen return true if close successful
+	 */
 	public bool ClosePanel(GameObject newPanel){
 		if (newPanel != null) {
 			newPanel.SetActive (false);		
@@ -43,7 +47,9 @@ public class AviationLobbyManager : MonoBehaviour {
 		}
 		return false;
 	}
-	//switch panel from lobby to main if failed return false
+	/*
+	 * switch panel from lobby to main if failed return false
+	*/
 	public bool LobbyToMain(){
 		if (ClosePanel (lobbyPanel)) {
 			return OpenPanel (mainPanel);
@@ -51,7 +57,9 @@ public class AviationLobbyManager : MonoBehaviour {
 		return false;
 	}
 
-	//switch panel from main to lobby if failed return false
+	/*
+	 * switch panel from main to lobby if failed return false
+	 */
 	public bool MainToLobby(){
 		if (ClosePanel (mainPanel)) {
 			return OpenPanel (lobbyPanel);

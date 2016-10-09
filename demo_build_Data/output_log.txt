@@ -1,0 +1,183 @@
+Initialize engine version: 5.4.0f3 (a6d8d714de6f)
+GfxDevice: creating device client; threaded=1
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.0]
+    Renderer: Intel(R) HD Graphics Family (ID=0xa16)
+    Vendor:   Intel
+    VRAM:     1136 MB
+Begin MonoManager ReloadAssembly
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.dll (this message is harmless)
+Loading D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.dll into Unity Child Domain
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\Assembly-CSharp.dll (this message is harmless)
+Loading D:\Uni\it-project\demo_build_Data\Managed\Assembly-CSharp.dll into Unity Child Domain
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\Assembly-UnityScript.dll (this message is harmless)
+Loading D:\Uni\it-project\demo_build_Data\Managed\Assembly-UnityScript.dll into Unity Child Domain
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.UI.dll (this message is harmless)
+Loading D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.UI.dll into Unity Child Domain
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.Networking.dll (this message is harmless)
+Loading D:\Uni\it-project\demo_build_Data\Managed\UnityEngine.Networking.dll into Unity Child Domain
+- Completed reload, in  0.303 seconds
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\System.Core.dll (this message is harmless)
+Platform assembly: D:\Uni\it-project\demo_build_Data\Managed\System.dll (this message is harmless)
+OnLevelWasLoaded was found on GameScore
+This message has been deprecated and will be removed in a later version of Unity.
+Add a delegate to SceneManager.sceneLoaded instead to get notifications after scene loading has completed
+ 
+(Filename:  Line: 375)
+
+desktop: 1366x768 60Hz; virtual: 1366x768 at 0,0
+<RI> Initializing input.
+XInput1_3.dll not found. Trying XInput9_1_0.dll instead...
+<RI> Input initialized.
+<RI> Initialized touch support.
+UnloadTime: 2.426181 ms
+Setting up 1 worker threads for Enlighten.
+  Thread -> id: 2050 -> priority: 1 
+NetworkLobbyManager LobbyScene is empty. Set the LobbyScene in the inspector for the NetworkLobbyMangaer
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:20
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+NetworkLobbyManager can't accept new connection [hostId: 0 connectionId: 1 isReady: False channel count: 2], not in lobby and game already in progress.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Failed to send internal buffer channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Send Error: WrongConnection channel:0 bytesToSend:50
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
+Empty player list given to NetworkServer.Destroy(), nothing to do.
+ 
+(Filename: C:/buildslave/unity/build/artifacts/generated/common/runtime/UnityEngineDebugBindings.gen.cpp Line: 42)
+
