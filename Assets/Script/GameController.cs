@@ -26,14 +26,17 @@ public class GameController : MonoBehaviour
     public GameObject[] enemyPrefabs;
 
     bool isStart = true;
-    NetworkClient mClient;
+    public NetworkClient mClient;
     //player id counter, starts from 0
     int idCount = 0;
-    GameObject controlledPlayer;
+    public GameObject controlledPlayer;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
     Dictionary<int,GameObject> enemies = new Dictionary<int, GameObject> ();
     // use to store the position of enemy spawn points
     List<Vector3> enemySpawnPoints = new List<Vector3> ();
+    // use to store the death enemies list, only be used in server, store the
+    // enemy id
+    Dictionary<int, List<int>> diedEnemies = new Dictionary<int, List<int>> ();
     public float enemyGenerationInterval = 1;
     private float generateCount = 0;
 
@@ -73,12 +76,16 @@ public class GameController : MonoBehaviour
         if (generateEnemy) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
-                generateCount = 0;
+                generateCount = -10000;
             } else {
                 generateCount += Time.deltaTime;
             }
         }
+        if (isServer) {
+            SendEnemyDeath ();
+        }
     }
+        
 
     /*
      * to set up the network connection
@@ -105,6 +112,10 @@ public class GameController : MonoBehaviour
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
+        NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
+            OnUpdateDamagedHp);
+        NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
+            OnReplyEnemyDeath);
         isStart = false;
     }
 
@@ -122,6 +133,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
+        mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -139,6 +151,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
+        mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         isStart = false;
     }
 
@@ -268,12 +281,13 @@ public class GameController : MonoBehaviour
             , spawnPoint, Quaternion.identity) as GameObject;
         // innitialize enemy
         Enemy enemy = enemyClone.GetComponent<Enemy> ();
-        enemy.Initialize (idCount, enemyIndex, level, maxHp, spawnPoint);
+        enemy.Initialize (idCount, enemyIndex, level, spawnPoint, maxHp, this);
         idCount++;
         foreach (GameObject player in players.Values) {
             enemy.AddPlayer (player.GetComponentInChildren<Player> ());
         }
         enemy.inServer = true;
+        enemies [enemy.id] = enemyClone;
         // send to client
         Messages.NewEnemyMessage newMsg = 
             new Messages.NewEnemyMessage (
@@ -296,8 +310,9 @@ public class GameController : MonoBehaviour
                 enemyMsg.spawnPoint, Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
         newEnemy.GetComponent<Enemy> ().Initialize (
-            enemyMsg.id, enemyMsg.enemyIndex, enemyMsg.level, enemyMsg.maxHp,
-            enemyMsg.spawnPoint);
+            enemyMsg.id, enemyMsg.enemyIndex, enemyMsg.level, enemyMsg.spawnPoint,
+            enemyMsg.maxHp,
+            this);
         foreach (GameObject player in players.Values) {
             newEnemy.GetComponent<Enemy> ().AddPlayer (
                 player.GetComponentInChildren<Player> ());
@@ -322,16 +337,97 @@ public class GameController : MonoBehaviour
         }
         Player player = 
             players [hateMsg.playerId].GetComponentInChildren<Player> ();
-        Debug.Log ("receive hate update to " + player.id);
         enemy.SetHatePlayer (player);
     }
 
+    /*
+     * server receive enemy hp damaged by local player, to see how this works
+     * go to Messages.UpdateDamagedHp class
+     */
+    void OnUpdateDamagedHp (NetworkMessage msg)
+    {
+        Messages.UpdateDamagedHp hpMsg =
+            msg.ReadMessage<Messages.UpdateDamagedHp> ();
+        Enemy enemy = enemies [hpMsg.enemyId].GetComponent<Enemy> ();
+        enemy.updateDamageList (hpMsg.playerId, hpMsg.damagedHp);
+    }
+
+    /* 
+     * when enemy die, server will contantly send death info to all client
+     * and client should reply a message to inform server to stop sending
+     */
+    void SendEnemyDeath ()
+    {
+        if (diedEnemies.Count == 0)
+            return;
+        foreach (int enemyId in diedEnemies.Keys) {
+            Messages.EnemyDeathMessage deathMsg =
+                new Messages.EnemyDeathMessage (enemyId);
+            foreach (int connId in diedEnemies[enemyId]) {
+                NetworkServer.SendToClient (connId,
+                    Messages.EnemyDeathMessage.msgId, deathMsg);
+            }
+        }
+    }
+
+    /*
+     * when client received server's enemy death message, it will reply 
+     * a receipt to server to told the server they have received the message
+     */
+    void OnEnemyDeath (NetworkMessage msg)
+    {
+        Messages.EnemyDeathMessage deathMsg = 
+            msg.ReadMessage<Messages.EnemyDeathMessage> ();
+        if (enemies.ContainsKey (deathMsg.id)) {
+            Enemy enemy = enemies [deathMsg.id].GetComponent<Enemy> ();
+            enemy.isDead = true;
+            enemies.Remove (deathMsg.id);
+        }
+        Messages.ReplyEnemyDeath reply =
+            new Messages.ReplyEnemyDeath (deathMsg.id);
+        mClient.Send (Messages.ReplyEnemyDeath.msgId, reply);
+    }
+
+
+    /*
+     * add died enemy to the list
+     */
+    public void EnemyDie (int enemyId)
+    {
+        if (diedEnemies.ContainsKey (enemyId))
+            return;
+        diedEnemies.Add (enemyId, new List<int> ());
+        // add all connection id to the list
+        // each time a client reply, the connection id will be removed to
+        // show which client still need to send notification
+        foreach (NetworkConnection conn in NetworkServer.connections) {
+            diedEnemies [enemyId].Add (conn.connectionId);
+        }
+    }
+
+    /*
+     * server handle the reply of the enemy death
+     */
+    void OnReplyEnemyDeath (NetworkMessage msg)
+    {
+        Messages.ReplyEnemyDeath reply = 
+            msg.ReadMessage<Messages.ReplyEnemyDeath> ();
+        if (!diedEnemies.ContainsKey (reply.enemyId)) {
+            Debug.Log ("Enemy Death Replied enemyId not exist!");
+        }
+        diedEnemies [reply.enemyId].Remove (msg.conn.connectionId);
+        // all client has replied
+        if (diedEnemies [reply.enemyId].Count == 0) {
+            diedEnemies.Remove (reply.enemyId);
+        }
+    }
+    
     public void Save()
     {
         if (isServer)
         {
             SavePlayers();
-            saveEnemies();
+            SaveEnemies();
         }
     }
 
@@ -360,7 +456,7 @@ public class GameController : MonoBehaviour
         file.Close();
     }
 
-    void saveEnemies()
+    void SaveEnemies()
     {
         XmlSerializer enemySer = new XmlSerializer(typeof(EnemySaving));
         FileStream file;
