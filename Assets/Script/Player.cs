@@ -11,6 +11,8 @@ using UnityStandardAssets.Characters.FirstPerson;
 
 public class Player : MonoBehaviour, ICharactor
 {
+    // public fields
+
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
     public GameObject[] weapons;
     public int id;
@@ -19,18 +21,20 @@ public class Player : MonoBehaviour, ICharactor
     // the rate that client will send to server of player's location
     public float updateRate = 0.05f;
     // the time counter to count how many time is elapsed
-    private float updateCount;
+    public float hp;
+    public float maxHp;
+    //player's current buffs
+    public List<Buff> buffs;
+
+    // private & protected fields
+    float updateCount;
     GameObject weaponPrefab;
     Weapon currentWeapon;
     int exp;
-    private const int NUM_WEAPONS = 3;
-    private NetworkClient mClient;
-    [SerializeField] private float hp;
-    [SerializeField] private float maxHp;
-    [SerializeField] private int weaponNumber;
-	
-    //player's current buffs
-    public List<Buff> buffs;
+    const int NUM_WEAPONS = 3;
+    NetworkClient mClient;
+    int weaponNumber;
+    
 
     // Use this for initialization
     void Start ()
