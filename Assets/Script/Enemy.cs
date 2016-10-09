@@ -135,7 +135,7 @@ public class Enemy : MonoBehaviour, ICharactor
         this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
-        this.hp = maxHp;
+        this.maxHp = maxHp;
         this.controller = controller;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
@@ -294,7 +294,7 @@ public class Enemy : MonoBehaviour, ICharactor
             this.transform.position = data.pos;
             this.transform.rotation = data.rot;
             level = data.level;
-            hp = data.hp;
+            hp = data.maxHp - data.damagedHp;
             maxHp = data.maxHp;
         }
     }
@@ -310,8 +310,13 @@ public class Enemy : MonoBehaviour, ICharactor
         data.pos = this.transform.position;
         data.rot = this.transform.rotation;
         data.level = level;
-        data.hp = hp;
+        data.damagedHp = damagedHp;
         data.maxHp = maxHp;
+        data.isWalking = isWalking;
+        data.isRunning = isRunning;
+        data.isGettingHit = isGettingHit;
+        data.isDead = isDead;
+        data.isAttacking = isAttacking;
 
         return data;
     }
@@ -326,6 +331,11 @@ public class EnemyData
     public Vector3 pos;
     public Quaternion rot;
     public int level;
-    public float hp;
+    public float damagedHp;
     public float maxHp;
+    public bool isWalking;
+    public bool isRunning;
+    public bool isGettingHit;
+    public bool isDead;
+    public bool isAttacking;
 }

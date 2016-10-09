@@ -421,7 +421,10 @@ public class GameController : MonoBehaviour
             diedEnemies.Remove (reply.enemyId);
         }
     }
-    
+
+    /*
+     * save the state of all players and enemies
+     */
     public void Save()
     {
         if (isServer)
@@ -431,10 +434,14 @@ public class GameController : MonoBehaviour
         }
     }
 
+    /*
+     * Get the player data and serialize it
+     */
     void SavePlayers()
     {
         XmlSerializer playerSer = new XmlSerializer(typeof(PlayerSaving));
         FileStream file;
+        // ensure the old save file is deleted
         if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
         {
             File.Delete(Application.persistentDataPath + "/playerinfo.dat");
@@ -442,9 +449,11 @@ public class GameController : MonoBehaviour
         file = File.Open(Application.persistentDataPath
             + "/playerinfo.dat", FileMode.Create);
 
+        // Create a new xml root
         PlayerSaving playerSaving = new PlayerSaving();
         playerSaving.PlayerList = new List<PlayerData>();
 
+        // add data to the list of playerlist
         foreach (GameObject player in players.Values)
         {
             PlayerData data;
@@ -456,10 +465,14 @@ public class GameController : MonoBehaviour
         file.Close();
     }
 
+    /*
+     * Get the enemy data and serialize it
+     */
     void SaveEnemies()
     {
         XmlSerializer enemySer = new XmlSerializer(typeof(EnemySaving));
         FileStream file;
+        // ensure the old save file is deleted
         if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
         {
             File.Delete(Application.persistentDataPath + "/enemyinfo.dat");
@@ -467,9 +480,11 @@ public class GameController : MonoBehaviour
         file = File.Open(Application.persistentDataPath + "/enemyinfo.dat",
             FileMode.Create);
 
+        // Create a new xml root
         EnemySaving enemySaving = new EnemySaving();
         enemySaving.EnemyList = new List<EnemyData>();
 
+        // add data to the list of enemylist
         foreach (GameObject enemy in enemies.Values)
         {
             EnemyData data;
@@ -482,6 +497,10 @@ public class GameController : MonoBehaviour
     }
 }
 
+
+/*
+* Define the structure of the player status xml
+*/
 [XmlRoot("PlayerSaving")]
 public class PlayerSaving
 {
@@ -490,6 +509,9 @@ public class PlayerSaving
     public List<PlayerData> PlayerList { get; set; }
 }
 
+/*
+* Define the structure of the enemy status xml
+*/
 [XmlRoot("EnemySaving")]
 public class EnemySaving
 {
