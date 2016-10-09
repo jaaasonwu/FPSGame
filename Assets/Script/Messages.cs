@@ -26,7 +26,6 @@ public class Messages
         // default constructor
         public PlayerMoveMessage ()
         {
-            
         }
     }
 
@@ -47,7 +46,6 @@ public class Messages
         // default constructor
         public NewPlayerMessage ()
         {
-            
         }
     }
 
@@ -71,7 +69,6 @@ public class Messages
 
         public NewEnemyMessage ()
         {
-            
         }
     }
 
@@ -90,7 +87,67 @@ public class Messages
 
         public UpdateEnemyHate ()
         {
-            
+        }
+    }
+
+    /*
+     * we calculate how much enemy is damaged based on how every player
+     * damage that enemy, so each enemy in client should send this message
+     * in certain rate and server will handle that, until enemy is dead
+     */
+    public class UpdateDamagedHp : MessageBase
+    {
+        public int enemyId;
+        public int playerId;
+        public float damagedHp;
+        public const short msgId = 104;
+
+        public UpdateDamagedHp (int enemyId, int playerId, float damagedHp)
+        {
+            this.enemyId = enemyId;
+            this.playerId = playerId;
+            this.damagedHp = damagedHp;
+        }
+
+        public UpdateDamagedHp ()
+        {
+        }
+    }
+
+    /*
+     * send the message to clients to show that an enemy is died
+     */
+    public class EnemyDeathMessage : MessageBase
+    {
+        public int id;
+
+        public const short msgId = 105;
+
+        public EnemyDeathMessage (int id)
+        {
+            this.id = id;
+        }
+
+        public EnemyDeathMessage ()
+        {
+        }
+    }
+
+    /*
+     * the message client reply to the enemy death message server sended
+     */
+    public class ReplyEnemyDeath : MessageBase
+    {
+        public int enemyId;
+        public const short msgId = 106;
+
+        public ReplyEnemyDeath (int id)
+        {
+            this.enemyId = id;
+        }
+
+        public ReplyEnemyDeath ()
+        {
         }
     }
 }
