@@ -59,13 +59,15 @@ public class Messages
         public Vector3 spawnPoint;
         // index in enemy prefab list in Game Controller
         public int enemyIndex;
+        public float maxHp;
         public const short msgId = 102;
 
-        public NewEnemyMessage (int index, int id, int level, Vector3 spawnPoint)
+        public NewEnemyMessage (int index, int id, int level, float maxHp, Vector3 spawnPoint)
         {
             this.id = id;
             this.level = level;
             this.enemyIndex = index;
+            this.maxHp = maxHp;
             this.spawnPoint = spawnPoint;
         }
 

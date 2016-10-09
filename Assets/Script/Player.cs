@@ -56,14 +56,15 @@ public class Player : MonoBehaviour, ICharactor
         ShowWeapon(weaponNumber);
 
         numAvailableWeapons = 3;
-        isLocal = true;
-        if (isLocal)
-        {
-            healthSlider = (Slider)GameObject.FindGameObjectWithTag("HealthSlider").GetComponent<Slider>();
-            healthSlider.maxValue = maxHp;
-            healthSlider.value = hp;
-        }
+        StartHealthSlider();
         updateCount = 0;
+    }
+
+    void StartHealthSlider()
+    {
+        healthSlider = (Slider)GameObject.FindGameObjectWithTag("HealthSlider").GetComponent<Slider>();
+        healthSlider.maxValue = maxHp;
+        healthSlider.value = hp;
     }
 
 
@@ -108,6 +109,9 @@ public class Player : MonoBehaviour, ICharactor
         healthSlider.value = hp;
     }
 
+
+    // Load the weapon and show it on screen. Meanwhile transfer the amount of
+    // ammo
     public void ShowWeapon(int weaponNumber)
     {
         weaponPrefab = Instantiate(weapons[weaponNumber]);
@@ -200,6 +204,7 @@ public class Player : MonoBehaviour, ICharactor
         this.currentWeapon.damage /= 1.0f + (percent / 100);
     }
 
+    // This function destroys the current weapon and switch to the next weapon
     public void NextWeapon()
     {
         if (weaponNumber == numAvailableWeapons - 1)
@@ -215,13 +220,18 @@ public class Player : MonoBehaviour, ICharactor
         ShowWeapon(weaponNumber);
     }
 
-    // The function reads from the serialized data from the storage
+    /*
+     * The function reads from the serialized data from the storage,
+     * deserialize it and load it
+     */
     public void Load()
     {
+        // Deserialize the xml file to generate PlayerData class
         if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
         {
             XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
-            FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Open);
+            FileStream file = File.Open(Application.persistentDataPath +
+                "/playerinfo.dat", FileMode.Open);
             PlayerData data = (PlayerData) serializer.Deserialize(file);
 
             id = data.id;
@@ -252,13 +262,11 @@ public class Player : MonoBehaviour, ICharactor
         }
     }
 
-    // This function serialize the data and save the data in the storage
-    public void Save()
+    /*
+     * This function returns a PlayerData class that is ready to be serlialized
+     */
+    public PlayerData GeneratePlayerData()
     {
-        XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
-        File.Delete(Application.persistentDataPath + "/playerinfo.dat");
-        FileStream file = File.Open(Application.persistentDataPath + "/playerinfo.dat", FileMode.Create);
-        
         PlayerData data = new PlayerData();
         data.id = id;
         data.isLocal = isLocal;
@@ -271,12 +279,13 @@ public class Player : MonoBehaviour, ICharactor
         data.weaponNumber = weaponNumber;
         data.ammo = currentWeapon.ammo;
 
-        serializer.Serialize(file, data);
-        file.Close();
+        return data;
     }
 }
 
-
+/*
+ * The class used to store player information
+ */
 public class PlayerData
 {
     public int id;

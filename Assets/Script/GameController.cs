@@ -8,6 +8,9 @@ using UnityEngine.Networking;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Serialization;
+using System.IO;
 
 public class GameController : MonoBehaviour
 {
@@ -258,13 +261,14 @@ public class GameController : MonoBehaviour
         int pos = Random.Range (0, enemySpawnPoints.Count);
         int enemyIndex = Random.Range (0, enemyPrefabs.Length);
         int level = 1;
+        int maxHp = 90 + 10 * level;
         // spawn
         Vector3 spawnPoint = enemySpawnPoints [pos];
         GameObject enemyClone = GameObject.Instantiate (enemyPrefabs [enemyIndex]
             , spawnPoint, Quaternion.identity) as GameObject;
         // innitialize enemy
         Enemy enemy = enemyClone.GetComponent<Enemy> ();
-        enemy.Innitialize (idCount, level, spawnPoint);
+        enemy.Initialize (idCount, enemyIndex, level, maxHp, spawnPoint);
         idCount++;
         foreach (GameObject player in players.Values) {
             enemy.AddPlayer (player.GetComponentInChildren<Player> ());
@@ -273,7 +277,7 @@ public class GameController : MonoBehaviour
         // send to client
         Messages.NewEnemyMessage newMsg = 
             new Messages.NewEnemyMessage (
-                enemyIndex, enemy.id, level, spawnPoint);
+                enemyIndex, enemy.id, level, maxHp, spawnPoint);
         NetworkServer.SendToAll (Messages.NewEnemyMessage.msgId, newMsg);
     }
         
@@ -291,8 +295,9 @@ public class GameController : MonoBehaviour
             Instantiate (enemyPrefabs [enemyMsg.enemyIndex],
                 enemyMsg.spawnPoint, Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
-        newEnemy.GetComponent<Enemy> ().Innitialize (
-            enemyMsg.id, enemyMsg.level, enemyMsg.spawnPoint);
+        newEnemy.GetComponent<Enemy> ().Initialize (
+            enemyMsg.id, enemyMsg.enemyIndex, enemyMsg.level, enemyMsg.maxHp,
+            enemyMsg.spawnPoint);
         foreach (GameObject player in players.Values) {
             newEnemy.GetComponent<Enemy> ().AddPlayer (
                 player.GetComponentInChildren<Player> ());
@@ -320,4 +325,79 @@ public class GameController : MonoBehaviour
         Debug.Log ("receive hate update to " + player.id);
         enemy.SetHatePlayer (player);
     }
+
+    public void Save()
+    {
+        if (isServer)
+        {
+            SavePlayers();
+            saveEnemies();
+        }
+    }
+
+    void SavePlayers()
+    {
+        XmlSerializer playerSer = new XmlSerializer(typeof(PlayerSaving));
+        FileStream file;
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            File.Delete(Application.persistentDataPath + "/playerinfo.dat");
+        }
+        file = File.Open(Application.persistentDataPath
+            + "/playerinfo.dat", FileMode.Create);
+
+        PlayerSaving playerSaving = new PlayerSaving();
+        playerSaving.PlayerList = new List<PlayerData>();
+
+        foreach (GameObject player in players.Values)
+        {
+            PlayerData data;
+            data = player.GetComponentInChildren<Player>().GeneratePlayerData();
+            playerSaving.PlayerList.Add(data);
+        }
+
+        playerSer.Serialize(file, playerSaving);
+        file.Close();
+    }
+
+    void saveEnemies()
+    {
+        XmlSerializer enemySer = new XmlSerializer(typeof(EnemySaving));
+        FileStream file;
+        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
+        {
+            File.Delete(Application.persistentDataPath + "/enemyinfo.dat");
+        }
+        file = File.Open(Application.persistentDataPath + "/enemyinfo.dat",
+            FileMode.Create);
+
+        EnemySaving enemySaving = new EnemySaving();
+        enemySaving.EnemyList = new List<EnemyData>();
+
+        foreach (GameObject enemy in enemies.Values)
+        {
+            EnemyData data;
+            data = enemy.GetComponent<Enemy>().GenerateEnemyData();
+            enemySaving.EnemyList.Add(data);
+        }
+
+        enemySer.Serialize(file, enemySaving);
+        file.Close();
+    }
+}
+
+[XmlRoot("PlayerSaving")]
+public class PlayerSaving
+{
+    [XmlArray("PlayerList"), XmlArrayItem(typeof(PlayerData),
+        ElementName = "PlayerData")]
+    public List<PlayerData> PlayerList { get; set; }
+}
+
+[XmlRoot("EnemySaving")]
+public class EnemySaving
+{
+    [XmlArray("EnemyList"), XmlArrayItem(typeof(EnemyData),
+        ElementName = "EnemyData")]
+    public List<EnemyData> EnemyList { get; set; }
 }

@@ -8,15 +8,22 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
     // enemy's id
     public int id;
+    // dertermines what is the kind of the enemy
+    public int enemyIndex;
     // the charactor's level
     protected int level;
     // the charactor's current HP
     public float hp;
+    // the character's maximum HP
+    public float maxHp;
     // the charactor's current movement speed
     public float moveSpeed;
     // the charactor's rotate speed
@@ -86,11 +93,14 @@ public class Enemy : MonoBehaviour, ICharactor
         Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Innitialize (int id, int level, Vector3 spawnPoint)
+    public void Initialize (int id,int enemyIndex, int level, float maxHp,
+        Vector3 spawnPoint)
     {
         this.id = id;
+        this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
+        this.hp = maxHp;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
         }
@@ -214,4 +224,56 @@ public class Enemy : MonoBehaviour, ICharactor
     {
         hatedPlayer = p;
     }
+
+    /*
+     * The function reads from the serialized data from the storage,
+     * deserialize it and load it
+     */
+     public void Load()
+    {
+        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
+        {
+            XmlSerializer serializer = new XmlSerializer(typeof(EnemyData));
+            FileStream file = File.Open(Application.persistentDataPath +
+                "/enemyinfo.dat", FileMode.Open);
+            EnemyData data = (EnemyData)serializer.Deserialize(file);
+
+            id = data.id;
+            this.transform.position = data.pos;
+            this.transform.rotation = data.rot;
+            level = data.level;
+            hp = data.hp;
+            maxHp = data.maxHp;
+        }
+    }
+
+    /*
+     * This function serlize the enemy data and save the data in th file
+     * system
+     */
+    public EnemyData GenerateEnemyData()
+    {
+        EnemyData data = new EnemyData();
+        data.id = id;
+        data.pos = this.transform.position;
+        data.rot = this.transform.rotation;
+        data.level = level;
+        data.hp = hp;
+        data.maxHp = maxHp;
+
+        return data;
+    }
+}
+
+/*
+ * The class used to store player information
+ */
+public class EnemyData
+{
+    public int id;
+    public Vector3 pos;
+    public Quaternion rot;
+    public int level;
+    public float hp;
+    public float maxHp;
 }

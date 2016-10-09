@@ -8,14 +8,11 @@ using System.Collections;
 using System.Xml;
 using System.Xml.Serialization;
 
+// This class can be serialized to save enemy information
 public class EnemyInfo {
-
-    public float baseHP;
-
-    public float moveSpeed;
-
-    public float rotateSpeed;
-
+    public int id;
+    public float hp;
+    public string type;
     public float hateRange;
 
     public float normalActiveRange;
