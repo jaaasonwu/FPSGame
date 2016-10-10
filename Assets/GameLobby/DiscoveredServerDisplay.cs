@@ -9,8 +9,10 @@ public class DiscoveredServerDisplay : MonoBehaviour {
 	// discovered server info
 	public bool isReady = false;
 	public GameFinder.DiscoveredServer serverInfo;
-
+	//UI used for display
 	public Button joinLobbyButton;
+	public Text playNumberText;
+	public Text lobbyNameText;
 	// need to ensure there is a info readed before rendering
 	public void ReadInfo(GameFinder.DiscoveredServer dServer){
 		this.serverInfo = dServer;

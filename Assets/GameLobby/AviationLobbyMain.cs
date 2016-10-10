@@ -10,9 +10,10 @@ public class AviationLobbyMain : MonoBehaviour {
 	// gamecontroller is also responsible to act as a networkmanager
 	[SerializeField]private GameController networkManager;
 
-	//input fields
+	//input fields (some are interact with buttons)
 	[SerializeField]private InputField addressToConnect;
 	[SerializeField]private InputField playerName;
+	[SerializeField]private InputField lobbyName;
 	//game are found by GameFinder (its based on NetworkDiscovery)
 	public GameFinder gameFinder;
 	public RectTransform serverListTransform;
@@ -20,7 +21,7 @@ public class AviationLobbyMain : MonoBehaviour {
 	public Dictionary<string,DiscoveredServerDisplay> displayedServer = 
 		new Dictionary<string,DiscoveredServerDisplay>(); 
 	private VerticalLayoutGroup serverLayout;
-	//buttons 
+	//for UIs 
 	public Transform joinButtonRow;
 
 	// lay out necessary stuffs when enable the panel
@@ -32,7 +33,7 @@ public class AviationLobbyMain : MonoBehaviour {
 
 	void Update(){
 		// check found game in each display
-		CheckDisplayedGame ();
+		//CheckDisplayedGame ();
 		// thisif statement is from lobbyplayerlist
 		//this dirty the layout to force it to recompute evryframe (a sync problem between client/server
 		//sometime to child being assigned before layout was enabled/init, leading to broken layouting)
@@ -71,9 +72,18 @@ public class AviationLobbyMain : MonoBehaviour {
 			Debug.Log ("failed to switch panel");
 		}
 
-		// stop listenning as client and start broadcast where message is port
+		// stop listenning as client and start broadcast where message is about lobby
+		// formating is in gamefinder
 		gameFinder.StopBroadcast();
-		gameFinder.broadcastData = networkManager.GetPort ().ToString();
+		int playerNum = 1;
+		string port = networkManager.GetPort ().ToString ();
+		string lobbyN = lobbyName.text;
+		string playerN = playerNum.ToString ();
+		string data = port + "\n" 
+			+ lobbyN + "\n"
+			+ playerN;
+		Debug.Log (data);
+		gameFinder.broadcastData = data;
 		gameFinder.StartAsServer ();
 	}
 
@@ -94,6 +104,8 @@ public class AviationLobbyMain : MonoBehaviour {
 
 	// when the join button on foundgame display being click it will connect to that server
 	public void OnClickJoinFoundGame(DiscoveredServerDisplay foundGame){
+		// stop listening
+		gameFinder.ReInit();
 		string address = foundGame.serverInfo.ipAddress;
 		int port = foundGame.serverInfo.port;
 		networkManager.StartAsJoinClient (address, port);

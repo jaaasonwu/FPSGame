@@ -21,7 +21,7 @@ public class GameFinder : NetworkDiscovery {
 		Initialize();
 		bool connected = false;
 		for (int i = minPort; i <= maxPort; i++) {
-			broadcastPort = i;
+			this.broadcastPort = i;
 			if (StartAsClient ()) {
 				connected = true;
 				break;
@@ -29,17 +29,17 @@ public class GameFinder : NetworkDiscovery {
 		}
 		if (!connected) {
 			Debug.Log ("connectionfailed");
-		} else {
-			// start loop out to check each server connection
-			StartCoroutine (CheckServerConnection ());
 		}
+			
+		// start loop out to check each server connection
+		StartCoroutine (CheckServerConnection ());
 	}
 
 	// when recieve Broadcast
 	public override void OnReceivedBroadcast (string fromAddress, string data)
 	{
 		base.OnReceivedBroadcast (fromAddress, data);
-		string[] splits = fromAddress.Split();
+		string[] splits = fromAddress.Split(new char[]{':'});
 		bool isAlreadyFound = false;
 		// go through all existing game and if not exist then add it to found
 		foreach(DiscoveredServer dServer in foundServers){
@@ -54,10 +54,18 @@ public class GameFinder : NetworkDiscovery {
 			// this is a new server add it 
 			DiscoveredServer newServer = new DiscoveredServer();
 			// port is broadcasted as data
-			newServer.port = int.Parse(data);
+			string[] dataSplits = data.Split(new char[]{'\n'});
+			newServer.port = int.Parse(dataSplits[0]);
+			newServer.lobbyName = dataSplits [1];
+			newServer.playerNum = int.Parse(dataSplits [2]);				
 			newServer.ipAddress = splits [3];
 			newServer.lastTimeFound = Time.time;
 			newServer.isExpired = false;
+			newServer.isModified = false;
+			//debug
+			Debug.Log(newServer.port);
+			Debug.Log(newServer.lobbyName);
+			Debug.Log(newServer.playerNum);
 			foundServers.Add (newServer);
 		}
 	}
@@ -81,11 +89,28 @@ public class GameFinder : NetworkDiscovery {
 			yield return new WaitForSeconds(coroutineRuntime);
 		}
 	}
-
+	/*
+	 * stop listenning and re init networktransport
+	*/
+	public void ReInit(){
+		StopBroadcast ();
+		NetworkTransport.Shutdown ();
+		NetworkTransport.Init ();
+	}
+	/*
+	 * discovered server contain infomation about it
+	 * broadcastdata should be in format 
+	 * port \n lobbyName \n playerNum (where split will be on \n)
+	 */
 	public class DiscoveredServer{
 		public string ipAddress;
 		public int port;
 		public float lastTimeFound;
+		// this will be removed if isExpired
 		public bool isExpired;
+		// is modified when ever broadcastdata changed
+		public bool isModified;
+		public string lobbyName;
+		public int playerNum;
 	}
 }
