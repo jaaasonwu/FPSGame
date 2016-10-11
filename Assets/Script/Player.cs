@@ -31,13 +31,13 @@ public class Player : MonoBehaviour, ICharactor
     public Slider healthSlider;
     GameObject weaponPrefab;
     Weapon currentWeapon;
-    private int level;
-    private int exp;
+    public int level;
+    public int exp;
+    public float hp;
+    public float maxHp;
+    public int weaponNumber;
+    public int ammo;
     private int numAvailableWeapons;
-    private float hp;
-    private float maxHp;
-    private int weaponNumber;
-    private int ammo;
     private Text ammoText;
 	
     //player's current buffs
@@ -289,7 +289,7 @@ public class Player : MonoBehaviour, ICharactor
 public class PlayerData
 {
     public int id;
-    public Boolean isLocal;
+    public bool isLocal;
     public Vector3 pos;
     public Quaternion rot;
     public int level;

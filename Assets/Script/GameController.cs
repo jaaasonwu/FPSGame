@@ -134,6 +134,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+        mClient.RegisterHandler(Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -494,6 +495,88 @@ public class GameController : MonoBehaviour
 
         enemySer.Serialize(file, enemySaving);
         file.Close();
+    }
+
+    /* 
+     * Load all the players from the file system and send the message
+     * to all clients connected to the server
+     */
+    void LoadPlayers()
+    {
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            // Read data from xml and deserialize it
+            XmlSerializer serializer = new XmlSerializer(typeof(PlayerSaving));
+            FileStream file = File.Open(Application.persistentDataPath +
+                "/playerinfo.dat", FileMode.Open);
+            PlayerSaving saving = (PlayerSaving)serializer.Deserialize(file);
+
+            foreach(PlayerData data in saving.PlayerList)
+            {
+                // prepare the message to be send to clients to initialize
+                // the loaded player
+                Messages.LoadPlayerMessage loadMessage =
+                    new Messages.LoadPlayerMessage(
+                        data.id,
+                        data.pos,
+                        data.rot,
+                        data.level,
+                        data.exp,
+                        data.hp,
+                        data.maxHp,
+                        data.weaponNumber,
+                        data.ammo);
+
+                // Initialize the player on server using saved data
+                GameObject playerClone = Instantiate(playerPrefab, data.pos,
+                    data.rot) as GameObject;
+                players[data.id] = playerClone;
+                Player player = playerClone.GetComponent<Player>();
+                player = initializePlayerOnLoad(player, loadMessage);
+
+                // Send the message to all clients
+                NetworkServer.SendToAll(Messages.LoadPlayerMessage.msgId,
+                    loadMessage);
+            }
+
+        }
+    }
+
+    /*
+     * The function being called when client receives the LoadPlayer message
+     */
+    public void OnLoadPlayer(NetworkMessage msg)
+    {
+        // if it is the local player, the player is already initialized
+        if (isServer)
+            return;
+
+        // Initialize the player using the data in the message
+        Messages.LoadPlayerMessage loadMessage =
+            msg.ReadMessage<Messages.LoadPlayerMessage>();
+        GameObject playerClone = Instantiate(playerPrefab, loadMessage.pos,
+            loadMessage.rot) as GameObject;
+        Player player = playerClone.GetComponent<Player>();
+        players[loadMessage.id] = playerClone;
+        player = initializePlayerOnLoad(player, loadMessage);
+    }
+
+    /*
+     * This is the helper function to fill the player with the data in the
+     * LoadPlayer netgwork messagee
+     */
+    private Player initializePlayerOnLoad(Player player,
+        Messages.LoadPlayerMessage loadMessage)
+    {
+        player.id = loadMessage.id;
+        player.level = loadMessage.level;
+        player.exp = loadMessage.exp;
+        player.hp = loadMessage.hp;
+        player.maxHp = loadMessage.maxHp;
+        player.weaponNumber = loadMessage.weaponNumber;
+        player.ammo = loadMessage.ammo;
+
+        return player;
     }
 }
 

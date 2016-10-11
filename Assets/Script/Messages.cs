@@ -49,6 +49,40 @@ public class Messages
         }
     }
 
+    // Message used when a player is loaded from the file system
+    public class LoadPlayerMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int level;
+        public int exp;
+        public float hp;
+        public float maxHp;
+        public int weaponNumber;
+        public int ammo;
+        public const short msgId = 110;
+        // default constructor
+        public LoadPlayerMessage()
+        {
+        }
+        
+        public LoadPlayerMessage(int id, Vector3 pos, Quaternion rot,
+            int level, int exp, float hp, float maxHp, int weaponNumber,
+            int ammo)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.level = level;
+            this.exp = exp;
+            this.hp = hp;
+            this.maxHp = maxHp;
+            this.weaponNumber = weaponNumber;
+            this.ammo = ammo;
+        }
+    }
+
     // message used to tell the client to spawn an enemy
     public class NewEnemyMessage: MessageBase
     {
