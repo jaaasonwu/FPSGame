@@ -20,6 +20,9 @@ public class Player : MonoBehaviour, ICharactor
     public GameObject[] weapons;
 
     public int id;
+    // The username of player which is used to authenticate when loading saved
+    // game state
+    public string username;
     // is the local player, means the player is controlled
     public bool isLocal = false;
     // the rate that client will send to server of player's location
@@ -44,7 +47,7 @@ public class Player : MonoBehaviour, ICharactor
     public List<Buff> buffs;
 
     // Use this for initialization
-    void Start ()
+    void Awake ()
     {
         level = 1;
         exp = 0;
@@ -190,6 +193,7 @@ public class Player : MonoBehaviour, ICharactor
         if (this.hp >= maxHp) {
             this.hp = maxHp;
         }
+        healthSlider.value = hp;
     }
 
     // formula new damage = old damage *(100% + percentage)
@@ -226,40 +230,10 @@ public class Player : MonoBehaviour, ICharactor
      */
     public void Load()
     {
-        // Deserialize the xml file to generate PlayerData class
-        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/playerinfo.dat", FileMode.Open);
-            PlayerData data = (PlayerData) serializer.Deserialize(file);
-
-            id = data.id;
-            isLocal = data.isLocal;
-            this.transform.parent.position = data.pos;
-            this.transform.parent.rotation = data.rot;
-            level = data.level;
-            exp = data.exp;
-            hp = data.hp;
-            healthSlider.value = hp;
-            maxHp = data.maxHp;
-            healthSlider.maxValue = maxHp;
-            weaponNumber = data.weaponNumber;
-            ammo = data.ammo;
-            Destroy(weaponPrefab);
-            ShowWeapon(weaponNumber);
-
-            file.Close();
-        } 
-        else
-        {
-            level = 1;
-            exp = 0;
-            hp = 100;
-            maxHp = 100;
-            weaponNumber = 0;
-            currentWeapon.ammo = 500;
-        }
+        healthSlider.value = hp;
+        healthSlider.maxValue = maxHp;
+        Destroy(weaponPrefab);
+        ShowWeapon(weaponNumber);
     }
 
     /*
@@ -269,7 +243,7 @@ public class Player : MonoBehaviour, ICharactor
     {
         PlayerData data = new PlayerData();
         data.id = id;
-        data.isLocal = isLocal;
+        data.username = username;
         data.pos = this.transform.parent.position;
         data.rot = this.transform.parent.rotation;
         data.level = level;
@@ -289,6 +263,7 @@ public class Player : MonoBehaviour, ICharactor
 public class PlayerData
 {
     public int id;
+    public String username;
     public bool isLocal;
     public Vector3 pos;
     public Quaternion rot;

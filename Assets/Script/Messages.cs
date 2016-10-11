@@ -53,6 +53,7 @@ public class Messages
     public class LoadPlayerMessage : MessageBase
     {
         public int id;
+        public string username;
         public Vector3 pos;
         public Quaternion rot;
         public int level;
@@ -67,11 +68,12 @@ public class Messages
         {
         }
         
-        public LoadPlayerMessage(int id, Vector3 pos, Quaternion rot,
-            int level, int exp, float hp, float maxHp, int weaponNumber,
-            int ammo)
+        public LoadPlayerMessage(int id, string username, Vector3 pos,
+            Quaternion rot, int level, int exp, float hp, float maxHp,
+            int weaponNumber, int ammo)
         {
             this.id = id;
+            this.username = username;
             this.pos = pos;
             this.rot = rot;
             this.level = level;
@@ -80,6 +82,35 @@ public class Messages
             this.maxHp = maxHp;
             this.weaponNumber = weaponNumber;
             this.ammo = ammo;
+        }
+    }
+
+    public class LoadEnemyMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int enemyIndex;
+        public int level;
+        public float damagedHp;
+        public float maxHp;
+        public const short msgId = 111;
+
+        //default constructor
+        public LoadEnemyMessage ()
+        {
+        }
+
+        public LoadEnemyMessage(int id, Vector3 pos, Quaternion rot,
+            int enemyIndex, int level, float damagedHp, float maxHp)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.enemyIndex = enemyIndex;
+            this.level = level;
+            this.damagedHp = damagedHp;
+            this.maxHp = maxHp;
         }
     }
 

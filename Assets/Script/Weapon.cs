@@ -42,7 +42,7 @@ public class Weapon : MonoBehaviour
     {
         // When the attack interval is passed and the player is allowed to
         // shoot again
-        if (timer >= attackInterval)
+        if (timer >= attackInterval && ammo > 0)
         {
             ammo--;
             ammoText.text = "Ammo: " + ammo;

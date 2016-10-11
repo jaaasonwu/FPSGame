@@ -21,7 +21,7 @@ public class Enemy : MonoBehaviour, ICharactor
     // dertermines what is the kind of the enemy
     public int enemyIndex;
     // the charactor's level
-    protected int level;
+    public int level;
     // the charactor's current HP
     public float hp;
     // the character's maximum HP
@@ -128,14 +128,15 @@ public class Enemy : MonoBehaviour, ICharactor
         Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint, float maxHp,
-                            GameController controller)
+    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint,
+        float maxHp, float damagedHp, GameController controller)
     {
         this.id = id;
         this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
         this.maxHp = maxHp;
+        this.damagedHp = damagedHp;
         this.controller = controller;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
@@ -283,20 +284,7 @@ public class Enemy : MonoBehaviour, ICharactor
      */
      public void Load()
     {
-        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(EnemyData));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/enemyinfo.dat", FileMode.Open);
-            EnemyData data = (EnemyData)serializer.Deserialize(file);
-
-            id = data.id;
-            this.transform.position = data.pos;
-            this.transform.rotation = data.rot;
-            level = data.level;
-            hp = data.maxHp - data.damagedHp;
-            maxHp = data.maxHp;
-        }
+        hp = maxHp - damagedHp;
     }
 
     /*
@@ -309,6 +297,7 @@ public class Enemy : MonoBehaviour, ICharactor
         data.id = id;
         data.pos = this.transform.position;
         data.rot = this.transform.rotation;
+        data.enemyIndex = this.enemyIndex;
         data.level = level;
         data.damagedHp = damagedHp;
         data.maxHp = maxHp;
@@ -330,6 +319,7 @@ public class EnemyData
     public int id;
     public Vector3 pos;
     public Quaternion rot;
+    public int enemyIndex;
     public int level;
     public float damagedHp;
     public float maxHp;
