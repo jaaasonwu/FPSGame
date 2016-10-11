@@ -110,6 +110,10 @@ public class Enemy : MonoBehaviour, ICharactor
             if (controller == null) {
                 Debug.Log ("null controller");
             }
+            // if the controlled player is dead
+            if (controller.controlledPlayer == null) {
+                return;
+            }
             int localPlayerId = 
                 controller.controlledPlayer.GetComponentInChildren<Player> ().id;
             Messages.UpdateDamagedHp newMsg = 
@@ -269,6 +273,22 @@ public class Enemy : MonoBehaviour, ICharactor
         if (totalDamage >= hp) {
             // tell server to send death message
             controller.EnemyDie (this.id);
+        }
+    }
+
+    /*
+     * remove a player from player list using player id
+     */
+    public void RemovePlayer (int playerId)
+    {
+        if (hatedPlayer.id == playerId) {
+            hatedPlayer = null;
+        }
+        for (int i = 0; i < players.Count; i++) {
+            if (players [i].id == playerId) {
+                players.RemoveAt (i);
+                break;
+            }
         }
     }
 }

@@ -32,7 +32,7 @@ public class Player : MonoBehaviour, ICharactor
     Weapon currentWeapon;
     int exp;
     const int NUM_WEAPONS = 3;
-    NetworkClient mClient;
+    GameController controller;
     int weaponNumber;
     
 
@@ -66,11 +66,14 @@ public class Player : MonoBehaviour, ICharactor
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
         if (updateCount >= updateRate) {
+            NetworkClient mClient = controller.mClient;
             updateCount = 0;
+            // send the player's position
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
-                    Quaternion.Euler (transform.rotation.eulerAngles - transform.localRotation.eulerAngles));
+                    Quaternion.Euler (transform.rotation.eulerAngles -
+                    transform.localRotation.eulerAngles));
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -89,6 +92,9 @@ public class Player : MonoBehaviour, ICharactor
     public void OnHit (float damage)
     {
         hp -= damage;
+        if (hp < 0) {
+            controller.localPlayerDie = true;
+        }
     }
 
     int GetExp ()
@@ -101,9 +107,9 @@ public class Player : MonoBehaviour, ICharactor
         return 100;
     }
 
-    public void SetNetworkClient (NetworkClient mClient)
+    public void SetGameController (GameController controller)
     {
-        this.mClient = mClient;
+        this.controller = controller;
     }
 
     // function to check whether the player is moving

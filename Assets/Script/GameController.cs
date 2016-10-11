@@ -23,8 +23,16 @@ public class GameController : MonoBehaviour
     public GameObject[] enemyPrefabs;
     public NetworkClient mClient;
     public GameObject controlledPlayer;
+    public GameObject watchedPlayer = null;
     public float enemyGenerationInterval = 1;
+    public float updateRate = 0.05f;
+    public float updateCount = 0;
     public bool generateEnemy = false;
+    // largest numbers of enemies
+    public int enemyLimits = 15;
+    // indicate whether local player is died, if it is true
+    // constantly send to server the dying message, until get server's reply
+    public bool localPlayerDie = false;
     // for test
     
     public const int PORT = 8001;
@@ -43,6 +51,8 @@ public class GameController : MonoBehaviour
     // use to store the death enemies list, only be used in server, store the
     // enemy id
     Dictionary<int, List<int>> diedEnemies = new Dictionary<int, List<int>> ();
+    // store the died players
+    Dictionary<int,List<int>> diedPlayers = new Dictionary<int, List<int>> ();
     float generateCount = 0;
 
     // for test
@@ -74,16 +84,25 @@ public class GameController : MonoBehaviour
         if (Input.GetKeyDown (KeyCode.N)) {
             generateEnemy = !generateEnemy;
         }
-        if (generateEnemy) {
+        if (generateEnemy && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
-                generateCount = -10000;
+                generateCount = 0;
             } else {
                 generateCount += Time.deltaTime;
             }
         }
+        if (localPlayerDie) {
+            if (updateCount >= updateRate) {
+                ClientSendPlayerDeath ();
+                updateCount = 0;
+            } else {
+                updateCount += Time.deltaTime;
+            }
+        }
         if (isServer) {
             SendEnemyDeath ();
+            ServerSendPlayerDeath ();
         }
     }
         
@@ -117,6 +136,10 @@ public class GameController : MonoBehaviour
             OnUpdateDamagedHp);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
             OnReplyEnemyDeath);
+        NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnServerGetPlayerDeath);
+        NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
+            OnReplyPlayerDeath);
         isStart = false;
     }
 
@@ -135,6 +158,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnClientReceivedPlayerDeath);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -153,6 +178,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnClientReceivedPlayerDeath);
         isStart = false;
     }
 
@@ -231,7 +258,7 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<FlareLayer> ().enabled = true;
         player.GetComponentInChildren<Skybox> ().enabled = true;
         player.GetComponentInChildren<Player> ().isLocal = true;
-        player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
+        player.GetComponentInChildren<Player> ().SetGameController (this);
         controlledPlayer = player;
     }
 
@@ -258,6 +285,8 @@ public class GameController : MonoBehaviour
     {
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
+        if (!players.ContainsKey (moveMsg.id))
+            return;
         GameObject player = players [moveMsg.id];
         // do not update what is controlled by the client
         if (player == controlledPlayer)
@@ -417,6 +446,139 @@ public class GameController : MonoBehaviour
         // all client has replied
         if (diedEnemies [reply.enemyId].Count == 0) {
             diedEnemies.Remove (reply.enemyId);
+        }
+    }
+
+    /*
+     * player die and switch the camera to another lived player
+     * if no player is lived, gameover will appear
+     * this player could either be controlled or watched (when you are died)
+     */
+    public void PlayerDie (int playerId)
+    {
+        // if already died
+        if (!players.ContainsKey (playerId)) {
+            return;
+        }
+        // remove player reference from enemies
+        foreach (GameObject enemyObject in enemies.Values) {
+            Enemy enemy = enemyObject.GetComponent<Enemy> ();
+            enemy.RemovePlayer (playerId);
+        }
+        // change the main camera
+        if (controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (controlledPlayer);
+            controlledPlayer = null;
+        } else if (watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (watchedPlayer);
+            watchedPlayer = null;
+
+        } else {
+            Destroy (players [playerId]);
+        }
+        players.Remove (playerId);
+        // if no player is lived, change to the game over camera
+        if (players.Count == 0) {
+            
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<Camera> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<AudioListener> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverUI")
+                .GetComponent<Canvas> ().enabled = true;
+        } else {
+            // else go to the camera of the first lived player in the player
+            // list
+            players [0].GetComponentInChildren<Camera> ().enabled = true;
+        }
+        if (players.Count > 0 && controlledPlayer == null) {
+            watchedPlayer = players [0];
+        }
+    }
+
+    /* if local controlled player is died, constantly call this method to 
+     * inform the server that the player is died, until get a reply from
+     * server
+     */
+    void ClientSendPlayerDeath ()
+    {
+        Messages.PlayerDieMessage dieMsg = 
+            new Messages.PlayerDieMessage (
+                controlledPlayer.GetComponentInChildren<Player> ().id);
+        mClient.Send (Messages.PlayerDieMessage.msgId, dieMsg);
+    }
+
+    /*
+     * after server received player's death, delete the player from the player
+     * list and then broadcast this information to all the player( including 
+     * the client who send it as a reply)
+     */
+    void OnServerGetPlayerDeath (NetworkMessage msg)
+    {
+        Messages.PlayerDieMessage dieMsg =
+            msg.ReadMessage<Messages.PlayerDieMessage> ();
+//        if (!players.ContainsKey (dieMsg.playerId)) {
+//            return;
+//        }
+//        players.Remove (dieMsg.playerId);
+        diedPlayers.Add (dieMsg.playerId, new List<int> ());
+        foreach (NetworkConnection conn in NetworkServer.connections) {
+            diedPlayers [dieMsg.playerId].Add (conn.connectionId);
+        }
+    }
+
+    /*
+     * server constantly call this function to broadcast the player's death
+     * until all client is replied to ensure all clients is received that info
+     */
+    void ServerSendPlayerDeath ()
+    {
+        if (players.Count == 0) {
+            return;
+        }
+        foreach (int diedPlayer in diedPlayers.Keys) {
+            Messages.PlayerDieMessage dieMsg = 
+                new Messages.PlayerDieMessage (diedPlayer);
+            foreach (int connid in diedPlayers[diedPlayer]) {
+                NetworkServer.SendToClient (connid,
+                    Messages.PlayerDieMessage.msgId,
+                    dieMsg);
+            }
+        }
+    }
+
+    /* 
+     * client received the message that server send to inform a player's death
+     */
+    void OnClientReceivedPlayerDeath (NetworkMessage msg)
+    {
+        Messages.PlayerDieMessage dieMsg = 
+            msg.ReadMessage<Messages.PlayerDieMessage> ();
+        // stop sending player die message
+        if (controlledPlayer != null &&
+            controlledPlayer.GetComponentInChildren<Player> ().id
+            == dieMsg.playerId && localPlayerDie) {
+            localPlayerDie = false;
+        }
+        PlayerDie (dieMsg.playerId);
+        Messages.ReplyPlayerDeath reply = 
+            new Messages.ReplyPlayerDeath (dieMsg.playerId);
+        mClient.Send (Messages.ReplyPlayerDeath.msgId, reply);
+    }
+
+    /*
+     * server received client's reply of player's death
+     */
+    void OnReplyPlayerDeath (NetworkMessage msg)
+    {
+        Messages.ReplyPlayerDeath reply = 
+            msg.ReadMessage<Messages.ReplyPlayerDeath> ();
+        if (!diedPlayers.ContainsKey (reply.playerId)) {
+            Debug.Log ("Player Death Replied enemyId not exist!");
+        }
+        diedPlayers [reply.playerId].Remove (msg.conn.connectionId);
+        if (diedPlayers [reply.playerId].Count == 0) {
+            diedPlayers.Remove (reply.playerId);
         }
     }
 }
