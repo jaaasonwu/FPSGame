@@ -8,6 +8,7 @@ using System.Collections.Generic;
 // to everyone in LAN, p.s. this has greately referenced from unity forum
 // where someone provide the idea
 public class GameFinder : NetworkDiscovery {
+	// list of founded server
 	public List<DiscoveredServer> foundServers = new List<DiscoveredServer> ();
 	// time for each routine to re-run
 	public float coroutineRuntime = 1.5f;
@@ -15,6 +16,7 @@ public class GameFinder : NetworkDiscovery {
 	//when game start start as cleint may failed so let 20 port to be listen
 	private int minPort = 47777;
 	private int maxPort = 47797;
+
 	// it start to find game as it start
 	void Start()
 	{
@@ -40,11 +42,22 @@ public class GameFinder : NetworkDiscovery {
 	{
 		base.OnReceivedBroadcast (fromAddress, data);
 		string[] splits = fromAddress.Split(new char[]{':'});
+		string[] dataSplits = data.Split(new char[]{'\n'});
+
 		bool isAlreadyFound = false;
 		// go through all existing game and if not exist then add it to found
 		foreach(DiscoveredServer dServer in foundServers){
 			// split 3 will be the ip address for this incomming broadcast
 			if (dServer.ipAddress == splits [3]) {
+				// check whether the text or playNum has being modified
+				if (dServer.lobbyName != dataSplits [1]) {
+					dServer.lobbyName = dataSplits [1];
+					dServer.isModified = true;
+				}
+				if (dServer.playerNum != int.Parse(dataSplits[2])) {
+					dServer.playerNum = int.Parse(dataSplits[2]);
+					dServer.isModified = true;
+				}
 				// refresh the time
 				isAlreadyFound = true;
 				dServer.lastTimeFound = Time.time;
@@ -54,7 +67,6 @@ public class GameFinder : NetworkDiscovery {
 			// this is a new server add it 
 			DiscoveredServer newServer = new DiscoveredServer();
 			// port is broadcasted as data
-			string[] dataSplits = data.Split(new char[]{'\n'});
 			newServer.port = int.Parse(dataSplits[0]);
 			newServer.lobbyName = dataSplits [1];
 			newServer.playerNum = int.Parse(dataSplits [2]);				
@@ -82,6 +94,9 @@ public class GameFinder : NetworkDiscovery {
 				if(dServer.lastTimeFound < Time.time-coroutineRuntime)
 				{
 					dServer.isExpired = true;
+					// this is added to remove error to ensure display is turned off before
+					// remove it from gamefinder
+					DiscoveredServerList.s_instance.RemoveServer (dServer.ipAddress);
 					foundServers.Remove(dServer);
 				}
 			}
@@ -89,6 +104,7 @@ public class GameFinder : NetworkDiscovery {
 			yield return new WaitForSeconds(coroutineRuntime);
 		}
 	}
+
 	/*
 	 * stop listenning and re init networktransport
 	*/
@@ -97,6 +113,7 @@ public class GameFinder : NetworkDiscovery {
 		NetworkTransport.Shutdown ();
 		NetworkTransport.Init ();
 	}
+
 	/*
 	 * discovered server contain infomation about it
 	 * broadcastdata should be in format 
