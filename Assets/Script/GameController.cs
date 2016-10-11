@@ -14,22 +14,31 @@ using System.IO;
 
 public class GameController : MonoBehaviour
 {
-    private bool isServer;
+    // public fields
     public string hostAddress;
     public GameObject playerPrefab;
     /*
-     * prefabs of enemies
-     * index 0 for cactus
-     * 1 for Mummy
-     * 2 for Skeleton
-     */
+    * prefabs of enemies
+    * index 0 for cactus
+    * 1 for Mummy
+    * 2 for Skeleton
+    */
     public GameObject[] enemyPrefabs;
-
-    bool isStart = true;
     public NetworkClient mClient;
+    public GameObject controlledPlayer;
+    public float enemyGenerationInterval = 1;
+    public bool generateEnemy = false;
+    // for test
+    
+    public const int PORT = 8001;
+    // Use this for initialization
+
+
+    //pirvate & protected fields
+    bool isServer;
+    bool isStart = true;
     //player id counter, starts from 0
     int idCount = 0;
-    public GameObject controlledPlayer;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
     Dictionary<int,GameObject> enemies = new Dictionary<int, GameObject> ();
     // use to store the position of enemy spawn points
@@ -37,16 +46,11 @@ public class GameController : MonoBehaviour
     // use to store the death enemies list, only be used in server, store the
     // enemy id
     Dictionary<int, List<int>> diedEnemies = new Dictionary<int, List<int>> ();
-    public float enemyGenerationInterval = 1;
-    private float generateCount = 0;
+    float generateCount = 0;
 
     // for test
-    private bool addedPlayer = false;
-    public bool generateEnemy = false;
-    // for test
+    bool addedPlayer = false;
 
-    public const int PORT = 8001;
-    // Use this for initialization
     void Start ()
     {
         GameObject[] spawnPoints =

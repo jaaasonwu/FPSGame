@@ -14,8 +14,8 @@ using System.Xml.Serialization;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
-    // network client
-    GameController controller;
+    // public fields
+
     // enemy's id
     public int id;
     // dertermines what is the kind of the enemy
@@ -28,8 +28,6 @@ public class Enemy : MonoBehaviour, ICharactor
     public float maxHp;
     // count how many hp been damaged by local player
     public float damagedHp = 0;
-    // record which player damage how much
-    private Dictionary<int,float> damageList = new Dictionary<int,float> ();
     // the charactor's current movement speed
     public float moveSpeed;
     // the charactor's rotate speed
@@ -48,23 +46,8 @@ public class Enemy : MonoBehaviour, ICharactor
     public float attackSpeed;
     // indicate whether enemy perform melee attack
     public bool isMelee;
-    // attack time count
-    private float attackCount;
-    // attack method
-    private IEnemyAttack attackMethod;
-    // born point
-    protected Vector3 spawnPoint;
-    // the players
-    protected List<Player> players = new List<Player> ();
-    // the varible that to record the last position of the enemy,
-    // in order to know whether the enemy is stucked
-    private Vector3 lastPos;
-    // the player which is hated by the enemy
-    private Player hatedPlayer;
     // update rate for enemy
     public float updateRate = 1f;
-    // update count down
-    private float updateCount = 0;
     // below is the booleans that control the animation
     public bool isWalking;
     public bool isRunning;
@@ -72,6 +55,28 @@ public class Enemy : MonoBehaviour, ICharactor
     public bool isDead;
     public bool isAttacking;
     public bool inServer = false;
+
+    // private fields
+
+    // network client
+    GameController controller;
+    // record which player damage how much
+    Dictionary<int,float> damageList = new Dictionary<int,float> ();
+    // attack time count
+    float attackCount;
+    // attack method
+    IEnemyAttack attackMethod;
+    // born point
+    Vector3 spawnPoint;
+    // the players
+    List<Player> players = new List<Player> ();
+    // the varible that to record the last position of the enemy,
+    // in order to know whether the enemy is stucked
+    Vector3 lastPos;
+    // the player which is hated by the enemy
+    Player hatedPlayer;
+    // update count down
+    float updateCount = 0;
 
     void Start ()
     {
