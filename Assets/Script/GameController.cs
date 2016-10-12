@@ -8,12 +8,16 @@ using UnityEngine.Networking;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
 using System.Collections.Generic;
+using System.Xml;
+using System.Xml.Serialization;
+using System.IO;
 
 public class GameController : MonoBehaviour
 {
     // public fields
     public string hostAddress;
     public GameObject playerPrefab;
+    public string username;
     /*
     * prefabs of enemies
     * index 0 for cactus
@@ -70,6 +74,11 @@ public class GameController : MonoBehaviour
                 mClient.Send (MsgType.AddPlayer, newPlayer);
                 addedPlayer = true;
             }
+        }
+
+        if (Input.GetKeyDown(KeyCode.L))
+        {
+            Load();
         }
         if (Input.GetKeyDown (KeyCode.N)) {
             generateEnemy = !generateEnemy;
@@ -135,6 +144,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+        mClient.RegisterHandler(Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -232,6 +242,7 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<Skybox> ().enabled = true;
         player.GetComponentInChildren<Player> ().isLocal = true;
         player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
+        player.GetComponentInChildren<Player>().username = username;
         controlledPlayer = player;
     }
 
@@ -275,13 +286,15 @@ public class GameController : MonoBehaviour
         int pos = Random.Range (0, enemySpawnPoints.Count);
         int enemyIndex = Random.Range (0, enemyPrefabs.Length);
         int level = 1;
+        int maxHp = 90 + 10 * level;
         // spawn
         Vector3 spawnPoint = enemySpawnPoints [pos];
         GameObject enemyClone = GameObject.Instantiate (enemyPrefabs [enemyIndex]
             , spawnPoint, Quaternion.identity) as GameObject;
         // innitialize enemy
         Enemy enemy = enemyClone.GetComponent<Enemy> ();
-        enemy.Initialize (idCount, level, spawnPoint, this);
+        enemy.Initialize (idCount, enemyIndex, level, spawnPoint, maxHp, 0,
+            this);
         idCount++;
         foreach (GameObject player in players.Values) {
             enemy.AddPlayer (player.GetComponentInChildren<Player> ());
@@ -291,7 +304,7 @@ public class GameController : MonoBehaviour
         // send to client
         Messages.NewEnemyMessage newMsg = 
             new Messages.NewEnemyMessage (
-                enemyIndex, enemy.id, level, spawnPoint);
+                enemyIndex, enemy.id, level, maxHp, spawnPoint);
         NetworkServer.SendToAll (Messages.NewEnemyMessage.msgId, newMsg);
     }
         
@@ -310,7 +323,8 @@ public class GameController : MonoBehaviour
                 enemyMsg.spawnPoint, Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
         newEnemy.GetComponent<Enemy> ().Initialize (
-            enemyMsg.id, enemyMsg.level, enemyMsg.spawnPoint, this);
+            enemyMsg.id, enemyMsg.enemyIndex, enemyMsg.level,
+            enemyMsg.spawnPoint, enemyMsg.maxHp, 0, this);
         foreach (GameObject player in players.Values) {
             newEnemy.GetComponent<Enemy> ().AddPlayer (
                 player.GetComponentInChildren<Player> ());
@@ -419,4 +433,291 @@ public class GameController : MonoBehaviour
             diedEnemies.Remove (reply.enemyId);
         }
     }
+
+    /*
+     * save the state of all players and enemies
+     */
+    public void Save()
+    {
+        if (isServer)
+        {
+            SavePlayers();
+            SaveEnemies();
+        }
+    }
+
+    /*
+     * Get the player data and serialize it
+     */
+    void SavePlayers()
+    {
+        XmlSerializer playerSer = new XmlSerializer(typeof(PlayerSaving));
+        FileStream file;
+        // ensure the old save file is deleted
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            File.Delete(Application.persistentDataPath + "/playerinfo.dat");
+        }
+        file = File.Open(Application.persistentDataPath
+            + "/playerinfo.dat", FileMode.Create);
+
+        // Create a new xml root
+        PlayerSaving playerSaving = new PlayerSaving();
+        playerSaving.PlayerList = new List<PlayerData>();
+
+        // add data to the list of playerlist
+        foreach (GameObject player in players.Values)
+        {
+            PlayerData data;
+            data = player.GetComponentInChildren<Player>().GeneratePlayerData();
+            playerSaving.PlayerList.Add(data);
+        }
+
+        playerSer.Serialize(file, playerSaving);
+        file.Close();
+    }
+
+    /*
+     * Get the enemy data and serialize it
+     */
+    void SaveEnemies()
+    {
+        XmlSerializer enemySer = new XmlSerializer(typeof(EnemySaving));
+        FileStream file;
+        // ensure the old save file is deleted
+        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
+        {
+            File.Delete(Application.persistentDataPath + "/enemyinfo.dat");
+        }
+        file = File.Open(Application.persistentDataPath + "/enemyinfo.dat",
+            FileMode.Create);
+
+        // Create a new xml root
+        EnemySaving enemySaving = new EnemySaving();
+        enemySaving.EnemyList = new List<EnemyData>();
+
+        // add data to the list of enemylist
+        foreach (GameObject enemy in enemies.Values)
+        {
+            EnemyData data;
+            data = enemy.GetComponent<Enemy>().GenerateEnemyData();
+            enemySaving.EnemyList.Add(data);
+        }
+
+        enemySer.Serialize(file, enemySaving);
+        file.Close();
+    }
+
+    public void Load()
+    {
+        LoadPlayers();
+        LoadEnemies();
+    }
+
+    /* 
+     * Load all the players from the file system and send the message
+     * to all clients connected to the server
+     */
+    void LoadPlayers()
+    {
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            // Read data from xml and deserialize it
+            XmlSerializer serializer = new XmlSerializer(typeof(PlayerSaving));
+            FileStream file = File.Open(Application.persistentDataPath +
+                "/playerinfo.dat", FileMode.Open);
+            PlayerSaving saving = (PlayerSaving)serializer.Deserialize(file);
+
+            foreach(PlayerData data in saving.PlayerList)
+            {
+                // prepare the message to be send to clients to initialize
+                // the loaded player
+                Messages.LoadPlayerMessage loadMessage =
+                    new Messages.LoadPlayerMessage(
+                        data.id,
+                        data.username,
+                        data.pos,
+                        data.rot,
+                        data.level,
+                        data.exp,
+                        data.hp,
+                        data.maxHp,
+                        data.weaponNumber,
+                        data.ammo);
+                // Initialize the player on server using saved data
+                GameObject playerClone = Instantiate(playerPrefab, data.pos,
+                    data.rot) as GameObject;
+                players[data.id] = playerClone;
+                Player player = playerClone.GetComponentInChildren<Player>();
+                player = initializePlayerOnLoad(player, loadMessage);
+                player.Load();
+
+                // Authenticate the player using the username and make the
+                // matching player the controlled player
+                if (data.username == username)
+                {
+                    playerClone.GetComponent<FirstPersonController>().enabled = true;
+                    playerClone.GetComponentInChildren<Camera>().enabled = true;
+                    playerClone.GetComponentInChildren<AudioListener>().enabled = true;
+                    playerClone.GetComponentInChildren<FlareLayer>().enabled = true;
+                    playerClone.GetComponentInChildren<Skybox>().enabled = true;
+                    playerClone.GetComponentInChildren<Player>().isLocal = true;
+                    playerClone.GetComponentInChildren<Player>().SetNetworkClient(mClient);
+                    controlledPlayer = playerClone;
+                }
+
+                // Send the message to all clients
+                NetworkServer.SendToAll(Messages.LoadPlayerMessage.msgId,
+                    loadMessage);
+            }
+
+        }
+    }
+
+    /*
+     * The function being called when client receives the LoadPlayer message
+     */
+    public void OnLoadPlayer(NetworkMessage msg)
+    {
+        // if it is the local player, the player is already initialized
+        if (isServer)
+            return;
+
+        // Initialize the player using the data in the message
+        Messages.LoadPlayerMessage loadMessage =
+            msg.ReadMessage<Messages.LoadPlayerMessage>();
+        GameObject playerClone = Instantiate(playerPrefab, loadMessage.pos,
+            loadMessage.rot) as GameObject;
+        Player player = playerClone.GetComponentInChildren<Player>();
+        players[loadMessage.id] = playerClone;
+        player = initializePlayerOnLoad(player, loadMessage);
+        player.Load();
+    }
+
+    /*
+     * This is the helper function to fill the player with the data in the
+     * LoadPlayer netgwork messagee
+     */
+    private Player initializePlayerOnLoad(Player player,
+        Messages.LoadPlayerMessage loadMessage)
+    {
+        player.id = loadMessage.id;
+        player.username = loadMessage.username;
+        player.level = loadMessage.level;
+        player.exp = loadMessage.exp;
+        player.hp = loadMessage.hp;
+        player.maxHp = loadMessage.maxHp;
+        player.weaponNumber = loadMessage.weaponNumber;
+        player.ammo = loadMessage.ammo;
+
+        return player;
+    }
+
+    void LoadEnemies()
+    {
+        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
+        {
+            // Read data from xml and deserialize it
+            XmlSerializer serializer = new XmlSerializer(typeof(EnemySaving));
+            FileStream file = File.Open(Application.persistentDataPath +
+                "/enemyinfo.dat", FileMode.Open);
+            EnemySaving saving = (EnemySaving)serializer.Deserialize(file);
+
+            foreach (EnemyData data in saving.EnemyList)
+            {
+                // prepare the message to be send to clients to initialize
+                // the loaded player
+                Messages.LoadEnemyMessage loadMessage =
+                    new Messages.LoadEnemyMessage(
+                        data.id,
+                        data.pos,
+                        data.rot,
+                        data.enemyIndex,
+                        data.level,
+                        data.damagedHp,
+                        data.maxHp);
+
+                // Initialize the player on server using saved data
+                GameObject enemyClone = Instantiate(
+                    enemyPrefabs[data.enemyIndex],
+                    data.pos,
+                    data.rot) as GameObject;
+                enemies[data.id] = enemyClone;
+                Enemy enemy = enemyClone.GetComponent<Enemy>();
+                enemy.Initialize(loadMessage.id,
+                    loadMessage.enemyIndex,
+                    loadMessage.level,
+                    loadMessage.pos,
+                    loadMessage.maxHp,
+                    loadMessage.damagedHp,
+                    this);
+                enemy.inServer = true;
+                enemy.Load();
+                foreach (GameObject player in players.Values)
+                {
+                    Player playerScript = player.GetComponentInChildren<Player>();
+                    enemy.AddPlayer(playerScript);
+                }
+
+                // Send the message to all clients
+                NetworkServer.SendToAll(Messages.LoadEnemyMessage.msgId,
+                    loadMessage);
+            }
+
+        }
+    }
+
+    public void OnLoadEnemy(NetworkMessage msg)
+    {
+        // if it is the local player, the player is already initialized
+        if (isServer)
+            return;
+
+        // Initialize the player using the data in the message
+        Messages.LoadEnemyMessage loadMessage =
+            msg.ReadMessage<Messages.LoadEnemyMessage>();
+        GameObject enemyClone = Instantiate(
+            enemyPrefabs[loadMessage.enemyIndex],
+            loadMessage.pos,
+            loadMessage.rot) as GameObject;
+        Enemy enemy = enemyClone.GetComponent<Enemy>();
+        enemies[loadMessage.id] = enemyClone;
+        enemy.Initialize(loadMessage.id,
+            loadMessage.enemyIndex,
+            loadMessage.level,
+            loadMessage.pos,
+            loadMessage.maxHp,
+            loadMessage.damagedHp,
+            this);
+        enemy.Load();
+        enemy.inServer = true;
+        foreach (GameObject player in players.Values)
+        {
+            Player playerScript = player.GetComponentInChildren<Player>();
+            enemy.AddPlayer(playerScript);
+        }
+    }
+}
+
+
+/*
+* Define the structure of the player status xml
+*/
+[XmlRoot("PlayerSaving")]
+public class PlayerSaving
+{
+    [XmlArray("PlayerList"), XmlArrayItem(typeof(PlayerData),
+        ElementName = "PlayerData")]
+    public List<PlayerData> PlayerList { get; set; }
+}
+
+/*
+* Define the structure of the enemy status xml
+*/
+[XmlRoot("EnemySaving")]
+public class EnemySaving
+{
+    [XmlArray("EnemyList"), XmlArrayItem(typeof(EnemyData),
+        ElementName = "EnemyData")]
+    public List<EnemyData> EnemyList { get; set; }
 }

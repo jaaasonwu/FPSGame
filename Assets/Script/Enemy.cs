@@ -8,15 +8,23 @@ using UnityEngine;
 using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
     // public fields
-
     // enemy's id
     public int id;
+    // dertermines what is the kind of the enemy
+    public int enemyIndex;
+    // the charactor's level
+    public int level;
     // the charactor's current HP
     public float hp;
+    // the character's maximum HP
+    public float maxHp;
     // count how many hp been damaged by local player
     public float damagedHp = 0;
     // the charactor's current movement speed
@@ -51,8 +59,6 @@ public class Enemy : MonoBehaviour, ICharactor
 
     // network client
     GameController controller;
-    // the charactor's level
-    int level;
     // record which player damage how much
     Dictionary<int,float> damageList = new Dictionary<int,float> ();
     // attack time count
@@ -126,12 +132,15 @@ public class Enemy : MonoBehaviour, ICharactor
         Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Initialize (int id, int level, Vector3 spawnPoint,
-                            GameController controller)
+    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint,
+        float maxHp, float damagedHp, GameController controller)
     {
         this.id = id;
+        this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
+        this.maxHp = maxHp;
+        this.damagedHp = damagedHp;
         this.controller = controller;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
@@ -253,6 +262,7 @@ public class Enemy : MonoBehaviour, ICharactor
     {
         hatedPlayer = p;
     }
+    
     /*
      * update the damageList to calculate how much damage the enemy endured
      * this function is only called in server
@@ -271,4 +281,55 @@ public class Enemy : MonoBehaviour, ICharactor
             controller.EnemyDie (this.id);
         }
     }
+
+    /*
+     * The function reads from the serialized data from the storage,
+     * deserialize it and load it
+     */
+     public void Load()
+    {
+        hp = maxHp - damagedHp;
+    }
+
+    /*
+     * This function serlize the enemy data and save the data in th file
+     * system
+     */
+    public EnemyData GenerateEnemyData()
+    {
+        EnemyData data = new EnemyData();
+        data.id = id;
+        data.pos = this.transform.position;
+        data.rot = this.transform.rotation;
+        data.enemyIndex = this.enemyIndex;
+        data.level = level;
+        data.damagedHp = damagedHp;
+        data.maxHp = maxHp;
+        data.isWalking = isWalking;
+        data.isRunning = isRunning;
+        data.isGettingHit = isGettingHit;
+        data.isDead = isDead;
+        data.isAttacking = isAttacking;
+
+        return data;
+    }
+}
+
+/*
+ * The class used to store player information
+ */
+public class EnemyData
+{
+    public int id;
+    public Vector3 pos;
+    public Quaternion rot;
+    public int enemyIndex;
+    public int level;
+    public float damagedHp;
+    public float maxHp;
+    public bool isWalking;
+    public bool isRunning;
+    public bool isGettingHit;
+    public bool isDead;
+    public bool isAttacking;
 }

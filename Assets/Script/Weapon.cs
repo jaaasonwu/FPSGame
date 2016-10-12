@@ -1,11 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class Weapon : MonoBehaviour
 {
     public float attackInterval;
     public float damage;
     public float range;
+    public int ammo;
 
     float timer;
     Ray shootRay;
@@ -13,21 +15,24 @@ public class Weapon : MonoBehaviour
     int shootableMask;
     LineRenderer gunLine;
     public GameObject barrelEnd;
+    Text ammoText;
 
-    // Use this for initialization
-    void Awake ()
-    {
-        gunLine = GetComponent<LineRenderer> ();
-        shootableMask = LayerMask.GetMask ("Shootable");
-    }
-	
+	// Use this for initialization
+	void Awake () {
+        gunLine = GetComponent<LineRenderer>();
+        shootableMask = LayerMask.GetMask("Shootable");
+        ammoText = GameObject.FindGameObjectWithTag("AmmoText").GetComponent<Text>();
+        ammoText.text = "Ammo: " + ammo;
+	}
+
     // Update is called once per frame
     void Update ()
     {
         // update the time for attack interval check
         timer += Time.deltaTime;
       
-        if (timer > 0.05) {
+        if (timer > 0.03)
+        {
             gunLine.enabled = false;
         }
     }
@@ -37,8 +42,11 @@ public class Weapon : MonoBehaviour
     {
         // When the attack interval is passed and the player is allowed to
         // shoot again
-        if (timer >= attackInterval) {
-
+        if (timer >= attackInterval && ammo > 0)
+        {
+            ammo--;
+            ammoText.text = "Ammo: " + ammo;
+            barrelEnd = GameObject.FindWithTag("BarrelEnd");
             timer = 0f;
 
             // Set the line renderer to make the line visible

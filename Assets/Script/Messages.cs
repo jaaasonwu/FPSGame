@@ -49,6 +49,71 @@ public class Messages
         }
     }
 
+    // Message used when a player is loaded from the file system
+    public class LoadPlayerMessage : MessageBase
+    {
+        public int id;
+        public string username;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int level;
+        public int exp;
+        public float hp;
+        public float maxHp;
+        public int weaponNumber;
+        public int ammo;
+        public const short msgId = 110;
+        // default constructor
+        public LoadPlayerMessage()
+        {
+        }
+        
+        public LoadPlayerMessage(int id, string username, Vector3 pos,
+            Quaternion rot, int level, int exp, float hp, float maxHp,
+            int weaponNumber, int ammo)
+        {
+            this.id = id;
+            this.username = username;
+            this.pos = pos;
+            this.rot = rot;
+            this.level = level;
+            this.exp = exp;
+            this.hp = hp;
+            this.maxHp = maxHp;
+            this.weaponNumber = weaponNumber;
+            this.ammo = ammo;
+        }
+    }
+
+    public class LoadEnemyMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int enemyIndex;
+        public int level;
+        public float damagedHp;
+        public float maxHp;
+        public const short msgId = 111;
+
+        //default constructor
+        public LoadEnemyMessage ()
+        {
+        }
+
+        public LoadEnemyMessage(int id, Vector3 pos, Quaternion rot,
+            int enemyIndex, int level, float damagedHp, float maxHp)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.enemyIndex = enemyIndex;
+            this.level = level;
+            this.damagedHp = damagedHp;
+            this.maxHp = maxHp;
+        }
+    }
+
     // message used to tell the client to spawn an enemy
     public class NewEnemyMessage: MessageBase
     {
@@ -57,13 +122,15 @@ public class Messages
         public Vector3 spawnPoint;
         // index in enemy prefab list in Game Controller
         public int enemyIndex;
+        public float maxHp;
         public const short msgId = 102;
 
-        public NewEnemyMessage (int index, int id, int level, Vector3 spawnPoint)
+        public NewEnemyMessage (int index, int id, int level, float maxHp, Vector3 spawnPoint)
         {
             this.id = id;
             this.level = level;
             this.enemyIndex = index;
+            this.maxHp = maxHp;
             this.spawnPoint = spawnPoint;
         }
 
