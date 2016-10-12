@@ -101,7 +101,7 @@ public class Player : MonoBehaviour, ICharactor
             NextWeapon ();
         }
 
-        if (isAttacking)
+        if (Input.GetButton("Fire1"))
         {
             Attack();
         }

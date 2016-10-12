@@ -76,8 +76,9 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        if (isStart) {
-            SetUpNetwork ();
+        if (isStart)
+        {
+            SetUpNetwork();
         }
         if (mClient != null && !addedPlayer) {
             if (Input.GetKeyDown (KeyCode.P)) {
@@ -626,6 +627,9 @@ public class GameController : MonoBehaviour
         if (controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (controlledPlayer);
             controlledPlayer = null;
+            GameObject.Find("Ingame").SetActive(false);
+            GameObject.FindGameObjectWithTag("AmmoText").SetActive(false);
+            GameObject.FindGameObjectWithTag("HealthSlider").SetActive(false);
         } else if (watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (watchedPlayer);
             watchedPlayer = null;
