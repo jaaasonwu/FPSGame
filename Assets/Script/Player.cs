@@ -14,24 +14,33 @@ using UnityEngine.UI;
 using System.Xml;
 using System.Xml.Serialization;
 
+/*
+ * This class defines the player behavior and update data regarding to players
+ */
 public class Player : MonoBehaviour, ICharactor
 {
-    // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
+    // remeber to change DamageUpByRatio to change all weapon damage when
+    // enable weapons
     public GameObject[] weapons;
 
     public int id;
+
     // The username of player which is used to authenticate when loading saved
     // game state
     public string username;
+
     // is the local player, means the player is controlled
     public bool isLocal = false;
+
     // the rate that client will send to server of player's location
     public float updateRate = 0.05f;
+
     // the time counter to count how many time is elapsed
     private float updateCount;
-    private NetworkClient mClient;
 
+    // The slider to show the remaining hp of the player
     public Slider healthSlider;
+
     GameObject weaponPrefab;
     Weapon currentWeapon;
     public int level;
@@ -40,6 +49,9 @@ public class Player : MonoBehaviour, ICharactor
     public float maxHp;
     public int weaponNumber;
     public int ammo;
+
+    Button swapButton;
+    Button shootButton;
     private int numAvailableWeapons;
     private Text ammoText;
 	
@@ -61,6 +73,23 @@ public class Player : MonoBehaviour, ICharactor
         numAvailableWeapons = 3;
         StartHealthSlider();
         updateCount = 0;
+
+        GameObject[] buttons = GameObject.FindGameObjectsWithTag("Button");
+        foreach(GameObject button in buttons)
+        {
+            Button buttonScript = button.GetComponent<Button>();
+            if (buttonScript.gameObject.name == "swap")
+            {
+                swapButton = buttonScript;
+            }
+            if (buttonScript.gameObject.name == "shoot")
+            {
+                shootButton = buttonScript;
+            }
+        }
+
+        swapButton.onClick.AddListener(NextWeapon);
+        shootButton.onClick.AddListener(Attack);
     }
 
     void StartHealthSlider()
@@ -76,13 +105,10 @@ public class Player : MonoBehaviour, ICharactor
     {
         if (!isLocal)
             return;
-        if (Input.GetKey (KeyCode.Mouse0)) {
-            Attack ();
-        }
-		
         if (Input.GetKeyDown (KeyCode.Q)) {
             NextWeapon ();
-        }	
+        }
+
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
         if (updateCount >= updateRate) {

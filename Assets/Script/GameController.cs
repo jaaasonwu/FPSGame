@@ -30,13 +30,13 @@ public class GameController : MonoBehaviour
     public float enemyGenerationInterval = 1;
     public bool generateEnemy = false;
     // for test
-    
+
+    SharedData sharedData;
     public const int PORT = 8001;
-    // Use this for initialization
+    public bool isServer;
 
 
     //pirvate & protected fields
-    bool isServer;
     bool isStart = true;
     //player id counter, starts from 0
     int idCount = 0;
@@ -59,6 +59,9 @@ public class GameController : MonoBehaviour
         for (int i = 0; i < spawnPoints.Length; i++) {
             enemySpawnPoints.Add (spawnPoints [i].transform.position);
         }
+
+        sharedData = GameObject.Find("SharedData").GetComponent<SharedData>();
+        isServer = sharedData.isServer;
     }
 	
     // Update is called once per frame
@@ -69,10 +72,7 @@ public class GameController : MonoBehaviour
         }
         if (mClient != null && !addedPlayer) {
             if (Input.GetKeyDown (KeyCode.P)) {
-                Messages.NewPlayerMessage newPlayer = new
-                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
-                mClient.Send (MsgType.AddPlayer, newPlayer);
-                addedPlayer = true;
+                CreatePlayer();
             }
         }
 
@@ -96,21 +96,34 @@ public class GameController : MonoBehaviour
         }
     }
         
+    void CreatePlayer()
+    {
+        Messages.NewPlayerMessage newPlayer = new
+                    Messages.NewPlayerMessage(-1, new Vector3(50, 1, 20));
+        mClient.Send(MsgType.AddPlayer, newPlayer);
+        addedPlayer = true;
+    }
 
     /*
      * to set up the network connection
      */
     void SetUpNetwork ()
     {
-        if (Input.GetKeyDown (KeyCode.I)) {
-            SetUpServer ();
-            SetUpLocalClient ();
-            isServer = true;
+        if (isServer)
+        {
+            SetUpServer();
+            SetUpLocalClient();
+            CreatePlayer();
         }
-        if (Input.GetKeyDown (KeyCode.O)) {
-            SetUpClient (hostAddress);
-            isServer = false;
-        }
+        //if (Input.GetKeyDown (KeyCode.I)) {
+        //    SetUpServer ();
+        //    SetUpLocalClient ();
+        //    isServer = true;
+        //}
+        //if (Input.GetKeyDown (KeyCode.O)) {
+        //    SetUpClient (hostAddress);
+        //    isServer = false;
+        //}
     }
     /*
      * set up the server, which is a local server and
