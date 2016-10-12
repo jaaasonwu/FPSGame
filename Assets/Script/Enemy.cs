@@ -116,6 +116,10 @@ public class Enemy : MonoBehaviour, ICharactor
             if (controller == null) {
                 Debug.Log ("null controller");
             }
+            // if the controlled player is dead
+            if (controller.controlledPlayer == null) {
+                return;
+            }
             int localPlayerId = 
                 controller.controlledPlayer.GetComponentInChildren<Player> ().id;
             Messages.UpdateDamagedHp newMsg = 
@@ -133,7 +137,7 @@ public class Enemy : MonoBehaviour, ICharactor
     }
     // Innitialize using EnemyInfo class
     public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint,
-        float maxHp, float damagedHp, GameController controller)
+                            float maxHp, float damagedHp, GameController controller)
     {
         this.id = id;
         this.enemyIndex = enemyIndex;
@@ -286,7 +290,7 @@ public class Enemy : MonoBehaviour, ICharactor
      * The function reads from the serialized data from the storage,
      * deserialize it and load it
      */
-     public void Load()
+    public void Load ()
     {
         hp = maxHp - damagedHp;
     }
@@ -295,9 +299,9 @@ public class Enemy : MonoBehaviour, ICharactor
      * This function serlize the enemy data and save the data in th file
      * system
      */
-    public EnemyData GenerateEnemyData()
+    public EnemyData GenerateEnemyData ()
     {
-        EnemyData data = new EnemyData();
+        EnemyData data = new EnemyData ();
         data.id = id;
         data.pos = this.transform.position;
         data.rot = this.transform.rotation;
@@ -313,10 +317,25 @@ public class Enemy : MonoBehaviour, ICharactor
 
         return data;
     }
+    /*
+    * remove a player from player list using player id
+    */
+    public void RemovePlayer (int playerId)
+    {
+        if (hatedPlayer.id == playerId) {
+            hatedPlayer = null;
+        }
+        for (int i = 0; i < players.Count; i++) {
+            if (players [i].id == playerId) {
+                players.RemoveAt (i);
+                break;
+            }
+        }
+    }
 }
 
 /*
- * The class used to store player information
+ * The class used to store enemy information
  */
 public class EnemyData
 {
@@ -332,4 +351,5 @@ public class EnemyData
     public bool isGettingHit;
     public bool isDead;
     public bool isAttacking;
+
 }
