@@ -31,9 +31,8 @@ public class GameController : MonoBehaviour
     public float enemyGenerationInterval = 1;
     public float updateRate = 0.05f;
     public float updateCount = 0;
-    public bool generateEnemy = false;
     // largest numbers of enemies
-    public int enemyLimits = 15;
+    public int enemyLimits = 20;
     // indicate whether local player is died, if it is true
     // constantly send to server the dying message, until get server's reply
     public bool localPlayerDie = false;
@@ -89,10 +88,9 @@ public class GameController : MonoBehaviour
         if (Input.GetKeyDown (KeyCode.L)) {
             Load ();
         }
-        if (Input.GetKeyDown (KeyCode.N)) {
-            generateEnemy = !generateEnemy;
-        }
-        if (generateEnemy && enemies.Count < enemyLimits) {
+
+        // Generate enemy at a regular interval
+        if (enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
                 generateCount = 0;
@@ -100,6 +98,7 @@ public class GameController : MonoBehaviour
                 generateCount += Time.deltaTime;
             }
         }
+
         if (localPlayerDie) {
             if (updateCount >= updateRate) {
                 ClientSendPlayerDeath ();

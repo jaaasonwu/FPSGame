@@ -31,7 +31,7 @@ public class Weapon : MonoBehaviour
         // update the time for attack interval check
         timer += Time.deltaTime;
       
-        if (timer > 0.03)
+        if (timer > 0.05)
         {
             gunLine.enabled = false;
         }

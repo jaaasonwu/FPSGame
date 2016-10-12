@@ -322,7 +322,7 @@ public class Enemy : MonoBehaviour, ICharactor
     */
     public void RemovePlayer (int playerId)
     {
-        if (hatedPlayer.id == playerId) {
+        if (hatedPlayer != null && hatedPlayer.id == playerId) {
             hatedPlayer = null;
         }
         for (int i = 0; i < players.Count; i++) {

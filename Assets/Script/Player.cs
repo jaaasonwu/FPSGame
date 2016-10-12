@@ -45,8 +45,10 @@ public class Player : MonoBehaviour, ICharactor
     public int weaponNumber;
     public int ammo;
 
+    // The boolean turns to true when the shoot button is hold
+    public bool isAttacking;
+
     Button swapButton;
-    Button shootButton;
 
     //player's current buffs
     public List<Buff> buffs;
@@ -73,26 +75,13 @@ public class Player : MonoBehaviour, ICharactor
         this.buffs = new List<Buff> ();
         ShowWeapon (weaponNumber);
 
+        isAttacking = false;
         numAvailableWeapons = 3;
         StartHealthSlider ();
         updateCount = 0;
 
-        GameObject[] buttons = GameObject.FindGameObjectsWithTag("Button");
-        foreach(GameObject button in buttons)
-        {
-            Button buttonScript = button.GetComponent<Button>();
-            if (buttonScript.gameObject.name == "swap")
-            {
-                swapButton = buttonScript;
-            }
-            if (buttonScript.gameObject.name == "shoot")
-            {
-                shootButton = buttonScript;
-            }
-        }
-
+        swapButton = GameObject.Find("swap").GetComponent<Button>();
         swapButton.onClick.AddListener(NextWeapon);
-        shootButton.onClick.AddListener(Attack);
     }
 
     void StartHealthSlider ()
@@ -112,6 +101,11 @@ public class Player : MonoBehaviour, ICharactor
             NextWeapon ();
         }
 
+        if (isAttacking)
+        {
+            Attack();
+        }
+
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
         if (updateCount >= updateRate) {
@@ -128,6 +122,26 @@ public class Player : MonoBehaviour, ICharactor
         updateCount += Time.deltaTime;
     }
 
+    /*
+     * Set the state of is attacking to true when the shooting button is hold
+     */
+    public void SetAttacking()
+    {
+        isAttacking = true;
+    }
+
+    /*
+     * Set the state of is attacking to false when the shooting button is no
+     * longer hold
+     */
+    public void UnsetAttacking()
+    {
+        isAttacking = false;
+    }
+
+    /*
+     * Call the weapon to make an attack
+     */
     public void Attack ()
     {
         currentWeapon.Attack ();

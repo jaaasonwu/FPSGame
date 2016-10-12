@@ -60,15 +60,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
             m_AudioSource = GetComponent<AudioSource>();
 			m_MouseLook.Init(transform , m_Camera.transform);
 
-            GameObject[] buttons = GameObject.FindGameObjectsWithTag("Button");
-            foreach (GameObject button in buttons)
-            {
-                Button buttonScript = button.GetComponent<Button>();
-                if (buttonScript.gameObject.name == "jump")
-                {
-                    jumpButton = buttonScript;
-                }
-            }
+            jumpButton = GameObject.Find("jump").GetComponent<Button>();
             jumpButton.onClick.AddListener(Jump);
         }
 
@@ -102,6 +94,7 @@ namespace UnityStandardAssets.Characters.FirstPerson
         {
             m_Jump = true;
         }
+
         private void PlayLandingSound()
         {
             m_AudioSource.clip = m_LandSound;
