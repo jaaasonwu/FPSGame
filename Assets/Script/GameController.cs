@@ -27,8 +27,16 @@ public class GameController : MonoBehaviour
     public GameObject[] enemyPrefabs;
     public NetworkClient mClient;
     public GameObject controlledPlayer;
+    public GameObject watchedPlayer = null;
     public float enemyGenerationInterval = 1;
+    public float updateRate = 0.05f;
+    public float updateCount = 0;
     public bool generateEnemy = false;
+    // largest numbers of enemies
+    public int enemyLimits = 15;
+    // indicate whether local player is died, if it is true
+    // constantly send to server the dying message, until get server's reply
+    public bool localPlayerDie = false;
     // for test
     
     public const int PORT = 8001;
@@ -47,6 +55,8 @@ public class GameController : MonoBehaviour
     // use to store the death enemies list, only be used in server, store the
     // enemy id
     Dictionary<int, List<int>> diedEnemies = new Dictionary<int, List<int>> ();
+    // store the died players
+    Dictionary<int,List<int>> diedPlayers = new Dictionary<int, List<int>> ();
     float generateCount = 0;
 
     // for test
@@ -76,23 +86,31 @@ public class GameController : MonoBehaviour
             }
         }
 
-        if (Input.GetKeyDown(KeyCode.L))
-        {
-            Load();
+        if (Input.GetKeyDown (KeyCode.L)) {
+            Load ();
         }
         if (Input.GetKeyDown (KeyCode.N)) {
             generateEnemy = !generateEnemy;
         }
-        if (generateEnemy) {
+        if (generateEnemy && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
-                generateCount = -10000;
+                generateCount = 0;
             } else {
                 generateCount += Time.deltaTime;
             }
         }
+        if (localPlayerDie) {
+            if (updateCount >= updateRate) {
+                ClientSendPlayerDeath ();
+                updateCount = 0;
+            } else {
+                updateCount += Time.deltaTime;
+            }
+        }
         if (isServer) {
             SendEnemyDeath ();
+            ServerSendPlayerDeath ();
         }
     }
         
@@ -126,6 +144,10 @@ public class GameController : MonoBehaviour
             OnUpdateDamagedHp);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
             OnReplyEnemyDeath);
+        NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnServerGetPlayerDeath);
+        NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
+            OnReplyPlayerDeath);
         isStart = false;
     }
 
@@ -144,7 +166,9 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
-        mClient.RegisterHandler(Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnClientReceivedPlayerDeath);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -163,6 +187,9 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+        mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnClientReceivedPlayerDeath);
         isStart = false;
     }
 
@@ -241,8 +268,8 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<FlareLayer> ().enabled = true;
         player.GetComponentInChildren<Skybox> ().enabled = true;
         player.GetComponentInChildren<Player> ().isLocal = true;
-        player.GetComponentInChildren<Player> ().SetNetworkClient (mClient);
-        player.GetComponentInChildren<Player>().username = username;
+        player.GetComponentInChildren<Player> ().username = username;
+        player.GetComponentInChildren<Player> ().SetGameController (this);
         controlledPlayer = player;
     }
 
@@ -269,6 +296,8 @@ public class GameController : MonoBehaviour
     {
         Messages.PlayerMoveMessage moveMsg = 
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
+        if (!players.ContainsKey (moveMsg.id))
+            return;
         GameObject player = players [moveMsg.id];
         // do not update what is controlled by the client
         if (player == controlledPlayer)
@@ -437,103 +466,96 @@ public class GameController : MonoBehaviour
     /*
      * save the state of all players and enemies
      */
-    public void Save()
+    public void Save ()
     {
-        if (isServer)
-        {
-            SavePlayers();
-            SaveEnemies();
+        if (isServer) {
+            SavePlayers ();
+            SaveEnemies ();
         }
     }
 
     /*
      * Get the player data and serialize it
      */
-    void SavePlayers()
+    void SavePlayers ()
     {
-        XmlSerializer playerSer = new XmlSerializer(typeof(PlayerSaving));
+        XmlSerializer playerSer = new XmlSerializer (typeof(PlayerSaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
-        {
-            File.Delete(Application.persistentDataPath + "/playerinfo.dat");
+        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
+            File.Delete (Application.persistentDataPath + "/playerinfo.dat");
         }
-        file = File.Open(Application.persistentDataPath
-            + "/playerinfo.dat", FileMode.Create);
+        file = File.Open (Application.persistentDataPath
+        + "/playerinfo.dat", FileMode.Create);
 
         // Create a new xml root
-        PlayerSaving playerSaving = new PlayerSaving();
-        playerSaving.PlayerList = new List<PlayerData>();
+        PlayerSaving playerSaving = new PlayerSaving ();
+        playerSaving.PlayerList = new List<PlayerData> ();
 
         // add data to the list of playerlist
-        foreach (GameObject player in players.Values)
-        {
+        foreach (GameObject player in players.Values) {
             PlayerData data;
-            data = player.GetComponentInChildren<Player>().GeneratePlayerData();
-            playerSaving.PlayerList.Add(data);
+            data = player.GetComponentInChildren<Player> ().GeneratePlayerData ();
+            playerSaving.PlayerList.Add (data);
         }
 
-        playerSer.Serialize(file, playerSaving);
-        file.Close();
+        playerSer.Serialize (file, playerSaving);
+        file.Close ();
     }
 
     /*
      * Get the enemy data and serialize it
      */
-    void SaveEnemies()
+    void SaveEnemies ()
     {
-        XmlSerializer enemySer = new XmlSerializer(typeof(EnemySaving));
+        XmlSerializer enemySer = new XmlSerializer (typeof(EnemySaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
-        {
-            File.Delete(Application.persistentDataPath + "/enemyinfo.dat");
+        if (File.Exists (Application.persistentDataPath + "/enemyinfo.dat")) {
+            File.Delete (Application.persistentDataPath + "/enemyinfo.dat");
         }
-        file = File.Open(Application.persistentDataPath + "/enemyinfo.dat",
+        file = File.Open (Application.persistentDataPath + "/enemyinfo.dat",
             FileMode.Create);
 
         // Create a new xml root
-        EnemySaving enemySaving = new EnemySaving();
-        enemySaving.EnemyList = new List<EnemyData>();
+        EnemySaving enemySaving = new EnemySaving ();
+        enemySaving.EnemyList = new List<EnemyData> ();
 
         // add data to the list of enemylist
-        foreach (GameObject enemy in enemies.Values)
-        {
+        foreach (GameObject enemy in enemies.Values) {
             EnemyData data;
-            data = enemy.GetComponent<Enemy>().GenerateEnemyData();
-            enemySaving.EnemyList.Add(data);
+            data = enemy.GetComponent<Enemy> ().GenerateEnemyData ();
+            enemySaving.EnemyList.Add (data);
         }
 
-        enemySer.Serialize(file, enemySaving);
-        file.Close();
+        enemySer.Serialize (file, enemySaving);
+        file.Close ();
     }
 
-    public void Load()
+    public void Load ()
     {
-        LoadPlayers();
-        LoadEnemies();
+        LoadPlayers ();
+        LoadEnemies ();
     }
 
     /* 
      * Load all the players from the file system and send the message
      * to all clients connected to the server
      */
-    void LoadPlayers()
+    void LoadPlayers ()
     {
-        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
-        {
+        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
             // Read data from xml and deserialize it
-            XmlSerializer serializer = new XmlSerializer(typeof(PlayerSaving));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/playerinfo.dat", FileMode.Open);
-            PlayerSaving saving = (PlayerSaving)serializer.Deserialize(file);
+            XmlSerializer serializer = new XmlSerializer (typeof(PlayerSaving));
+            FileStream file = File.Open (Application.persistentDataPath +
+                              "/playerinfo.dat", FileMode.Open);
+            PlayerSaving saving = (PlayerSaving)serializer.Deserialize (file);
 
-            foreach(PlayerData data in saving.PlayerList)
-            {
+            foreach (PlayerData data in saving.PlayerList) {
                 // prepare the message to be send to clients to initialize
                 // the loaded player
                 Messages.LoadPlayerMessage loadMessage =
-                    new Messages.LoadPlayerMessage(
+                    new Messages.LoadPlayerMessage (
                         data.id,
                         data.username,
                         data.pos,
@@ -545,39 +567,115 @@ public class GameController : MonoBehaviour
                         data.weaponNumber,
                         data.ammo);
                 // Initialize the player on server using saved data
-                GameObject playerClone = Instantiate(playerPrefab, data.pos,
-                    data.rot) as GameObject;
-                players[data.id] = playerClone;
-                Player player = playerClone.GetComponentInChildren<Player>();
-                player = initializePlayerOnLoad(player, loadMessage);
-                player.Load();
+                GameObject playerClone = Instantiate (playerPrefab, data.pos,
+                                             data.rot) as GameObject;
+                players [data.id] = playerClone;
+                Player player = playerClone.GetComponentInChildren<Player> ();
+                player = initializePlayerOnLoad (player, loadMessage);
+                player.Load ();
 
                 // Authenticate the player using the username and make the
                 // matching player the controlled player
-                if (data.username == username)
-                {
-                    playerClone.GetComponent<FirstPersonController>().enabled = true;
-                    playerClone.GetComponentInChildren<Camera>().enabled = true;
-                    playerClone.GetComponentInChildren<AudioListener>().enabled = true;
-                    playerClone.GetComponentInChildren<FlareLayer>().enabled = true;
-                    playerClone.GetComponentInChildren<Skybox>().enabled = true;
-                    playerClone.GetComponentInChildren<Player>().isLocal = true;
-                    playerClone.GetComponentInChildren<Player>().SetNetworkClient(mClient);
+                if (data.username == username) {
+                    playerClone.GetComponent<FirstPersonController> ().enabled = true;
+                    playerClone.GetComponentInChildren<Camera> ().enabled = true;
+                    playerClone.GetComponentInChildren<AudioListener> ().enabled = true;
+                    playerClone.GetComponentInChildren<FlareLayer> ().enabled = true;
+                    playerClone.GetComponentInChildren<Skybox> ().enabled = true;
+                    playerClone.GetComponentInChildren<Player> ().isLocal = true;
+                    playerClone.GetComponentInChildren<Player> ().SetGameController (this);
                     controlledPlayer = playerClone;
                 }
 
                 // Send the message to all clients
-                NetworkServer.SendToAll(Messages.LoadPlayerMessage.msgId,
+                NetworkServer.SendToAll (Messages.LoadPlayerMessage.msgId,
                     loadMessage);
             }
+        }
+    }
 
+    /*
+     * player die and switch the camera to another lived player
+     * if no player is lived, gameover will appear
+     * this player could either be controlled or watched (when you are died)
+     */
+    public void PlayerDie (int playerId)
+    {
+        // if already died
+        if (!players.ContainsKey (playerId)) {
+            return;
+        }
+        // remove player reference from enemies
+        foreach (GameObject enemyObject in enemies.Values) {
+            Enemy enemy = enemyObject.GetComponent<Enemy> ();
+            enemy.RemovePlayer (playerId);
+        }
+        // change the main camera
+        if (controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (controlledPlayer);
+            controlledPlayer = null;
+        } else if (watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (watchedPlayer);
+            watchedPlayer = null;
+
+        } else {
+            Destroy (players [playerId]);
+        }
+        players.Remove (playerId);
+        // if no player is lived, change to the game over camera
+        if (players.Count == 0) {
+            
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<Camera> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<AudioListener> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverUI")
+                .GetComponent<Canvas> ().enabled = true;
+        } else {
+            // else go to the camera of the first lived player in the player
+            // list
+            players [0].GetComponentInChildren<Camera> ().enabled = true;
+        }
+        if (players.Count > 0 && controlledPlayer == null) {
+            watchedPlayer = players [0];
+        }
+    }
+
+    /* if local controlled player is died, constantly call this method to 
+     * inform the server that the player is died, until get a reply from
+     * server
+     */
+    void ClientSendPlayerDeath ()
+    {
+        Messages.PlayerDieMessage dieMsg = 
+            new Messages.PlayerDieMessage (
+                controlledPlayer.GetComponentInChildren<Player> ().id);
+        mClient.Send (Messages.PlayerDieMessage.msgId, dieMsg);
+    }
+
+    /*
+     * after server received player's death, delete the player from the player
+     * list and then broadcast this information to all the player( including 
+     * the client who send it as a reply)
+     */
+    void OnServerGetPlayerDeath (NetworkMessage msg)
+    {
+        Messages.PlayerDieMessage dieMsg =
+            msg.ReadMessage<Messages.PlayerDieMessage> ();
+//        if (!players.ContainsKey (dieMsg.playerId)) {
+//            return;
+//        }
+//        players.Remove (dieMsg.playerId);
+        diedPlayers.Add (dieMsg.playerId, new List<int> ());
+        foreach (NetworkConnection conn in NetworkServer.connections) {
+            diedPlayers [dieMsg.playerId].Add (conn.connectionId);
         }
     }
 
     /*
      * The function being called when client receives the LoadPlayer message
      */
-    public void OnLoadPlayer(NetworkMessage msg)
+    public void OnLoadPlayer (NetworkMessage msg)
     {
         // if it is the local player, the player is already initialized
         if (isServer)
@@ -585,21 +683,21 @@ public class GameController : MonoBehaviour
 
         // Initialize the player using the data in the message
         Messages.LoadPlayerMessage loadMessage =
-            msg.ReadMessage<Messages.LoadPlayerMessage>();
-        GameObject playerClone = Instantiate(playerPrefab, loadMessage.pos,
-            loadMessage.rot) as GameObject;
-        Player player = playerClone.GetComponentInChildren<Player>();
-        players[loadMessage.id] = playerClone;
-        player = initializePlayerOnLoad(player, loadMessage);
-        player.Load();
+            msg.ReadMessage<Messages.LoadPlayerMessage> ();
+        GameObject playerClone = Instantiate (playerPrefab, loadMessage.pos,
+                                     loadMessage.rot) as GameObject;
+        Player player = playerClone.GetComponentInChildren<Player> ();
+        players [loadMessage.id] = playerClone;
+        player = initializePlayerOnLoad (player, loadMessage);
+        player.Load ();
     }
 
     /*
      * This is the helper function to fill the player with the data in the
      * LoadPlayer netgwork messagee
      */
-    private Player initializePlayerOnLoad(Player player,
-        Messages.LoadPlayerMessage loadMessage)
+    private Player initializePlayerOnLoad (Player player,
+                                           Messages.LoadPlayerMessage loadMessage)
     {
         player.id = loadMessage.id;
         player.username = loadMessage.username;
@@ -613,22 +711,20 @@ public class GameController : MonoBehaviour
         return player;
     }
 
-    void LoadEnemies()
+    void LoadEnemies ()
     {
-        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
-        {
+        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
             // Read data from xml and deserialize it
-            XmlSerializer serializer = new XmlSerializer(typeof(EnemySaving));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/enemyinfo.dat", FileMode.Open);
-            EnemySaving saving = (EnemySaving)serializer.Deserialize(file);
+            XmlSerializer serializer = new XmlSerializer (typeof(EnemySaving));
+            FileStream file = File.Open (Application.persistentDataPath +
+                              "/enemyinfo.dat", FileMode.Open);
+            EnemySaving saving = (EnemySaving)serializer.Deserialize (file);
 
-            foreach (EnemyData data in saving.EnemyList)
-            {
+            foreach (EnemyData data in saving.EnemyList) {
                 // prepare the message to be send to clients to initialize
                 // the loaded player
                 Messages.LoadEnemyMessage loadMessage =
-                    new Messages.LoadEnemyMessage(
+                    new Messages.LoadEnemyMessage (
                         data.id,
                         data.pos,
                         data.rot,
@@ -638,13 +734,13 @@ public class GameController : MonoBehaviour
                         data.maxHp);
 
                 // Initialize the player on server using saved data
-                GameObject enemyClone = Instantiate(
-                    enemyPrefabs[data.enemyIndex],
-                    data.pos,
-                    data.rot) as GameObject;
-                enemies[data.id] = enemyClone;
-                Enemy enemy = enemyClone.GetComponent<Enemy>();
-                enemy.Initialize(loadMessage.id,
+                GameObject enemyClone = Instantiate (
+                                            enemyPrefabs [data.enemyIndex],
+                                            data.pos,
+                                            data.rot) as GameObject;
+                enemies [data.id] = enemyClone;
+                Enemy enemy = enemyClone.GetComponent<Enemy> ();
+                enemy.Initialize (loadMessage.id,
                     loadMessage.enemyIndex,
                     loadMessage.level,
                     loadMessage.pos,
@@ -652,22 +748,21 @@ public class GameController : MonoBehaviour
                     loadMessage.damagedHp,
                     this);
                 enemy.inServer = true;
-                enemy.Load();
-                foreach (GameObject player in players.Values)
-                {
-                    Player playerScript = player.GetComponentInChildren<Player>();
-                    enemy.AddPlayer(playerScript);
+                enemy.Load ();
+                foreach (GameObject player in players.Values) {
+                    Player playerScript = player.GetComponentInChildren<Player> ();
+                    enemy.AddPlayer (playerScript);
                 }
 
                 // Send the message to all clients
-                NetworkServer.SendToAll(Messages.LoadEnemyMessage.msgId,
+                NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
                     loadMessage);
             }
 
         }
     }
 
-    public void OnLoadEnemy(NetworkMessage msg)
+    public void OnLoadEnemy (NetworkMessage msg)
     {
         // if it is the local player, the player is already initialized
         if (isServer)
@@ -675,26 +770,80 @@ public class GameController : MonoBehaviour
 
         // Initialize the player using the data in the message
         Messages.LoadEnemyMessage loadMessage =
-            msg.ReadMessage<Messages.LoadEnemyMessage>();
-        GameObject enemyClone = Instantiate(
-            enemyPrefabs[loadMessage.enemyIndex],
-            loadMessage.pos,
-            loadMessage.rot) as GameObject;
-        Enemy enemy = enemyClone.GetComponent<Enemy>();
-        enemies[loadMessage.id] = enemyClone;
-        enemy.Initialize(loadMessage.id,
+            msg.ReadMessage<Messages.LoadEnemyMessage> ();
+        GameObject enemyClone = Instantiate (
+                                    enemyPrefabs [loadMessage.enemyIndex],
+                                    loadMessage.pos,
+                                    loadMessage.rot) as GameObject;
+        Enemy enemy = enemyClone.GetComponent<Enemy> ();
+        enemies [loadMessage.id] = enemyClone;
+        enemy.Initialize (loadMessage.id,
             loadMessage.enemyIndex,
             loadMessage.level,
             loadMessage.pos,
             loadMessage.maxHp,
             loadMessage.damagedHp,
             this);
-        enemy.Load();
+        enemy.Load ();
         enemy.inServer = true;
-        foreach (GameObject player in players.Values)
-        {
-            Player playerScript = player.GetComponentInChildren<Player>();
-            enemy.AddPlayer(playerScript);
+        foreach (GameObject player in players.Values) {
+            Player playerScript = player.GetComponentInChildren<Player> ();
+            enemy.AddPlayer (playerScript);
+        }
+    }
+
+    /*
+    * server constantly call this function to broadcast the player's death
+    * until all client is replied to ensure all clients is received that info
+    */
+    void ServerSendPlayerDeath ()
+    {
+        if (players.Count == 0) {
+            return;
+        }
+        foreach (int diedPlayer in diedPlayers.Keys) {
+            Messages.PlayerDieMessage dieMsg = 
+                new Messages.PlayerDieMessage (diedPlayer);
+            foreach (int connid in diedPlayers[diedPlayer]) {
+                NetworkServer.SendToClient (connid,
+                    Messages.PlayerDieMessage.msgId,
+                    dieMsg);
+            }
+        }
+    }
+    
+    /* 
+    * client received the message that server send to inform a player's death
+    */
+    void OnClientReceivedPlayerDeath (NetworkMessage msg)
+    {
+        Messages.PlayerDieMessage dieMsg = 
+            msg.ReadMessage<Messages.PlayerDieMessage> ();
+        // stop sending player die message
+        if (controlledPlayer != null &&
+            controlledPlayer.GetComponentInChildren<Player> ().id
+            == dieMsg.playerId && localPlayerDie) {
+            localPlayerDie = false;
+        }
+        PlayerDie (dieMsg.playerId);
+        Messages.ReplyPlayerDeath reply = 
+            new Messages.ReplyPlayerDeath (dieMsg.playerId);
+        mClient.Send (Messages.ReplyPlayerDeath.msgId, reply);
+    }
+    
+    /*
+    * server received client's reply of player's death
+    */
+    void OnReplyPlayerDeath (NetworkMessage msg)
+    {
+        Messages.ReplyPlayerDeath reply = 
+            msg.ReadMessage<Messages.ReplyPlayerDeath> ();
+        if (!diedPlayers.ContainsKey (reply.playerId)) {
+            Debug.Log ("Player Death Replied enemyId not exist!");
+        }
+        diedPlayers [reply.playerId].Remove (msg.conn.connectionId);
+        if (diedPlayers [reply.playerId].Count == 0) {
+            diedPlayers.Remove (reply.playerId);
         }
     }
 }
@@ -703,10 +852,10 @@ public class GameController : MonoBehaviour
 /*
 * Define the structure of the player status xml
 */
-[XmlRoot("PlayerSaving")]
+[XmlRoot ("PlayerSaving")]
 public class PlayerSaving
 {
-    [XmlArray("PlayerList"), XmlArrayItem(typeof(PlayerData),
+    [XmlArray ("PlayerList"), XmlArrayItem (typeof(PlayerData),
         ElementName = "PlayerData")]
     public List<PlayerData> PlayerList { get; set; }
 }
@@ -714,10 +863,10 @@ public class PlayerSaving
 /*
 * Define the structure of the enemy status xml
 */
-[XmlRoot("EnemySaving")]
+[XmlRoot ("EnemySaving")]
 public class EnemySaving
 {
-    [XmlArray("EnemyList"), XmlArrayItem(typeof(EnemyData),
+    [XmlArray ("EnemyList"), XmlArrayItem (typeof(EnemyData),
         ElementName = "EnemyData")]
     public List<EnemyData> EnemyList { get; set; }
 }

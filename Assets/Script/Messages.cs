@@ -64,13 +64,13 @@ public class Messages
         public int ammo;
         public const short msgId = 110;
         // default constructor
-        public LoadPlayerMessage()
+        public LoadPlayerMessage ()
         {
         }
-        
-        public LoadPlayerMessage(int id, string username, Vector3 pos,
-            Quaternion rot, int level, int exp, float hp, float maxHp,
-            int weaponNumber, int ammo)
+
+        public LoadPlayerMessage (int id, string username, Vector3 pos,
+                                 Quaternion rot, int level, int exp, float hp, float maxHp,
+                                 int weaponNumber, int ammo)
         {
             this.id = id;
             this.username = username;
@@ -101,8 +101,8 @@ public class Messages
         {
         }
 
-        public LoadEnemyMessage(int id, Vector3 pos, Quaternion rot,
-            int enemyIndex, int level, float damagedHp, float maxHp)
+        public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
+                                int enemyIndex, int level, float damagedHp, float maxHp)
         {
             this.id = id;
             this.pos = pos;
@@ -113,7 +113,7 @@ public class Messages
             this.maxHp = maxHp;
         }
     }
-
+        
     // message used to tell the client to spawn an enemy
     public class NewEnemyMessage: MessageBase
     {
@@ -214,6 +214,40 @@ public class Messages
         }
 
         public ReplyEnemyDeath ()
+        {
+        }
+    }
+
+    // message used to update plyaer's hp
+    public class PlayerDieMessage : MessageBase
+    {
+        public int playerId;
+        public const short msgId = 107;
+
+        public PlayerDieMessage (int playerId)
+        {
+            this.playerId = playerId;
+        }
+
+        public PlayerDieMessage ()
+        {
+        }
+    }
+
+    /*
+     * the message client reply to the enemy death message server sended
+     */
+    public class ReplyPlayerDeath : MessageBase
+    {
+        public int playerId;
+        public const short msgId = 108;
+
+        public ReplyPlayerDeath (int id)
+        {
+            this.playerId = id;
+        }
+
+        public ReplyPlayerDeath ()
         {
         }
     }
