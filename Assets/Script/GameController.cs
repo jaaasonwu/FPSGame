@@ -630,13 +630,11 @@ public class GameController : MonoBehaviour
             enemy.RemovePlayer (playerId);
         }
         // change the main camera
-        if (controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
+        if (controlledPlayer != null && controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (controlledPlayer);
             controlledPlayer = null;
             GameObject.Find ("Ingame").SetActive (false);
-            GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
-            GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
-        } else if (watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
+        } else if (watchedPlayer != null && watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (watchedPlayer);
             watchedPlayer = null;
 
@@ -647,6 +645,8 @@ public class GameController : MonoBehaviour
         // if no player is lived, change to the game over camera
         if (players.Count == 0) {
             
+            GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
+            GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
             GameObject.FindGameObjectWithTag ("GameOverCamera")
                 .GetComponent<Camera> ().enabled = true;
             GameObject.FindGameObjectWithTag ("GameOverCamera")
