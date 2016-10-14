@@ -53,6 +53,7 @@ public class Messages
     public class LoadPlayerMessage : MessageBase
     {
         public int id;
+        public string username;
         public Vector3 pos;
         public Quaternion rot;
         public int level;
@@ -63,15 +64,16 @@ public class Messages
         public int ammo;
         public const short msgId = 110;
         // default constructor
-        public LoadPlayerMessage()
+        public LoadPlayerMessage ()
         {
         }
-        
-        public LoadPlayerMessage(int id, Vector3 pos, Quaternion rot,
-            int level, int exp, float hp, float maxHp, int weaponNumber,
-            int ammo)
+
+        public LoadPlayerMessage (int id, string username, Vector3 pos,
+                                 Quaternion rot, int level, int exp, float hp, float maxHp,
+                                 int weaponNumber, int ammo)
         {
             this.id = id;
+            this.username = username;
             this.pos = pos;
             this.rot = rot;
             this.level = level;
@@ -83,6 +85,35 @@ public class Messages
         }
     }
 
+    public class LoadEnemyMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int enemyIndex;
+        public int level;
+        public float damagedHp;
+        public float maxHp;
+        public const short msgId = 111;
+
+        //default constructor
+        public LoadEnemyMessage ()
+        {
+        }
+
+        public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
+                                int enemyIndex, int level, float damagedHp, float maxHp)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.enemyIndex = enemyIndex;
+            this.level = level;
+            this.damagedHp = damagedHp;
+            this.maxHp = maxHp;
+        }
+    }
+        
     // message used to tell the client to spawn an enemy
     public class NewEnemyMessage: MessageBase
     {
@@ -183,6 +214,40 @@ public class Messages
         }
 
         public ReplyEnemyDeath ()
+        {
+        }
+    }
+
+    // message used to update plyaer's hp
+    public class PlayerDieMessage : MessageBase
+    {
+        public int playerId;
+        public const short msgId = 107;
+
+        public PlayerDieMessage (int playerId)
+        {
+            this.playerId = playerId;
+        }
+
+        public PlayerDieMessage ()
+        {
+        }
+    }
+
+    /*
+     * the message client reply to the enemy death message server sended
+     */
+    public class ReplyPlayerDeath : MessageBase
+    {
+        public int playerId;
+        public const short msgId = 108;
+
+        public ReplyPlayerDeath (int id)
+        {
+            this.playerId = id;
+        }
+
+        public ReplyPlayerDeath ()
         {
         }
     }

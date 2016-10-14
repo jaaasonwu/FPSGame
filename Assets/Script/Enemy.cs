@@ -15,13 +15,12 @@ using System.Xml.Serialization;
 public class Enemy : MonoBehaviour, ICharactor
 {
     // public fields
-
     // enemy's id
     public int id;
     // dertermines what is the kind of the enemy
     public int enemyIndex;
     // the charactor's level
-    protected int level;
+    public int level;
     // the charactor's current HP
     public float hp;
     // the character's maximum HP
@@ -117,6 +116,10 @@ public class Enemy : MonoBehaviour, ICharactor
             if (controller == null) {
                 Debug.Log ("null controller");
             }
+            // if the controlled player is dead
+            if (controller.controlledPlayer == null) {
+                return;
+            }
             int localPlayerId = 
                 controller.controlledPlayer.GetComponentInChildren<Player> ().id;
             Messages.UpdateDamagedHp newMsg = 
@@ -133,14 +136,15 @@ public class Enemy : MonoBehaviour, ICharactor
         Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint, float maxHp,
-                            GameController controller)
+    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint,
+                            float maxHp, float damagedHp, GameController controller)
     {
         this.id = id;
         this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
         this.maxHp = maxHp;
+        this.damagedHp = damagedHp;
         this.controller = controller;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
@@ -286,34 +290,22 @@ public class Enemy : MonoBehaviour, ICharactor
      * The function reads from the serialized data from the storage,
      * deserialize it and load it
      */
-     public void Load()
+    public void Load ()
     {
-        if (File.Exists(Application.persistentDataPath + "/enemyinfo.dat"))
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(EnemyData));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/enemyinfo.dat", FileMode.Open);
-            EnemyData data = (EnemyData)serializer.Deserialize(file);
-
-            id = data.id;
-            this.transform.position = data.pos;
-            this.transform.rotation = data.rot;
-            level = data.level;
-            hp = data.maxHp - data.damagedHp;
-            maxHp = data.maxHp;
-        }
+        hp = maxHp - damagedHp;
     }
 
     /*
      * This function serlize the enemy data and save the data in th file
      * system
      */
-    public EnemyData GenerateEnemyData()
+    public EnemyData GenerateEnemyData ()
     {
-        EnemyData data = new EnemyData();
+        EnemyData data = new EnemyData ();
         data.id = id;
         data.pos = this.transform.position;
         data.rot = this.transform.rotation;
+        data.enemyIndex = this.enemyIndex;
         data.level = level;
         data.damagedHp = damagedHp;
         data.maxHp = maxHp;
@@ -325,16 +317,32 @@ public class Enemy : MonoBehaviour, ICharactor
 
         return data;
     }
+    /*
+    * remove a player from player list using player id
+    */
+    public void RemovePlayer (int playerId)
+    {
+        if (hatedPlayer.id == playerId) {
+            hatedPlayer = null;
+        }
+        for (int i = 0; i < players.Count; i++) {
+            if (players [i].id == playerId) {
+                players.RemoveAt (i);
+                break;
+            }
+        }
+    }
 }
 
 /*
- * The class used to store player information
+ * The class used to store enemy information
  */
 public class EnemyData
 {
     public int id;
     public Vector3 pos;
     public Quaternion rot;
+    public int enemyIndex;
     public int level;
     public float damagedHp;
     public float maxHp;
@@ -343,4 +351,5 @@ public class EnemyData
     public bool isGettingHit;
     public bool isDead;
     public bool isAttacking;
+
 }

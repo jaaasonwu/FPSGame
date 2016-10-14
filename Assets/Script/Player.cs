@@ -20,31 +20,38 @@ public class Player : MonoBehaviour, ICharactor
     public GameObject[] weapons;
 
     public int id;
+    // The username of player which is used to authenticate when loading saved
+    // game state
+    public string username;
     // is the local player, means the player is controlled
     public bool isLocal = false;
     // the rate that client will send to server of player's location
     public float updateRate = 0.05f;
     // the time counter to count how many time is elapsed
-    private float updateCount;
-    private NetworkClient mClient;
 
     public Slider healthSlider;
-    GameObject weaponPrefab;
-    Weapon currentWeapon;
     public int level;
     public int exp;
     public float hp;
     public float maxHp;
     public int weaponNumber;
     public int ammo;
-    private int numAvailableWeapons;
-    private Text ammoText;
-	
+    
     //player's current buffs
     public List<Buff> buffs;
 
+    // private & protected fields
+    private int numAvailableWeapons;
+    private Text ammoText;
+    float updateCount;
+    GameObject weaponPrefab;
+    Weapon currentWeapon;
+    const int NUM_WEAPONS = 3;
+    GameController controller;
+    
+
     // Use this for initialization
-    void Start ()
+    void Awake ()
     {
         level = 1;
         exp = 0;
@@ -52,17 +59,17 @@ public class Player : MonoBehaviour, ICharactor
         maxHp = 100;
         weaponNumber = 0;
         ammo = 500;
-        this.buffs = new List<Buff>();
-        ShowWeapon(weaponNumber);
+        this.buffs = new List<Buff> ();
+        ShowWeapon (weaponNumber);
 
         numAvailableWeapons = 3;
-        StartHealthSlider();
+        StartHealthSlider ();
         updateCount = 0;
     }
 
-    void StartHealthSlider()
+    void StartHealthSlider ()
     {
-        healthSlider = (Slider)GameObject.FindGameObjectWithTag("HealthSlider").GetComponent<Slider>();
+        healthSlider = (Slider)GameObject.FindGameObjectWithTag ("HealthSlider").GetComponent<Slider> ();
         healthSlider.maxValue = maxHp;
         healthSlider.value = hp;
     }
@@ -83,11 +90,14 @@ public class Player : MonoBehaviour, ICharactor
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
         if (updateCount >= updateRate) {
+            NetworkClient mClient = controller.mClient;
             updateCount = 0;
+            // send the player's position
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
-                    Quaternion.Euler (transform.rotation.eulerAngles - transform.localRotation.eulerAngles));
+                    Quaternion.Euler (transform.rotation.eulerAngles -
+                    transform.localRotation.eulerAngles));
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -107,26 +117,29 @@ public class Player : MonoBehaviour, ICharactor
     {
         hp -= damage;
         healthSlider.value = hp;
+        if (hp < 0) {
+            controller.localPlayerDie = true;
+        }
     }
 
 
     // Load the weapon and show it on screen. Meanwhile transfer the amount of
     // ammo
-    public void ShowWeapon(int weaponNumber)
+    public void ShowWeapon (int weaponNumber)
     {
-        weaponPrefab = Instantiate(weapons[weaponNumber]);
+        weaponPrefab = Instantiate (weapons [weaponNumber]);
         weaponPrefab.transform.parent = gameObject.transform;
         weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
         weaponPrefab.transform.rotation = gameObject.transform.rotation;
-        currentWeapon = weaponPrefab.GetComponent<Weapon>();
+        currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         currentWeapon.ammo = ammo;
-        ammoText = (Text)GameObject.FindGameObjectWithTag("AmmoText").GetComponent<Text>();
+        ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + currentWeapon.ammo;
     }
 
-    public void SetNetworkClient (NetworkClient mClient)
+    public void SetGameController (GameController controller)
     {
-        this.mClient = mClient;
+        this.controller = controller;
     }
 
     // function to check whether the player is moving
@@ -190,6 +203,7 @@ public class Player : MonoBehaviour, ICharactor
         if (this.hp >= maxHp) {
             this.hp = maxHp;
         }
+        healthSlider.value = hp;
     }
 
     // formula new damage = old damage *(100% + percentage)
@@ -205,71 +219,38 @@ public class Player : MonoBehaviour, ICharactor
     }
 
     // This function destroys the current weapon and switch to the next weapon
-    public void NextWeapon()
+    public void NextWeapon ()
     {
-        if (weaponNumber == numAvailableWeapons - 1)
-        {
+        if (weaponNumber == numAvailableWeapons - 1) {
             weaponNumber = 0;
-        }
-        else
-        {
+        } else {
             weaponNumber++;
         }
         ammo = currentWeapon.ammo;
-        Destroy(weaponPrefab);
-        ShowWeapon(weaponNumber);
+        Destroy (weaponPrefab);
+        ShowWeapon (weaponNumber);
     }
 
     /*
      * The function reads from the serialized data from the storage,
      * deserialize it and load it
      */
-    public void Load()
+    public void Load ()
     {
-        // Deserialize the xml file to generate PlayerData class
-        if (File.Exists(Application.persistentDataPath + "/playerinfo.dat"))
-        {
-            XmlSerializer serializer = new XmlSerializer(typeof(PlayerData));
-            FileStream file = File.Open(Application.persistentDataPath +
-                "/playerinfo.dat", FileMode.Open);
-            PlayerData data = (PlayerData) serializer.Deserialize(file);
-
-            id = data.id;
-            isLocal = data.isLocal;
-            this.transform.parent.position = data.pos;
-            this.transform.parent.rotation = data.rot;
-            level = data.level;
-            exp = data.exp;
-            hp = data.hp;
-            healthSlider.value = hp;
-            maxHp = data.maxHp;
-            healthSlider.maxValue = maxHp;
-            weaponNumber = data.weaponNumber;
-            ammo = data.ammo;
-            Destroy(weaponPrefab);
-            ShowWeapon(weaponNumber);
-
-            file.Close();
-        } 
-        else
-        {
-            level = 1;
-            exp = 0;
-            hp = 100;
-            maxHp = 100;
-            weaponNumber = 0;
-            currentWeapon.ammo = 500;
-        }
+        healthSlider.value = hp;
+        healthSlider.maxValue = maxHp;
+        Destroy (weaponPrefab);
+        ShowWeapon (weaponNumber);
     }
 
     /*
      * This function returns a PlayerData class that is ready to be serlialized
      */
-    public PlayerData GeneratePlayerData()
+    public PlayerData GeneratePlayerData ()
     {
-        PlayerData data = new PlayerData();
+        PlayerData data = new PlayerData ();
         data.id = id;
-        data.isLocal = isLocal;
+        data.username = username;
         data.pos = this.transform.parent.position;
         data.rot = this.transform.parent.rotation;
         data.level = level;
@@ -289,6 +270,7 @@ public class Player : MonoBehaviour, ICharactor
 public class PlayerData
 {
     public int id;
+    public String username;
     public bool isLocal;
     public Vector3 pos;
     public Quaternion rot;
