@@ -23,7 +23,7 @@ public class GameController : MonoBehaviour
     public GameObject[] enemyPrefabs;
 
     bool isStart = true;
-    NetworkClient mClient;
+    public NetworkClient mClient;
     //player id counter, starts from 0
     int idCount = 0;
     GameObject controlledPlayer;
@@ -34,6 +34,7 @@ public class GameController : MonoBehaviour
     // for test
 
     public const int PORT = 8001;
+
     // Use this for initialization
     void Start ()
     {
@@ -41,8 +42,8 @@ public class GameController : MonoBehaviour
 	
     // Update is called once per frame
     void Update ()
-    {
-        if (isStart) {
+	{
+		if (isStart) {
             SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
@@ -82,9 +83,28 @@ public class GameController : MonoBehaviour
 		isServer = false;
 	}
 
+	/*
+	 *  return port number of current server listen to
+	 */
 	public int GetPort(){
 		return NetworkServer.listenPort;
 	}
+
+	/*
+	 * getter method for isServer
+	 */
+	public bool isAServer(){
+		return isServer;
+	}
+
+	/*
+	 * getter method for mClient
+	 */
+	public NetworkClient GetmClient(){
+		//Debug.Log (mClient.connection);
+		return mClient;
+	}
+
     /*
      * set up the server, which is a local server and
      * a local client
@@ -95,6 +115,8 @@ public class GameController : MonoBehaviour
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
+		NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnServerRecieveLobbyMsg);
         isStart = false;
     }
 
@@ -110,6 +132,10 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -122,6 +148,10 @@ public class GameController : MonoBehaviour
 		mClient.RegisterHandler (MsgType.Connect, OnConnected);
 		mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
 		mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
 		mClient.Connect (address, port);
 		isStart = false;
 	}
@@ -137,13 +167,51 @@ public class GameController : MonoBehaviour
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
         isStart = false;
     }
+
 	/*
 	 * diconnect from current server
 	 */
 	public void Disconnect(){
 		mClient.Disconnect();
+	}
+
+	/*
+	 * on server recieve lobby message 
+	 */
+	public void OnServerRecieveLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve lobby message 
+	 */
+	public void OnClientRecieveLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve left lobby message
+	 */
+	public void OnRecieveLeftLobby(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
 	}
 
     /*
@@ -153,6 +221,14 @@ public class GameController : MonoBehaviour
     void OnConnected (NetworkMessage msg)
     {
         Debug.Log ("connected to server");
+		// instance is null if not in lobby main
+		
+		if (AviationLobbyMain.s_instance != null) {
+			Debug.Log("entering lobby");
+			AviationLobbyMain.s_instance.OnEnterLobby ();
+		}
+		//Debug.Log(NetworkServer.connections.Count);
+
         // -1 in id means not allocated
 //        Messages.NewPlayerMessage newPlayer = new
 //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));

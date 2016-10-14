@@ -67,4 +67,43 @@ public class Messages
             this.spawnPoint = spawnPoint;
         }
     }
+
+	/*
+	 * message used to tell server about client when client enter or in lobby
+	 * this message will be triggered after connection established
+	 */
+	public class PlayerLobbyMessage : MessageBase
+	{
+		public int connectionId;
+		public string playerName;
+		public bool isReady;
+		public const short msgId = 198; 
+
+		public PlayerLobbyMessage(int connId, string name,bool readiness){
+			this.connectionId = connId;
+			this.playerName = name;
+			this.isReady = readiness;
+		}
+
+		//default constructor
+		public PlayerLobbyMessage(){
+			
+		}
+	}
+
+	public class PlayerLeftLobbyMessage : MessageBase{
+		public int connectionId;
+		public bool isServer;
+		public const short msgId = 199;
+
+		public PlayerLeftLobbyMessage(int connId,bool isServer){
+			this.connectionId = connId;
+			this.isServer = isServer;
+		}
+
+		//defalut constructor
+		public PlayerLeftLobbyMessage(){
+		
+		}
+	}
 }

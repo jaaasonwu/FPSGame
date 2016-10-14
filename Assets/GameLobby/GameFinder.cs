@@ -106,12 +106,23 @@ public class GameFinder : NetworkDiscovery {
 	}
 
 	/*
-	 * stop listenning and re init networktransport
+	 * stop listenning and clear serverFound
 	*/
 	public void ReInit(){
+		this.foundServers.Clear ();
 		StopBroadcast ();
-		NetworkTransport.Shutdown ();
-		NetworkTransport.Init ();
+	}
+
+	/*
+	 * set broadcast message 
+	 */
+	public void SetBroadcastData(int port, string lobbyName, int playerNum){
+		string portS = port.ToString ();
+		string playerNumS = playerNum.ToString ();
+		string data = portS + "\n" 
+			+ lobbyName + "\n"
+			+ playerNumS;
+		this.broadcastData = data;
 	}
 
 	/*

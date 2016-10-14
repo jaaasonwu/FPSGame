@@ -42,16 +42,11 @@ public class AviationLobbyMain : MonoBehaviour {
 
 		// stop listenning as client and start broadcast where message is about lobby
 		// formating is in gamefinder
-		gameFinder.StopBroadcast();
+		gameFinder.ReInit();
 		int playerNum = 1;
-		string port = networkManager.GetPort ().ToString ();
+		int port = networkManager.GetPort ();
 		string lobbyN = lobbyName.text;
-		string playerN = playerNum.ToString ();
-		string data = port + "\n" 
-			+ lobbyN + "\n"
-			+ playerN;
-		Debug.Log (data);
-		gameFinder.broadcastData = data;
+		gameFinder.SetBroadcastData(port,lobbyN,playerNum);
 		gameFinder.StartAsServer ();
 	}
 
@@ -60,7 +55,7 @@ public class AviationLobbyMain : MonoBehaviour {
 	 */
 	public void OnClickJoinGame(){
 		// stop listenning
-		gameFinder.StopBroadcast();
+		gameFinder.ReInit();
 		// try to connect to server else report and return
 		string address = addressToConnect.text;
 		int port = networkManager.GetPort ();
@@ -76,12 +71,26 @@ public class AviationLobbyMain : MonoBehaviour {
 	 * when the join button on foundgame display being click it will connect to that server
 	 */
 	public void OnClickJoinFoundGame(DiscoveredServerEntry foundGame){
-		// stop listening
-		gameFinder.StopBroadcast();
+		// stop listening and clear foundedGame
+		gameFinder.ReInit();
 		string address = foundGame.serverInfo.ipAddress;
 		int port = foundGame.serverInfo.port;
 		networkManager.StartAsJoinClient (address, port);
 
 		AviationLobbyManager.s_lobbyManager.MainToLobby ();
+	}
+
+	/*
+	 * this is a bug fixed method
+	 * to ensure message send to server after the client is sucessfully connected
+	 */
+	public void OnEnterLobby(){
+		NetworkClient mClient = networkManager.GetmClient ();
+		Debug.Log (mClient.isConnected);
+		// report the server that it has entered lobby
+		int connId = mClient.connection.connectionId;
+		Messages.PlayerLobbyMessage msg = 
+			new Messages.PlayerLobbyMessage (connId, playerName.text, false);
+		mClient.Send (Messages.PlayerLobbyMessage.msgId, msg);
 	}
 }
