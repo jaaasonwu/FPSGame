@@ -77,11 +77,9 @@ public class Player : MonoBehaviour, ICharactor
 
         isAttacking = false;
         numAvailableWeapons = 3;
-        StartHealthSlider ();
         updateCount = 0;
 
-        swapButton = GameObject.Find("swap").GetComponent<Button>();
-        swapButton.onClick.AddListener(NextWeapon);
+
     }
 
     void StartHealthSlider ()
@@ -101,9 +99,8 @@ public class Player : MonoBehaviour, ICharactor
             NextWeapon ();
         }
 
-        if (Input.GetButton("Fire1"))
-        {
-            Attack();
+        if (Input.GetButton ("Fire1")) {
+            Attack ();
         }
 
         this.CheckBuffs ();
@@ -125,7 +122,7 @@ public class Player : MonoBehaviour, ICharactor
     /*
      * Set the state of is attacking to true when the shooting button is hold
      */
-    public void SetAttacking()
+    public void SetAttacking ()
     {
         isAttacking = true;
     }
@@ -134,7 +131,7 @@ public class Player : MonoBehaviour, ICharactor
      * Set the state of is attacking to false when the shooting button is no
      * longer hold
      */
-    public void UnsetAttacking()
+    public void UnsetAttacking ()
     {
         isAttacking = false;
     }
@@ -172,8 +169,8 @@ public class Player : MonoBehaviour, ICharactor
         weaponPrefab.transform.rotation = gameObject.transform.rotation;
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         currentWeapon.ammo = ammo;
-        ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
-        ammoText.text = "Ammo: " + currentWeapon.ammo;
+
+
     }
 
     public void SetGameController (GameController controller)
@@ -260,6 +257,8 @@ public class Player : MonoBehaviour, ICharactor
     // This function destroys the current weapon and switch to the next weapon
     public void NextWeapon ()
     {
+        if (!isLocal)
+            return;
         if (weaponNumber == numAvailableWeapons - 1) {
             weaponNumber = 0;
         } else {
@@ -300,6 +299,19 @@ public class Player : MonoBehaviour, ICharactor
         data.ammo = currentWeapon.ammo;
 
         return data;
+    }
+
+    /*
+     * called by server, to bind swap button and healthSlider to the
+     * player, as well as ammoText
+     */
+    public void BindItems ()
+    {
+        StartHealthSlider ();
+        swapButton = GameObject.Find ("swap").GetComponent<Button> ();
+        swapButton.onClick.AddListener (NextWeapon);
+        ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
+        ammoText.text = "Ammo: " + currentWeapon.ammo;
     }
 }
 

@@ -69,29 +69,26 @@ public class GameController : MonoBehaviour
             enemySpawnPoints.Add (spawnPoints [i].transform.position);
         }
 
-        sharedData = GameObject.Find("SharedData").GetComponent<SharedData>();
+        sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
         isServer = sharedData.isServer;
     }
 	
     // Update is called once per frame
     void Update ()
     {
-        if (isStart)
-        {
-            SetUpNetwork();
+        if (isStart) {
+            SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
             if (Input.GetKeyDown (KeyCode.P)) {
-                CreatePlayer();
+                CreatePlayer ();
             }
         }
-        if (controlledPlayer == null && isServer && NetworkServer.connections.Count >= 2)
-        {
-            CreatePlayer();
+        if (!addedPlayer && isServer && NetworkServer.connections.Count >= 2) {
+            CreatePlayer ();
         }
-        if (mClient != null && !isServer)
-        {
-            CreatePlayer();
+        if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
+            CreatePlayer ();
         }
         if (Input.GetKeyDown (KeyCode.L)) {
             Load ();
@@ -120,12 +117,12 @@ public class GameController : MonoBehaviour
             ServerSendPlayerDeath ();
         }
     }
-        
-    void CreatePlayer()
+
+    void CreatePlayer ()
     {
         Messages.NewPlayerMessage newPlayer = new
-                    Messages.NewPlayerMessage(-1, new Vector3(50, 1, 20));
-        mClient.Send(MsgType.AddPlayer, newPlayer);
+                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+        mClient.Send (MsgType.AddPlayer, newPlayer);
         addedPlayer = true;
     }
 
@@ -134,15 +131,12 @@ public class GameController : MonoBehaviour
      */
     void SetUpNetwork ()
     {
-        if (isServer)
-        {
-            SetUpServer();
-            SetUpLocalClient();
+        if (isServer) {
+            SetUpServer ();
+            SetUpLocalClient ();
             //CreatePlayer();
-        }
-        else
-        {
-            SetUpClient(hostAddress);
+        } else {
+            SetUpClient (hostAddress);
         }
         //if (Input.GetKeyDown (KeyCode.I)) {
         //    SetUpServer ();
@@ -193,8 +187,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-        //mClient.Connect (address, PORT);
-        //isStart = false;
+        mClient.Connect (address, PORT);
+        isStart = false;
     }
 
     /*
@@ -228,7 +222,6 @@ public class GameController : MonoBehaviour
         //        Messages.NewPlayerMessage newPlayer = new
         //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
         //        mClient.Send (MsgType.AddPlayer, newPlayer);
-        CreatePlayer();
     }
 
     /*
@@ -295,6 +288,7 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<Player> ().isLocal = true;
         player.GetComponentInChildren<Player> ().username = username;
         player.GetComponentInChildren<Player> ().SetGameController (this);
+        player.GetComponentInChildren<Player> ().BindItems ();
         controlledPlayer = player;
     }
 
@@ -639,9 +633,9 @@ public class GameController : MonoBehaviour
         if (controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (controlledPlayer);
             controlledPlayer = null;
-            GameObject.Find("Ingame").SetActive(false);
-            GameObject.FindGameObjectWithTag("AmmoText").SetActive(false);
-            GameObject.FindGameObjectWithTag("HealthSlider").SetActive(false);
+            GameObject.Find ("Ingame").SetActive (false);
+            GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
+            GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
         } else if (watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
             Destroy (watchedPlayer);
             watchedPlayer = null;
