@@ -85,13 +85,20 @@ public class GameController : MonoBehaviour
                 CreatePlayer();
             }
         }
-
+        if (controlledPlayer == null && isServer && NetworkServer.connections.Count >= 2)
+        {
+            CreatePlayer();
+        }
+        if (mClient != null && !isServer)
+        {
+            CreatePlayer();
+        }
         if (Input.GetKeyDown (KeyCode.L)) {
             Load ();
         }
 
         // Generate enemy at a regular interval
-        if (enemies.Count < enemyLimits) {
+        if (isServer && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
                 generateCount = 0;
@@ -131,7 +138,11 @@ public class GameController : MonoBehaviour
         {
             SetUpServer();
             SetUpLocalClient();
-            CreatePlayer();
+            //CreatePlayer();
+        }
+        else
+        {
+            SetUpClient(hostAddress);
         }
         //if (Input.GetKeyDown (KeyCode.I)) {
         //    SetUpServer ();
@@ -182,8 +193,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-        mClient.Connect (address, PORT);
-        isStart = false;
+        //mClient.Connect (address, PORT);
+        //isStart = false;
     }
 
     /*
@@ -214,9 +225,10 @@ public class GameController : MonoBehaviour
     {
         Debug.Log ("connected to server");
         // -1 in id means not allocated
-//        Messages.NewPlayerMessage newPlayer = new
-//            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
-//        mClient.Send (MsgType.AddPlayer, newPlayer);
+        //        Messages.NewPlayerMessage newPlayer = new
+        //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+        //        mClient.Send (MsgType.AddPlayer, newPlayer);
+        CreatePlayer();
     }
 
     /*
