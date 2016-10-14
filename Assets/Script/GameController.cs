@@ -656,10 +656,14 @@ public class GameController : MonoBehaviour
         } else {
             // else go to the camera of the first lived player in the player
             // list
-            players [0].GetComponentInChildren<Camera> ().enabled = true;
-        }
-        if (players.Count > 0 && controlledPlayer == null) {
-            watchedPlayer = players [0];
+            if (controlledPlayer == null) {
+                foreach (GameObject player in players.Values) {
+                    player.GetComponentInChildren<Camera> ().enabled = true;
+                    player.GetComponentInChildren<Player> ().BindItems ();
+                    watchedPlayer = player;
+                    break;
+                }
+            }
         }
     }
 

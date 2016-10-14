@@ -155,7 +155,9 @@ public class Player : MonoBehaviour, ICharactor
         if (hp < 0 && isLocal) {
             controller.localPlayerDie = true;
         }
-        healthSlider.value = hp;
+        if (healthSlider != null) {
+            healthSlider.value = hp;
+        }
     }
 
 
