@@ -152,10 +152,10 @@ public class Player : MonoBehaviour, ICharactor
     public void OnHit (float damage)
     {
         hp -= damage;
-        healthSlider.value = hp;
-        if (hp < 0) {
+        if (hp < 0 && isLocal) {
             controller.localPlayerDie = true;
         }
+        healthSlider.value = hp;
     }
 
 
@@ -267,6 +267,7 @@ public class Player : MonoBehaviour, ICharactor
         ammo = currentWeapon.ammo;
         Destroy (weaponPrefab);
         ShowWeapon (weaponNumber);
+
     }
 
     /*

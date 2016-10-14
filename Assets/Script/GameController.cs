@@ -95,7 +95,7 @@ public class GameController : MonoBehaviour
         }
 
         // Generate enemy at a regular interval
-        if (isServer && enemies.Count < enemyLimits) {
+        if (isServer && addedPlayer && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
                 generateCount = 0;
@@ -684,9 +684,9 @@ public class GameController : MonoBehaviour
     {
         Messages.PlayerDieMessage dieMsg =
             msg.ReadMessage<Messages.PlayerDieMessage> ();
-//        if (!players.ContainsKey (dieMsg.playerId)) {
-//            return;
-//        }
+        if (diedPlayers.ContainsKey (dieMsg.playerId)) {
+            return;
+        }
 //        players.Remove (dieMsg.playerId);
         diedPlayers.Add (dieMsg.playerId, new List<int> ());
         foreach (NetworkConnection conn in NetworkServer.connections) {
