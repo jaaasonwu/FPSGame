@@ -117,6 +117,7 @@ public class GameController : MonoBehaviour
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
 		NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
 			OnServerRecieveLobbyMsg);
+		
         isStart = false;
     }
 
@@ -136,6 +137,8 @@ public class GameController : MonoBehaviour
 			OnClientRecieveLobbyMsg);
 		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
 			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -152,6 +155,8 @@ public class GameController : MonoBehaviour
 			OnClientRecieveLobbyMsg);
 		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
 			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
 		mClient.Connect (address, port);
 		isStart = false;
 	}
@@ -171,6 +176,8 @@ public class GameController : MonoBehaviour
 			OnClientRecieveLobbyMsg);
 		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
 			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
         isStart = false;
     }
 
@@ -209,6 +216,17 @@ public class GameController : MonoBehaviour
 	public void OnRecieveLeftLobby(NetworkMessage msg){
 		if (AviationInLobby.s_Lobby != null) {
 			AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve start
+	 */
+	public void OnRecieveStartGameMessage(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
 		} else {
 			Debug.Log ("lobby not exist");
 		}

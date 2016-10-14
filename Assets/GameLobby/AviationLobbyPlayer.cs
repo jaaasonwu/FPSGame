@@ -18,4 +18,18 @@ public class AviationLobbyPlayer : MonoBehaviour {
 	// UIs
 	public Button removeButton;
 	public Text isReadyText;
+	public Text playerNameText;
+
+	void Update(){
+		playerNameText.text = playerName;
+		if (isHost) {
+			isReadyText.text = "host";
+		} else {
+			if (isReady) {
+				isReadyText.text = "Ready";
+			} else {
+				isReadyText.text = "NotReady";
+			}
+		}
+	}
 }

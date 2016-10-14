@@ -106,4 +106,14 @@ public class Messages
 		
 		}
 	}
+
+	public class LobbyStartGameMessage : MessageBase{
+
+		public const short msgId = 200;
+
+		//default constructor
+		public LobbyStartGameMessage(){
+	
+		}
+	}
 }

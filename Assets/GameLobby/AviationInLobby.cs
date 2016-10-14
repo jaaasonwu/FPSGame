@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Generic;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 // created by Jia Yi Bai jiab1@student.unimelb.edu.au
 // this script contains lobby functions for all player inside lobby
@@ -24,6 +25,7 @@ public class AviationInLobby : MonoBehaviour {
 	//lobby Player prefab
 	[SerializeField]private GameObject lobbyPlayerEntryPrefab;
 
+	[SerializeField]private string inGameScence;
 	//UIs
 	public Button returnButton;
 	public Button startButton;
@@ -32,11 +34,16 @@ public class AviationInLobby : MonoBehaviour {
 	public void OnEnable(){
 		s_Lobby = this;
 		playerListLayout = playerListTransform.GetComponent<VerticalLayoutGroup> ();
+		if (networkManager.isAServer ()) {
+			SetUpUIServer ();
+		} else {
+			SetUpUIClient();
+		}
 	}
 
 	void Update(){
 		// it has to be connected to stay in lobby panel
-		/*
+		/* not working correctly 
 		if (!networkManager.GetmClient ().isConnected) {
 			AviationLobbyManager.s_lobbyManager.LobbyToMain ();
 		}
@@ -103,6 +110,8 @@ public class AviationInLobby : MonoBehaviour {
 	 */
 	private void SetUpUIServer(){
 		readyButton.interactable = false;
+		startButton.onClick.RemoveAllListeners ();
+		startButton.onClick.AddListener (OnClickStart);
 	}
 
 	/*
@@ -110,6 +119,8 @@ public class AviationInLobby : MonoBehaviour {
 	 */
 	private void SetUpUIClient(){
 		startButton.interactable = false;
+		readyButton.onClick.RemoveAllListeners();
+		readyButton.onClick.AddListener (OnClickReady);
 	}
 
 	/*
@@ -191,7 +202,44 @@ public class AviationInLobby : MonoBehaviour {
 	 * allow player to get ready
 	 */
 	public void OnClickReady(){
+		int connId;
+		string name;
+		bool readiness;
+		if (localLobbyPlayer != null) {
+			connId = localLobbyPlayer.connectionId;
+			name = localLobbyPlayer.playerName;
+			readiness = !localLobbyPlayer.isReady;
 
+			localLobbyPlayer.isReady = readiness;
+
+			// send to server to let it know i am ready
+			Messages.PlayerLobbyMessage msg = 
+				new Messages.PlayerLobbyMessage (connId, name, readiness);
+			networkManager.GetmClient ().Send (
+				Messages.PlayerLobbyMessage.msgId, msg);
+		} else {
+			Debug.Log ("local lobby player not setted");
+			// use client.connid to find the player
+			localLobbyPlayer = FindInLobbyById (
+				networkManager.GetmClient ().connection.connectionId);
+			if (localLobbyPlayer != null) {
+				// do the same
+				connId = localLobbyPlayer.connectionId;
+				name = localLobbyPlayer.playerName;
+				readiness = !localLobbyPlayer.isReady;
+
+				localLobbyPlayer.isReady = readiness;
+				// send to server to let it know i am ready
+				Messages.PlayerLobbyMessage msg = 
+					new Messages.PlayerLobbyMessage (connId, name, readiness);
+				networkManager.GetmClient ().Send (
+					Messages.PlayerLobbyMessage.msgId, msg);
+			} else {
+				// cant save this serious bug if reach here
+				Debug.Log("aviation locallobbyplayer cant be found");
+			}
+
+		}
 	}
 
 	/*
@@ -214,7 +262,34 @@ public class AviationInLobby : MonoBehaviour {
 	 *  allow server to start the game
 	 */
 	public void OnClickStart(){
-		
+		Debug.Log (AllReady ());
+		if (AllReady ()) {
+			Messages.LobbyStartGameMessage msg = 
+				new Messages.LobbyStartGameMessage ();
+			// this is only clickable by server but again check it
+			if (!networkManager.isAServer ()) {
+				Debug.Log ("OnClickStart this should be server");
+				return;
+			}
+			NetworkServer.SendToAll (Messages.LobbyStartGameMessage.msgId, msg);
+		}
+	}
+
+	/*
+	 * server method that check for readiness of all client
+	 */
+	private bool AllReady(){
+		foreach(AviationLobbyPlayer p in lobbyPlayers){
+			if (p.isHost) {
+				//bypass
+				continue;
+			}
+
+			if (!p.isReady) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 	/*
@@ -228,12 +303,14 @@ public class AviationInLobby : MonoBehaviour {
 		string playerName = newMsg.playerName;
 		bool isReady = newMsg.isReady;
 
-		Debug.Log ("Recieve Lobby Msg");
-		// as i recieved the message find the one who edit it by it then modify it
+		//Debug.Log ("Recieve Lobby Msg");
+		//as i recieved the message find the one who edit it by it then modify it
 		AviationLobbyPlayer player = FindInLobbyById(connId);
 		if (player == null) {
 			//enter lobby message
 			player = AddPlayer (connId);
+			player.playerName = playerName;
+			player.isReady = isReady;
 			// set local lobby player 
 			if (connId == networkManager.GetmClient ().connection.connectionId) {
 				this.localLobbyPlayer = player;
@@ -268,5 +345,13 @@ public class AviationInLobby : MonoBehaviour {
 		if (p != null) {
 			RemovePlayer (p);
 		}
+	}
+
+	/*
+	 * when client recived start game message they should load scence
+	 */
+	public void OnReciveStartGameMessage(NetworkMessage msg){
+		//switch scence one recieve this 
+		SceneManager.LoadScene(inGameScence);
 	}
 }
