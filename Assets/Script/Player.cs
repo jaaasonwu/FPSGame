@@ -8,43 +8,70 @@ using UnityStandardAssets.CrossPlatformInput;
 using System.Collections;
 using System.Collections.Generic;
 using UnityStandardAssets.Characters.FirstPerson;
+using System;
+using System.IO;
+using UnityEngine.UI;
+using System.Xml;
+using System.Xml.Serialization;
 
 public class Player : MonoBehaviour, ICharactor
 {
     // remeber to change DamageUpByRatio to change all weapon damage when enable weapons
     public GameObject[] weapons;
+
     public int id;
+    // The username of player which is used to authenticate when loading saved
+    // game state
+    public string username;
     // is the local player, means the player is controlled
     public bool isLocal = false;
     // the rate that client will send to server of player's location
     public float updateRate = 0.05f;
     // the time counter to count how many time is elapsed
-    private float updateCount;
-    GameObject weaponPrefab;
-    Weapon currentWeapon;
-    int exp;
-	private int level;
-    private const int NUM_WEAPONS = 3;
-    private NetworkClient mClient;
-    [SerializeField] private float hp;
-    [SerializeField] private float maxHp;
-    [SerializeField] private int weaponNumber;
-	
+
+    public Slider healthSlider;
+    public int level;
+    public int exp;
+    public float hp;
+    public float maxHp;
+    public int weaponNumber;
+    public int ammo;
+    
     //player's current buffs
     public List<Buff> buffs;
 
+    // private & protected fields
+    private int numAvailableWeapons;
+    private Text ammoText;
+    float updateCount;
+    GameObject weaponPrefab;
+    Weapon currentWeapon;
+    const int NUM_WEAPONS = 3;
+    GameController controller;
+    
+
     // Use this for initialization
-    void Start ()
+    void Awake ()
     {
-        exp = GetExp ();
-        maxHp = GetMaxHp ();
-        weaponPrefab = Instantiate (weapons [weaponNumber]);
-        weaponPrefab.transform.parent = gameObject.transform;
-        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
-        weaponPrefab.transform.rotation = gameObject.transform.rotation;
-        currentWeapon = weaponPrefab.GetComponent<Weapon> ();
+        level = 1;
+        exp = 0;
+        hp = 100;
+        maxHp = 100;
+        weaponNumber = 0;
+        ammo = 500;
         this.buffs = new List<Buff> ();
+        ShowWeapon (weaponNumber);
+
+        numAvailableWeapons = 3;
+        StartHealthSlider ();
         updateCount = 0;
+    }
+
+    void StartHealthSlider ()
+    {
+        healthSlider = (Slider)GameObject.FindGameObjectWithTag ("HealthSlider").GetComponent<Slider> ();
+        healthSlider.maxValue = maxHp;
+        healthSlider.value = hp;
     }
 
 
@@ -63,11 +90,14 @@ public class Player : MonoBehaviour, ICharactor
         this.CheckBuffs ();
         FirstPersonController fpc = GetComponentInParent<FirstPersonController> ();
         if (updateCount >= updateRate) {
+            NetworkClient mClient = controller.mClient;
             updateCount = 0;
+            // send the player's position
             Messages.PlayerMoveMessage moveMsg = 
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
-                    Quaternion.Euler (transform.rotation.eulerAngles - transform.localRotation.eulerAngles));
+                    Quaternion.Euler (transform.rotation.eulerAngles -
+                    transform.localRotation.eulerAngles));
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -86,21 +116,30 @@ public class Player : MonoBehaviour, ICharactor
     public void OnHit (float damage)
     {
         hp -= damage;
+        healthSlider.value = hp;
+        if (hp < 0) {
+            controller.localPlayerDie = true;
+        }
     }
 
-    int GetExp ()
+
+    // Load the weapon and show it on screen. Meanwhile transfer the amount of
+    // ammo
+    public void ShowWeapon (int weaponNumber)
     {
-        return 0;
+        weaponPrefab = Instantiate (weapons [weaponNumber]);
+        weaponPrefab.transform.parent = gameObject.transform;
+        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
+        weaponPrefab.transform.rotation = gameObject.transform.rotation;
+        currentWeapon = weaponPrefab.GetComponent<Weapon> ();
+        currentWeapon.ammo = ammo;
+        ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
+        ammoText.text = "Ammo: " + currentWeapon.ammo;
     }
 
-    int GetMaxHp ()
+    public void SetGameController (GameController controller)
     {
-        return 100;
-    }
-
-    public void SetNetworkClient (NetworkClient mClient)
-    {
-        this.mClient = mClient;
+        this.controller = controller;
     }
 
     // function to check whether the player is moving
@@ -164,6 +203,7 @@ public class Player : MonoBehaviour, ICharactor
         if (this.hp >= maxHp) {
             this.hp = maxHp;
         }
+        healthSlider.value = hp;
     }
 
     // formula new damage = old damage *(100% + percentage)
@@ -178,22 +218,66 @@ public class Player : MonoBehaviour, ICharactor
         this.currentWeapon.damage /= 1.0f + (percent / 100);
     }
 
+    // This function destroys the current weapon and switch to the next weapon
     public void NextWeapon ()
     {
-        if (weaponNumber == NUM_WEAPONS - 1) {
+        if (weaponNumber == numAvailableWeapons - 1) {
             weaponNumber = 0;
         } else {
             weaponNumber++;
         }
+        ammo = currentWeapon.ammo;
         Destroy (weaponPrefab);
-        weaponPrefab = Instantiate (weapons [weaponNumber]);
-        weaponPrefab.transform.parent = gameObject.transform;
-        weaponPrefab.transform.localPosition = weaponPrefab.transform.position;
-        weaponPrefab.transform.rotation = gameObject.transform.rotation;
-        currentWeapon = weaponPrefab.GetComponent<Weapon> ();
+        ShowWeapon (weaponNumber);
     }
 
-	public int getLevel(){
-		return this.level; 
-	}
+    /*
+     * The function reads from the serialized data from the storage,
+     * deserialize it and load it
+     */
+    public void Load ()
+    {
+        healthSlider.value = hp;
+        healthSlider.maxValue = maxHp;
+        Destroy (weaponPrefab);
+        ShowWeapon (weaponNumber);
+    }
+
+    /*
+     * This function returns a PlayerData class that is ready to be serlialized
+     */
+    public PlayerData GeneratePlayerData ()
+    {
+        PlayerData data = new PlayerData ();
+        data.id = id;
+        data.username = username;
+        data.pos = this.transform.parent.position;
+        data.rot = this.transform.parent.rotation;
+        data.level = level;
+        data.exp = exp;
+        data.hp = hp;
+        data.maxHp = maxHp;
+        data.weaponNumber = weaponNumber;
+        data.ammo = currentWeapon.ammo;
+
+        return data;
+    }
+}
+
+/*
+ * The class used to store player information
+ */
+public class PlayerData
+{
+    public int id;
+    public String username;
+    public bool isLocal;
+    public Vector3 pos;
+    public Quaternion rot;
+    public int level;
+    public int exp;
+    public float hp;
+    public float maxHp;
+    public int weaponNumber;
+    public int ammo;
 }

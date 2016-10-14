@@ -1,15 +1,32 @@
 ﻿// created by Haoyu Zhai, zhaih@student.unimelb.edu.au
 // base class for enemy
+// enemy's behaviour is based on hate system, and will not be
+// exactly same as server, but their hate target will be 
+// synchronized so the overall behaviour will be similiar
+// of course, the hp will be synchronized as well
 using UnityEngine;
+using UnityEngine.Networking;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
 
 public class Enemy : MonoBehaviour, ICharactor
 {
+    // public fields
+    // enemy's id
+    public int id;
+    // dertermines what is the kind of the enemy
+    public int enemyIndex;
     // the charactor's level
-    protected int level;
+    public int level;
     // the charactor's current HP
     public float hp;
+    // the character's maximum HP
+    public float maxHp;
+    // count how many hp been damaged by local player
+    public float damagedHp = 0;
     // the charactor's current movement speed
     public float moveSpeed;
     // the charactor's rotate speed
@@ -28,19 +45,8 @@ public class Enemy : MonoBehaviour, ICharactor
     public float attackSpeed;
     // indicate whether enemy perform melee attack
     public bool isMelee;
-    // attack time count
-    private float attackCount;
-    // attack method
-    private IEnemyAttack attackMethod;
-    // born point
-    protected Vector3 spawnPoint;
-    // the players
-    protected List<Player> players = new List<Player> ();
-    // the varible that to record the last position of the enemy,
-    // in order to know whether the enemy is stucked
-    private Vector3 lastPos;
-    // the player which is hated by the enemy
-    private Player hatedPlayer;
+    // update rate for enemy
+    public float updateRate = 1f;
     // below is the booleans that control the animation
     public bool isWalking;
     public bool isRunning;
@@ -48,6 +54,28 @@ public class Enemy : MonoBehaviour, ICharactor
     public bool isDead;
     public bool isAttacking;
     public bool inServer = false;
+
+    // private fields
+
+    // network client
+    GameController controller;
+    // record which player damage how much
+    Dictionary<int,float> damageList = new Dictionary<int,float> ();
+    // attack time count
+    float attackCount;
+    // attack method
+    IEnemyAttack attackMethod;
+    // born point
+    Vector3 spawnPoint;
+    // the players
+    List<Player> players = new List<Player> ();
+    // the varible that to record the last position of the enemy,
+    // in order to know whether the enemy is stucked
+    Vector3 lastPos;
+    // the player which is hated by the enemy
+    Player hatedPlayer;
+    // update count down
+    float updateCount = 0;
 
     void Start ()
     {
@@ -57,26 +85,67 @@ public class Enemy : MonoBehaviour, ICharactor
 
     void Update ()
     {
+        bool update = false;
+        if (updateCount >= updateRate) {
+            update = true;
+            updateCount = 0;
+        } else
+            updateCount += Time.deltaTime;
         if (isDead)
             return;
+        if (this.hp < 0) {
+            isDead = true;
+        }
         isGettingHit = false;
         Attack ();
-        if (inServer)
+        if (inServer) {
+            // in server we update how which player is enemy hated and its 
+            // damaged hp which caused by local player
             Hate ();
+            if (update) {
+                // enemy in server update enemies' hate player
+                Messages.UpdateEnemyHate newMsg = 
+                    new Messages.UpdateEnemyHate (id,
+                        hatedPlayer == null ? -1 : hatedPlayer.id);
+                NetworkServer.SendToAll (Messages.UpdateEnemyHate.msgId, newMsg);
+                updateCount = 0;
+            }
+        }
+        // in client we only update how many hp damaged by local player
+        if (update) {
+            if (controller == null) {
+                Debug.Log ("null controller");
+            }
+            // if the controlled player is dead
+            if (controller.controlledPlayer == null) {
+                return;
+            }
+            int localPlayerId = 
+                controller.controlledPlayer.GetComponentInChildren<Player> ().id;
+            Messages.UpdateDamagedHp newMsg = 
+                new Messages.UpdateDamagedHp (id, localPlayerId, damagedHp);
+            controller.mClient.Send (Messages.UpdateDamagedHp.msgId, newMsg);
+            updateCount = 0;
+        }
     }
 
     void FixedUpdate ()
     {
         if (isDead)
             return;
-        if (inServer)
-            Move ();
+        Move ();
     }
     // Innitialize using EnemyInfo class
-    public void Innitialize (int level, Vector3 spawnPoint)
+    public void Initialize (int id, int enemyIndex, int level, Vector3 spawnPoint,
+                            float maxHp, float damagedHp, GameController controller)
     {
+        this.id = id;
+        this.enemyIndex = enemyIndex;
         this.level = level;
         this.spawnPoint = spawnPoint;
+        this.maxHp = maxHp;
+        this.damagedHp = damagedHp;
+        this.controller = controller;
         if (isMelee) {
             this.attackMethod = new EnemyMeleeAttack ();
         }
@@ -91,11 +160,8 @@ public class Enemy : MonoBehaviour, ICharactor
 
     public void OnHit (float damage)
     {
-        this.hp -= damage;
+        this.damagedHp += damage;
         isGettingHit = true;
-        if (this.hp < 0) {
-            isDead = true;
-        }
         // call the animation then
     }
 
@@ -195,4 +261,95 @@ public class Enemy : MonoBehaviour, ICharactor
         }
         hatedPlayer = p;
     }
+
+    public void SetHatePlayer (Player p)
+    {
+        hatedPlayer = p;
+    }
+    
+    /*
+     * update the damageList to calculate how much damage the enemy endured
+     * this function is only called in server
+     */
+    public void updateDamageList (int playerId, float damage)
+    {
+        this.damageList [playerId] = damage;
+
+        float totalDamage = 0;
+        // then calculate how much damage it suffers in total
+        foreach (float d in damageList.Values) {
+            totalDamage += d;
+        }
+        if (totalDamage >= hp) {
+            // tell server to send death message
+            controller.EnemyDie (this.id);
+        }
+    }
+
+    /*
+     * The function reads from the serialized data from the storage,
+     * deserialize it and load it
+     */
+    public void Load ()
+    {
+        hp = maxHp - damagedHp;
+    }
+
+    /*
+     * This function serlize the enemy data and save the data in th file
+     * system
+     */
+    public EnemyData GenerateEnemyData ()
+    {
+        EnemyData data = new EnemyData ();
+        data.id = id;
+        data.pos = this.transform.position;
+        data.rot = this.transform.rotation;
+        data.enemyIndex = this.enemyIndex;
+        data.level = level;
+        data.damagedHp = damagedHp;
+        data.maxHp = maxHp;
+        data.isWalking = isWalking;
+        data.isRunning = isRunning;
+        data.isGettingHit = isGettingHit;
+        data.isDead = isDead;
+        data.isAttacking = isAttacking;
+
+        return data;
+    }
+    /*
+    * remove a player from player list using player id
+    */
+    public void RemovePlayer (int playerId)
+    {
+        if (hatedPlayer.id == playerId) {
+            hatedPlayer = null;
+        }
+        for (int i = 0; i < players.Count; i++) {
+            if (players [i].id == playerId) {
+                players.RemoveAt (i);
+                break;
+            }
+        }
+    }
+}
+
+/*
+ * The class used to store enemy information
+ */
+public class EnemyData
+{
+    public int id;
+    public Vector3 pos;
+    public Quaternion rot;
+    public int enemyIndex;
+    public int level;
+    public float damagedHp;
+    public float maxHp;
+    public bool isWalking;
+    public bool isRunning;
+    public bool isGettingHit;
+    public bool isDead;
+    public bool isAttacking;
+
 }
