@@ -45,6 +45,7 @@ public class GameController : MonoBehaviour
 
     //pirvate & protected fields
     bool isStart = true;
+
     //player id counter, starts from 0
     int idCount = 0;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
@@ -72,11 +73,11 @@ public class GameController : MonoBehaviour
         sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
         isServer = sharedData.isServer;
     }
-	
+
     // Update is called once per frame
     void Update ()
-    {
-        if (isStart) {
+	{
+		if (isStart) {
             SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
@@ -129,7 +130,7 @@ public class GameController : MonoBehaviour
     /*
      * to set up the network connection
      */
-    void SetUpNetwork ()
+    public void SetUpNetwork ()
     {
         if (isServer) {
             SetUpServer ();
@@ -148,16 +149,52 @@ public class GameController : MonoBehaviour
         //    isServer = false;
         //}
     }
+
+	public void StartAsLocalServer(){
+		SetUpServer ();
+		SetUpLocalClient ();
+		isServer = true;
+	}
+
+	public void StartAsJoinClient(string hostAddress,int port){
+		SetUpClient (hostAddress,port);
+		isServer = false;
+	}
+
+	/*
+	 *  return port number of current server listen to
+	 */
+	public int GetPort(){
+		return NetworkServer.listenPort;
+	}
+
+	/*
+	 * getter method for isServer
+	 */
+	public bool isAServer(){
+		return isServer;
+	}
+
+	/*
+	 * getter method for mClient
+	 */
+	public NetworkClient GetmClient(){
+		//Debug.Log (mClient.connection);
+		return mClient;
+	}
+
     /*
      * set up the server, which is a local server and
      * a local client
      */
-    void SetUpServer ()
+    public void SetUpServer ()
     {
         NetworkServer.Listen (PORT);
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
+		NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnServerRecieveLobbyMsg);
         NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
             OnUpdateDamagedHp);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
@@ -173,7 +210,7 @@ public class GameController : MonoBehaviour
      * set up the client, which is just a client connect to server
      * somewhere else
      */
-    void SetUpClient (string address)
+    public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
@@ -181,6 +218,12 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
@@ -191,10 +234,34 @@ public class GameController : MonoBehaviour
         isStart = false;
     }
 
+	public void SetUpClient (string address, int port)
+	{
+		mClient = new NetworkClient ();
+		mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
+			OnClientReceivePlayerPosition);
+		mClient.RegisterHandler (MsgType.Connect, OnConnected);
+		mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
+		mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
+		mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
+		mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
+		mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
+		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
+			OnClientReceivedPlayerDeath);
+		mClient.Connect (address, port);
+		isStart = false;
+	}
+
     /*
      * set up local client
      */
-    void SetUpLocalClient ()
+    public void SetUpLocalClient ()
     {
         mClient = ClientScene.ConnectLocalServer ();
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
@@ -202,6 +269,12 @@ public class GameController : MonoBehaviour
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
+		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+			OnClientRecieveLobbyMsg);
+		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+			OnRecieveLeftLobby);
+		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+			OnRecieveStartGameMessage);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
@@ -211,13 +284,72 @@ public class GameController : MonoBehaviour
         isStart = false;
     }
 
+	/*
+	 * diconnect from current server
+	 */
+	public void Disconnect(){
+		mClient.Disconnect();
+	}
+
+	/*
+	 * on server recieve lobby message
+	 */
+	public void OnServerRecieveLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve lobby message
+	 */
+	public void OnClientRecieveLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve left lobby message
+	 */
+	public void OnRecieveLeftLobby(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve start
+	 */
+	public void OnRecieveStartGameMessage(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
     /*
-     * after connected to the server, the client send a message to 
+     * after connected to the server, the client send a message to
      * call server to add the player
      */
     void OnConnected (NetworkMessage msg)
     {
         Debug.Log ("connected to server");
+		// instance is null if not in lobby main
+
+		if (AviationLobbyMain.s_instance != null) {
+			Debug.Log("entering lobby");
+			AviationLobbyMain.s_instance.OnEnterLobby ();
+		}
+		//Debug.Log(NetworkServer.connections.Count);
+
         // -1 in id means not allocated
         //        Messages.NewPlayerMessage newPlayer = new
         //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
@@ -225,15 +357,15 @@ public class GameController : MonoBehaviour
     }
 
     /*
-     * after server receive the message to spawn the player, it 
-     * instantiate the model of player and then send the ownership 
+     * after server receive the message to spawn the player, it
+     * instantiate the model of player and then send the ownership
      * certification to the client who own that player
      */
     void OnServerAddPlayer (NetworkMessage msg)
     {
         Messages.NewPlayerMessage newPlayerMsg =
             msg.ReadMessage<Messages.NewPlayerMessage> ();
-        GameObject playerClone = 
+        GameObject playerClone =
             Instantiate (playerPrefab, newPlayerMsg.spawnPoint,
                 Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
@@ -247,7 +379,7 @@ public class GameController : MonoBehaviour
     }
 
     /*
-     * when client received the add player message, they would instantiate a 
+     * when client received the add player message, they would instantiate a
      * player
      */
 
@@ -258,7 +390,7 @@ public class GameController : MonoBehaviour
             return;
         Messages.NewPlayerMessage newPlayerMsg =
             msg.ReadMessage<Messages.NewPlayerMessage> ();
-        GameObject playerClone = 
+        GameObject playerClone =
             Instantiate (playerPrefab, newPlayerMsg.spawnPoint,
                 Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
@@ -274,7 +406,7 @@ public class GameController : MonoBehaviour
      */
     void OnOwner (NetworkMessage msg)
     {
-        Messages.NewPlayerMessage newPlayerMsg = 
+        Messages.NewPlayerMessage newPlayerMsg =
             msg.ReadMessage<Messages.NewPlayerMessage> ();
         GameObject player = players [newPlayerMsg.id];
         if (player == null) {
@@ -297,7 +429,7 @@ public class GameController : MonoBehaviour
      */
     void OnServerReceivePlayerPosition (NetworkMessage msg)
     {
-        Messages.PlayerMoveMessage moveMsg = 
+        Messages.PlayerMoveMessage moveMsg =
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         GameObject player = players [moveMsg.id];
         if (msg.conn.connectionId != mClient.connection.connectionId) {
@@ -313,7 +445,7 @@ public class GameController : MonoBehaviour
      */
     void OnClientReceivePlayerPosition (NetworkMessage msg)
     {
-        Messages.PlayerMoveMessage moveMsg = 
+        Messages.PlayerMoveMessage moveMsg =
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
         if (!players.ContainsKey (moveMsg.id))
             return;
@@ -350,13 +482,13 @@ public class GameController : MonoBehaviour
         enemy.inServer = true;
         enemies [enemy.id] = enemyClone;
         // send to client
-        Messages.NewEnemyMessage newMsg = 
+        Messages.NewEnemyMessage newMsg =
             new Messages.NewEnemyMessage (
                 enemyIndex, enemy.id, level, maxHp, spawnPoint);
         NetworkServer.SendToAll (Messages.NewEnemyMessage.msgId, newMsg);
     }
-        
-    /* 
+
+    /*
      * client receive message to spawn the enemy
      */
     void OnSpawnEnemy (NetworkMessage msg)
@@ -364,9 +496,9 @@ public class GameController : MonoBehaviour
         // if is local player, skip
         if (isServer)
             return;
-        Messages.NewEnemyMessage enemyMsg = 
+        Messages.NewEnemyMessage enemyMsg =
             msg.ReadMessage<Messages.NewEnemyMessage> ();
-        GameObject newEnemy = 
+        GameObject newEnemy =
             Instantiate (enemyPrefabs [enemyMsg.enemyIndex],
                 enemyMsg.spawnPoint, Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
@@ -395,7 +527,7 @@ public class GameController : MonoBehaviour
             enemy.SetHatePlayer (null);
             return;
         }
-        Player player = 
+        Player player =
             players [hateMsg.playerId].GetComponentInChildren<Player> ();
         enemy.SetHatePlayer (player);
     }
@@ -412,7 +544,7 @@ public class GameController : MonoBehaviour
         enemy.updateDamageList (hpMsg.playerId, hpMsg.damagedHp);
     }
 
-    /* 
+    /*
      * when enemy die, server will contantly send death info to all client
      * and client should reply a message to inform server to stop sending
      */
@@ -431,12 +563,12 @@ public class GameController : MonoBehaviour
     }
 
     /*
-     * when client received server's enemy death message, it will reply 
+     * when client received server's enemy death message, it will reply
      * a receipt to server to told the server they have received the message
      */
     void OnEnemyDeath (NetworkMessage msg)
     {
-        Messages.EnemyDeathMessage deathMsg = 
+        Messages.EnemyDeathMessage deathMsg =
             msg.ReadMessage<Messages.EnemyDeathMessage> ();
         if (enemies.ContainsKey (deathMsg.id)) {
             Enemy enemy = enemies [deathMsg.id].GetComponent<Enemy> ();
@@ -470,7 +602,7 @@ public class GameController : MonoBehaviour
      */
     void OnReplyEnemyDeath (NetworkMessage msg)
     {
-        Messages.ReplyEnemyDeath reply = 
+        Messages.ReplyEnemyDeath reply =
             msg.ReadMessage<Messages.ReplyEnemyDeath> ();
         if (!diedEnemies.ContainsKey (reply.enemyId)) {
             Debug.Log ("Enemy Death Replied enemyId not exist!");
@@ -557,7 +689,7 @@ public class GameController : MonoBehaviour
         LoadEnemies ();
     }
 
-    /* 
+    /*
      * Load all the players from the file system and send the message
      * to all clients connected to the server
      */
@@ -644,7 +776,7 @@ public class GameController : MonoBehaviour
         players.Remove (playerId);
         // if no player is lived, change to the game over camera
         if (players.Count == 0) {
-            
+
             GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
             GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
             GameObject.FindGameObjectWithTag ("GameOverCamera")
@@ -667,13 +799,13 @@ public class GameController : MonoBehaviour
         }
     }
 
-    /* if local controlled player is died, constantly call this method to 
+    /* if local controlled player is died, constantly call this method to
      * inform the server that the player is died, until get a reply from
      * server
      */
     void ClientSendPlayerDeath ()
     {
-        Messages.PlayerDieMessage dieMsg = 
+        Messages.PlayerDieMessage dieMsg =
             new Messages.PlayerDieMessage (
                 controlledPlayer.GetComponentInChildren<Player> ().id);
         mClient.Send (Messages.PlayerDieMessage.msgId, dieMsg);
@@ -681,7 +813,7 @@ public class GameController : MonoBehaviour
 
     /*
      * after server received player's death, delete the player from the player
-     * list and then broadcast this information to all the player( including 
+     * list and then broadcast this information to all the player( including
      * the client who send it as a reply)
      */
     void OnServerGetPlayerDeath (NetworkMessage msg)
@@ -828,7 +960,7 @@ public class GameController : MonoBehaviour
             return;
         }
         foreach (int diedPlayer in diedPlayers.Keys) {
-            Messages.PlayerDieMessage dieMsg = 
+            Messages.PlayerDieMessage dieMsg =
                 new Messages.PlayerDieMessage (diedPlayer);
             foreach (int connid in diedPlayers[diedPlayer]) {
                 NetworkServer.SendToClient (connid,
@@ -837,13 +969,13 @@ public class GameController : MonoBehaviour
             }
         }
     }
-    
-    /* 
+
+    /*
     * client received the message that server send to inform a player's death
     */
     void OnClientReceivedPlayerDeath (NetworkMessage msg)
     {
-        Messages.PlayerDieMessage dieMsg = 
+        Messages.PlayerDieMessage dieMsg =
             msg.ReadMessage<Messages.PlayerDieMessage> ();
         // stop sending player die message
         if (controlledPlayer != null &&
@@ -852,17 +984,17 @@ public class GameController : MonoBehaviour
             localPlayerDie = false;
         }
         PlayerDie (dieMsg.playerId);
-        Messages.ReplyPlayerDeath reply = 
+        Messages.ReplyPlayerDeath reply =
             new Messages.ReplyPlayerDeath (dieMsg.playerId);
         mClient.Send (Messages.ReplyPlayerDeath.msgId, reply);
     }
-    
+
     /*
     * server received client's reply of player's death
     */
     void OnReplyPlayerDeath (NetworkMessage msg)
     {
-        Messages.ReplyPlayerDeath reply = 
+        Messages.ReplyPlayerDeath reply =
             msg.ReadMessage<Messages.ReplyPlayerDeath> ();
         if (!diedPlayers.ContainsKey (reply.playerId)) {
             Debug.Log ("Player Death Replied enemyId not exist!");
