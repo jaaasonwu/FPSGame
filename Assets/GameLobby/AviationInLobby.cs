@@ -285,6 +285,9 @@ public class AviationInLobby : MonoBehaviour
                 return;
             }
             gameFinder.StopBroadcast ();
+            if (networkManager.mClient == null) {
+                print ("aaa");
+            }
             networkManager.StartGame ();
             NetworkServer.SendToAll (Messages.LobbyStartGameMessage.msgId, msg);
         }

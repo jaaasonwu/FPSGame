@@ -90,6 +90,7 @@ public class GameController : MonoBehaviour
                 for (int i = 0; i < spawnPoints.Length; i++) {
                     enemySpawnPoints.Add (spawnPoints [i].transform.position);
                 }
+                Debug.Log (mClient);
                 ClientReady ();
                 inPlayScene = true;
             }
@@ -262,7 +263,6 @@ public class GameController : MonoBehaviour
      */
     void RegisterClientHandler ()
     {
-        mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.Connect, OnConnected);

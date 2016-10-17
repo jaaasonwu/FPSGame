@@ -228,8 +228,8 @@ public class Messages
         }
 
         public LoadPlayerMessage (int id, string username, Vector3 pos,
-                                      Quaternion rot, int level, int exp, float hp, float maxHp,
-                                      int weaponNumber, int ammo)
+                                  Quaternion rot, int level, int exp, float hp, float maxHp,
+                                  int weaponNumber, int ammo)
         {
             this.id = id;
             this.username = username;
@@ -261,7 +261,7 @@ public class Messages
         }
 
         public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
-                                     int enemyIndex, int level, float damagedHp, float maxHp)
+                                 int enemyIndex, int level, float damagedHp, float maxHp)
         {
             this.id = id;
             this.pos = pos;
@@ -279,6 +279,10 @@ public class Messages
     public class ReadyMessage : MessageBase
     {
         public const short msgId = 112;
+
+        public ReadyMessage ()
+        {
+        }
     }
 
     /*
