@@ -210,6 +210,8 @@ public class GameController : MonoBehaviour
 			OnServerRecieveLobbyMsg);
         NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
             OnUpdateDamagedHp);
+        NetworkServer.RegisterHandler(Messages.PlayerInfoMessage.msgId,
+            OnReceivePlayerInfo);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
             OnReplyEnemyDeath);
         NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
@@ -241,6 +243,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler(Messages.RequestPlayerInfoMessage.msgId, OnRequstPlayerInfo);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
         mClient.Connect (address, PORT);
@@ -265,6 +268,7 @@ public class GameController : MonoBehaviour
 		mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
 		mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
 		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler(Messages.RequestPlayerInfoMessage.msgId, OnRequstPlayerInfo);
 		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
 			OnClientReceivedPlayerDeath);
 		mClient.Connect (address, port);
@@ -656,6 +660,8 @@ public class GameController : MonoBehaviour
         PlayerSaving playerSaving = new PlayerSaving ();
         playerSaving.PlayerList = new List<PlayerData> ();
 
+        // Update the info from other players
+        RequestPlayerInfo();
         // add data to the list of playerlist
         foreach (GameObject player in players.Values) {
             PlayerData data;
@@ -759,87 +765,43 @@ public class GameController : MonoBehaviour
     }
 
     /*
-     * player die and switch the camera to another lived player
-     * if no player is lived, gameover will appear
-     * this player could either be controlled or watched (when you are died)
+     * Request an update client players
      */
-    public void PlayerDie (int playerId)
+    public void RequestPlayerInfo()
     {
-        // if already died
-        if (!players.ContainsKey (playerId)) {
-            return;
-        }
-        // remove player reference from enemies
-        foreach (GameObject enemyObject in enemies.Values) {
-            Enemy enemy = enemyObject.GetComponent<Enemy> ();
-            enemy.RemovePlayer (playerId);
-        }
-        // change the main camera
-        if (controlledPlayer != null && controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
-            Destroy (controlledPlayer);
-            controlledPlayer = null;
-            GameObject.Find ("Ingame").SetActive (false);
-        } else if (watchedPlayer != null && watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
-            Destroy (watchedPlayer);
-            watchedPlayer = null;
-
-        } else {
-            Destroy (players [playerId]);
-        }
-        players.Remove (playerId);
-        // if no player is lived, change to the game over camera
-        if (players.Count == 0) {
-
-            GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
-            GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
-            GameObject.FindGameObjectWithTag ("GameOverCamera")
-                .GetComponent<Camera> ().enabled = true;
-            GameObject.FindGameObjectWithTag ("GameOverCamera")
-                .GetComponent<AudioListener> ().enabled = true;
-            GameObject.FindGameObjectWithTag ("GameOverUI")
-                .GetComponent<Canvas> ().enabled = true;
-        } else {
-            // else go to the camera of the first lived player in the player
-            // list
-            if (controlledPlayer == null) {
-                foreach (GameObject player in players.Values) {
-                    player.GetComponentInChildren<Camera> ().enabled = true;
-                    player.GetComponentInChildren<Player> ().BindItems ();
-                    watchedPlayer = player;
-                    break;
-                }
-            }
-        }
-    }
-
-    /* if local controlled player is died, constantly call this method to
-     * inform the server that the player is died, until get a reply from
-     * server
-     */
-    void ClientSendPlayerDeath ()
-    {
-        Messages.PlayerDieMessage dieMsg =
-            new Messages.PlayerDieMessage (
-                controlledPlayer.GetComponentInChildren<Player> ().id);
-        mClient.Send (Messages.PlayerDieMessage.msgId, dieMsg);
+        NetworkServer.SendToAll(Messages.RequestPlayerInfoMessage.msgId,
+            new Messages.RequestPlayerInfoMessage());
     }
 
     /*
-     * after server received player's death, delete the player from the player
-     * list and then broadcast this information to all the player( including
-     * the client who send it as a reply)
+     * Send the information back to the server
      */
-    void OnServerGetPlayerDeath (NetworkMessage msg)
+    public void OnRequstPlayerInfo(NetworkMessage msg)
     {
-        Messages.PlayerDieMessage dieMsg =
-            msg.ReadMessage<Messages.PlayerDieMessage> ();
-        if (diedPlayers.ContainsKey (dieMsg.playerId)) {
-            return;
-        }
-//        players.Remove (dieMsg.playerId);
-        diedPlayers.Add (dieMsg.playerId, new List<int> ());
-        foreach (NetworkConnection conn in NetworkServer.connections) {
-            diedPlayers [dieMsg.playerId].Add (conn.connectionId);
+        PlayerData data = controlledPlayer.GetComponentInChildren<Player>().
+            GeneratePlayerData();
+        mClient.Send(Messages.PlayerInfoMessage.msgId,
+            new Messages.PlayerInfoMessage(data.id, data.pos, data.rot,
+                data.level, data.exp, data.hp, data.maxHp, data.weaponNumber,
+                data.ammo));
+    }
+
+    /*
+     * Update the stored player information
+     */
+    public void OnReceivePlayerInfo(NetworkMessage msg)
+    {
+        Messages.PlayerInfoMessage info =
+            msg.ReadMessage<Messages.PlayerInfoMessage>();
+        foreach(GameObject player in players.Values)
+        {
+            Player playerScript = player.GetComponent<Player>();
+            if (playerScript.id == info.id)
+            {
+                playerScript.UpdatePlayerStatus(
+                    info.pos, info.rot, info.level, info.exp, info.hp,
+                    info.maxHp, info.weaponNumber, info.ammo);
+            }
         }
     }
 
@@ -960,6 +922,91 @@ public class GameController : MonoBehaviour
         foreach (GameObject player in players.Values) {
             Player playerScript = player.GetComponentInChildren<Player> ();
             enemy.AddPlayer (playerScript);
+        }
+    }
+
+    /*
+     * player die and switch the camera to another lived player
+     * if no player is lived, gameover will appear
+     * this player could either be controlled or watched (when you are died)
+     */
+    public void PlayerDie (int playerId)
+    {
+        // if already died
+        if (!players.ContainsKey (playerId)) {
+            return;
+        }
+        // remove player reference from enemies
+        foreach (GameObject enemyObject in enemies.Values) {
+            Enemy enemy = enemyObject.GetComponent<Enemy> ();
+            enemy.RemovePlayer (playerId);
+        }
+        // change the main camera
+        if (controlledPlayer != null && controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (controlledPlayer);
+            controlledPlayer = null;
+            GameObject.Find ("Ingame").SetActive (false);
+        } else if (watchedPlayer != null && watchedPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            Destroy (watchedPlayer);
+            watchedPlayer = null;
+
+        } else {
+            Destroy (players [playerId]);
+        }
+        players.Remove (playerId);
+        // if no player is lived, change to the game over camera
+        if (players.Count == 0) {
+
+            GameObject.FindGameObjectWithTag ("AmmoText").SetActive (false);
+            GameObject.FindGameObjectWithTag ("HealthSlider").SetActive (false);
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<Camera> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverCamera")
+                .GetComponent<AudioListener> ().enabled = true;
+            GameObject.FindGameObjectWithTag ("GameOverUI")
+                .GetComponent<Canvas> ().enabled = true;
+        } else {
+            // else go to the camera of the first lived player in the player
+            // list
+            if (controlledPlayer == null) {
+                foreach (GameObject player in players.Values) {
+                    player.GetComponentInChildren<Camera> ().enabled = true;
+                    player.GetComponentInChildren<Player> ().BindItems ();
+                    watchedPlayer = player;
+                    break;
+                }
+            }
+        }
+    }
+
+    /* if local controlled player is died, constantly call this method to
+     * inform the server that the player is died, until get a reply from
+     * server
+     */
+    void ClientSendPlayerDeath ()
+    {
+        Messages.PlayerDieMessage dieMsg =
+            new Messages.PlayerDieMessage (
+                controlledPlayer.GetComponentInChildren<Player> ().id);
+        mClient.Send (Messages.PlayerDieMessage.msgId, dieMsg);
+    }
+
+    /*
+     * after server received player's death, delete the player from the player
+     * list and then broadcast this information to all the player( including
+     * the client who send it as a reply)
+     */
+    void OnServerGetPlayerDeath (NetworkMessage msg)
+    {
+        Messages.PlayerDieMessage dieMsg =
+            msg.ReadMessage<Messages.PlayerDieMessage> ();
+        if (diedPlayers.ContainsKey (dieMsg.playerId)) {
+            return;
+        }
+//        players.Remove (dieMsg.playerId);
+        diedPlayers.Add (dieMsg.playerId, new List<int> ());
+        foreach (NetworkConnection conn in NetworkServer.connections) {
+            diedPlayers [dieMsg.playerId].Add (conn.connectionId);
         }
     }
 

@@ -172,7 +172,6 @@ public class Player : MonoBehaviour, ICharactor
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         currentWeapon.ammo = ammo;
 
-
     }
 
     public void SetGameController (GameController controller)
@@ -304,6 +303,19 @@ public class Player : MonoBehaviour, ICharactor
         return data;
     }
 
+    public void UpdatePlayerStatus(Vector3 pos, Quaternion rot, int level,
+        int exp, float hp, float maxHp, int weaponNumber, int ammo)
+    {
+        this.transform.parent.position = pos;
+        this.transform.parent.rotation = rot;
+        this.level = level;
+        this.exp = exp;
+        this.hp = hp;
+        this.maxHp = maxHp;
+        this.weaponNumber = weaponNumber;
+        this.ammo = ammo;
+    }
+
     /*
      * called by server, to bind swap button and healthSlider to the
      * player, as well as ammoText
@@ -325,7 +337,6 @@ public class PlayerData
 {
     public int id;
     public String username;
-    public bool isLocal;
     public Vector3 pos;
     public Quaternion rot;
     public int level;

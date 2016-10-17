@@ -49,6 +49,46 @@ public class Messages
         }
     }
 
+    public class RequestPlayerInfoMessage : MessageBase
+    {
+        public const short msgId = 150;
+        public RequestPlayerInfoMessage()
+        {
+        }
+    }
+
+    public class PlayerInfoMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int level;
+        public int exp;
+        public float hp;
+        public float maxHp;
+        public int weaponNumber;
+        public int ammo;
+
+        public const short msgId = 151;
+        public PlayerInfoMessage()
+        {
+        }
+
+        public PlayerInfoMessage(int id, Vector3 pos, Quaternion rot, int level,
+            int exp, float hp, float maxHp, int weaponNumber, int ammo)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.level = level;
+            this.exp = exp;
+            this.hp = hp;
+            this.maxHp = maxHp;
+            this.weaponNumber = weaponNumber;
+            this.ammo = ammo;
+        }
+    }
+
     // Message used when a player is loaded from the file system
     public class LoadPlayerMessage : MessageBase
     {
