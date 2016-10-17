@@ -15,13 +15,27 @@ public class Messages
         public Vector3 position;
         public Quaternion rotation;
         public int id;
+        public int level;
+        public int exp;
+        public float hp;
+        public float maxHp;
+        public int weaponNumber;
+        public int ammo;
         public const short msgId = 100;
 
-        public PlayerMoveMessage (int id, Vector3 position, Quaternion rotation)
+        public PlayerMoveMessage (int id, Vector3 position, Quaternion rotation,
+            int level, int exp, float hp, float maxHp, int weaponNumber,
+            int ammo)
         {
             this.id = id;
             this.position = position;
             this.rotation = rotation;
+            this.level = level;
+            this.exp = exp;
+            this.hp = hp;
+            this.maxHp = maxHp;
+            this.weaponNumber = weaponNumber;
+            this.ammo = ammo;
         }
         // default constructor
         public PlayerMoveMessage ()
@@ -46,46 +60,6 @@ public class Messages
         // default constructor
         public NewPlayerMessage ()
         {
-        }
-    }
-
-    public class RequestPlayerInfoMessage : MessageBase
-    {
-        public const short msgId = 150;
-        public RequestPlayerInfoMessage()
-        {
-        }
-    }
-
-    public class PlayerInfoMessage : MessageBase
-    {
-        public int id;
-        public Vector3 pos;
-        public Quaternion rot;
-        public int level;
-        public int exp;
-        public float hp;
-        public float maxHp;
-        public int weaponNumber;
-        public int ammo;
-
-        public const short msgId = 151;
-        public PlayerInfoMessage()
-        {
-        }
-
-        public PlayerInfoMessage(int id, Vector3 pos, Quaternion rot, int level,
-            int exp, float hp, float maxHp, int weaponNumber, int ammo)
-        {
-            this.id = id;
-            this.pos = pos;
-            this.rot = rot;
-            this.level = level;
-            this.exp = exp;
-            this.hp = hp;
-            this.maxHp = maxHp;
-            this.weaponNumber = weaponNumber;
-            this.ammo = ammo;
         }
     }
 

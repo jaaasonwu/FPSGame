@@ -243,7 +243,6 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-        mClient.RegisterHandler(Messages.RequestPlayerInfoMessage.msgId, OnRequstPlayerInfo);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
         mClient.Connect (address, PORT);
@@ -268,7 +267,6 @@ public class GameController : MonoBehaviour
 		mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
 		mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
 		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-        mClient.RegisterHandler(Messages.RequestPlayerInfoMessage.msgId, OnRequstPlayerInfo);
 		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
 			OnClientReceivedPlayerDeath);
 		mClient.Connect (address, port);
@@ -472,6 +470,7 @@ public class GameController : MonoBehaviour
             return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
+        player.
     }
 
     /*
@@ -660,8 +659,6 @@ public class GameController : MonoBehaviour
         PlayerSaving playerSaving = new PlayerSaving ();
         playerSaving.PlayerList = new List<PlayerData> ();
 
-        // Update the info from other players
-        RequestPlayerInfo();
         // add data to the list of playerlist
         foreach (GameObject player in players.Values) {
             PlayerData data;
@@ -764,46 +761,7 @@ public class GameController : MonoBehaviour
         }
     }
 
-    /*
-     * Request an update client players
-     */
-    public void RequestPlayerInfo()
-    {
-        NetworkServer.SendToAll(Messages.RequestPlayerInfoMessage.msgId,
-            new Messages.RequestPlayerInfoMessage());
-    }
 
-    /*
-     * Send the information back to the server
-     */
-    public void OnRequstPlayerInfo(NetworkMessage msg)
-    {
-        PlayerData data = controlledPlayer.GetComponentInChildren<Player>().
-            GeneratePlayerData();
-        mClient.Send(Messages.PlayerInfoMessage.msgId,
-            new Messages.PlayerInfoMessage(data.id, data.pos, data.rot,
-                data.level, data.exp, data.hp, data.maxHp, data.weaponNumber,
-                data.ammo));
-    }
-
-    /*
-     * Update the stored player information
-     */
-    public void OnReceivePlayerInfo(NetworkMessage msg)
-    {
-        Messages.PlayerInfoMessage info =
-            msg.ReadMessage<Messages.PlayerInfoMessage>();
-        foreach(GameObject player in players.Values)
-        {
-            Player playerScript = player.GetComponent<Player>();
-            if (playerScript.id == info.id)
-            {
-                playerScript.UpdatePlayerStatus(
-                    info.pos, info.rot, info.level, info.exp, info.hp,
-                    info.maxHp, info.weaponNumber, info.ammo);
-            }
-        }
-    }
 
     /*
      * The function being called when client receives the LoadPlayer message
