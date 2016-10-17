@@ -12,6 +12,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
@@ -19,6 +20,7 @@ public class GameController : MonoBehaviour
     public string hostAddress;
     public GameObject playerPrefab;
     public string username;
+    public Text usernameText;
     /*
     * prefabs of enemies
     * index 0 for cactus
@@ -39,14 +41,12 @@ public class GameController : MonoBehaviour
     public bool localPlayerDie = false;
     // for test
 
-    SharedData sharedData;
+    public Text LoadButtonText;
     public const int PORT = 8001;
     public bool isServer;
 
 
     //pirvate & protected fields
-    bool isStart = true;
-
     //player id counter, starts from 0
     int idCount = 0;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
@@ -64,6 +64,8 @@ public class GameController : MonoBehaviour
     bool inPlayScene = false;
     // indicate all clients is ready
     bool allReady = false;
+    // when the game is a load game
+    bool isLoad = false;
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
@@ -79,6 +81,7 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+        UpdateUsername();
         // first time in play scene
         if (!inPlayScene) {
             Scene s = SceneManager.GetActiveScene ();
@@ -115,6 +118,27 @@ public class GameController : MonoBehaviour
         if (isServer) {
             SendEnemyDeath ();
             ServerSendPlayerDeath ();
+        }
+    }
+
+    public void ChangeIsLoaded()
+    {
+        if (isLoad == false)
+        {
+            isLoad = true;
+            LoadButtonText.text = "IsLoad";
+        } else
+        {
+            isLoad = false;
+            LoadButtonText.text = "NotLoad";
+        }
+    }
+
+    void UpdateUsername()
+    {
+        if (usernameText != null && usernameText.text != username)
+        {
+            username = usernameText.text;
         }
     }
 
@@ -210,7 +234,6 @@ public class GameController : MonoBehaviour
         NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
             OnServerRecieveEnterLobbyMsg);
         NetworkServer.RegisterHandler (Messages.ReadyMessage.msgId, OnServerReceiveReady);
-        isStart = false;
     }
 
     /*
@@ -222,7 +245,6 @@ public class GameController : MonoBehaviour
         mClient = new NetworkClient ();
         RegisterClientHandler ();
         mClient.Connect (address, PORT);
-        isStart = false;
     }
 
     public void SetUpClient (string address, int port)
@@ -232,7 +254,6 @@ public class GameController : MonoBehaviour
         hostAddress = address;
         mClient.Connect (address, port);
         Debug.Log ("Connected");
-        isStart = false;
     }
 
     /*
@@ -242,7 +263,6 @@ public class GameController : MonoBehaviour
     {
         mClient = ClientScene.ConnectLocalServer ();
         RegisterClientHandler ();
-        isStart = false;
     }
 
     /*
@@ -406,6 +426,12 @@ public class GameController : MonoBehaviour
      */
     void OnServerReceiveReady (NetworkMessage msg)
     {
+        if (isLoad)
+        {
+            Load();
+            return;
+        }
+
         int connId = msg.conn.connectionId;
         if (readyList.Contains (connId)) {
             readyList.Remove (connId);
@@ -505,6 +531,10 @@ public class GameController : MonoBehaviour
         if (msg.conn.connectionId != mClient.connection.connectionId) {
             player.transform.position = moveMsg.position;
             player.transform.rotation = moveMsg.rotation;
+            Player playerScript = player.GetComponentInChildren<Player>();
+            playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
+                moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
+            
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);
@@ -525,6 +555,9 @@ public class GameController : MonoBehaviour
             return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
+        Player playerScript = player.GetComponentInChildren<Player>();
+        playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
+            moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
     }
 
     /*
@@ -792,8 +825,7 @@ public class GameController : MonoBehaviour
                                              data.rot) as GameObject;
                 players [data.id] = playerClone;
                 Player player = playerClone.GetComponentInChildren<Player> ();
-                player = initializePlayerOnLoad (player, loadMessage);
-                player.Load ();
+                player.Load (loadMessage);
 
                 // Authenticate the player using the username and make the
                 // matching player the controlled player
@@ -805,6 +837,7 @@ public class GameController : MonoBehaviour
                     playerClone.GetComponentInChildren<Skybox> ().enabled = true;
                     playerClone.GetComponentInChildren<Player> ().isLocal = true;
                     playerClone.GetComponentInChildren<Player> ().SetGameController (this);
+                    player.LocalLoad();
                     controlledPlayer = playerClone;
                 }
 
@@ -916,27 +949,7 @@ public class GameController : MonoBehaviour
                                      loadMessage.rot) as GameObject;
         Player player = playerClone.GetComponentInChildren<Player> ();
         players [loadMessage.id] = playerClone;
-        player = initializePlayerOnLoad (player, loadMessage);
-        player.Load ();
-    }
-
-    /*
-     * This is the helper function to fill the player with the data in the
-     * LoadPlayer netgwork messagee
-     */
-    private Player initializePlayerOnLoad (Player player,
-                                           Messages.LoadPlayerMessage loadMessage)
-    {
-        player.id = loadMessage.id;
-        player.username = loadMessage.username;
-        player.level = loadMessage.level;
-        player.exp = loadMessage.exp;
-        player.hp = loadMessage.hp;
-        player.maxHp = loadMessage.maxHp;
-        player.weaponNumber = loadMessage.weaponNumber;
-        player.ammo = loadMessage.ammo;
-
-        return player;
+        player.Load (loadMessage);
     }
 
     void LoadEnemies ()

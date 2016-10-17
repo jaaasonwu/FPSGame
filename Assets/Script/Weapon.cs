@@ -22,8 +22,8 @@ public class Weapon : MonoBehaviour
     {
         gunLine = GetComponent<LineRenderer> ();
         shootableMask = LayerMask.GetMask ("Shootable");
-        ammoText = GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
-        ammoText.text = "Ammo: " + ammo;
+        ammoText = GameObject.FindGameObjectWithTag("AmmoText").GetComponent<Text>();
+        //ammoText.text = "Ammo: " + ammo;
     }
 
     // Update is called once per frame
