@@ -60,8 +60,12 @@ public class GameController : MonoBehaviour
     Dictionary<int,List<int>> diedPlayers = new Dictionary<int, List<int>> ();
     float generateCount = 0;
 
-    // for test
-    bool addedPlayer = false;
+    // to show whether is the first time enter play scene
+    bool inPlayScene = false;
+    // indicate all clients is ready
+    bool allReady = false;
+    // to show all the client in connection is ready
+    List<int> readyList = new List<int> ();
 
     void Start ()
     {
@@ -69,46 +73,29 @@ public class GameController : MonoBehaviour
 
         //sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
         //isServer = sharedData.isServer;
-        DontDestroyOnLoad(gameObject);
+        DontDestroyOnLoad (gameObject);
     }
 
     // Update is called once per frame
     void Update ()
-	{
-		//if (isStart) {
-        //    SetUpNetwork ();
-        //}
-        if (mClient != null && !addedPlayer) {
-            if (Input.GetKeyDown (KeyCode.P)) {
-                CreatePlayer ();
-            }
-        }
-        if (!addedPlayer)
-        {
-            Scene s = SceneManager.GetActiveScene();
-            if (s.name == "Map01" && s.isLoaded)
-            {
+    {
+        // first time in play scene
+        if (!inPlayScene) {
+            Scene s = SceneManager.GetActiveScene ();
+            if (s.name == "Map01" && s.isLoaded) {
                 GameObject[] spawnPoints = 
-                    GameObject.FindGameObjectsWithTag("SpawnPoint");
-                for (int i = 0; i < spawnPoints.Length; i++)
-                {
-                    enemySpawnPoints.Add(spawnPoints[i].transform.position);
+                    GameObject.FindGameObjectsWithTag ("SpawnPoint");
+                for (int i = 0; i < spawnPoints.Length; i++) {
+                    enemySpawnPoints.Add (spawnPoints [i].transform.position);
                 }
-                CreatePlayer();
+                ClientReady ();
+                inPlayScene = true;
             }
-        }
-        //if (!addedPlayer && isServer && NetworkServer.connections.Count >= 1) {
-        //    CreatePlayer();
-        //}
-        //if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
-        //    CreatePlayer ();
-        //}
-        if (Input.GetKeyDown (KeyCode.L)) {
-            Load ();
         }
 
         // Generate enemy at a regular interval
-        if (isServer && addedPlayer && enemies.Count < enemyLimits) {
+        // only if all the player is ready
+        if (isServer && allReady && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
                 generateCount = 0;
@@ -133,11 +120,10 @@ public class GameController : MonoBehaviour
 
     void CreatePlayer ()
     {
-        Debug.Log(SceneManager.GetActiveScene().name);
+        Debug.Log (SceneManager.GetActiveScene ().name);
         Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
         mClient.Send (MsgType.AddPlayer, newPlayer);
-        addedPlayer = true;
     }
 
     /*
@@ -163,38 +149,43 @@ public class GameController : MonoBehaviour
         //}
     }
 
-	public void StartAsLocalServer(){
-		SetUpServer ();
-		SetUpLocalClient ();
-		isServer = true;
-	}
+    public void StartAsLocalServer ()
+    {
+        SetUpServer ();
+        SetUpLocalClient ();
+        isServer = true;
+    }
 
-	public void StartAsJoinClient(string hostAddress,int port){
-		SetUpClient (hostAddress,port);
-		isServer = false;
-	}
+    public void StartAsJoinClient (string hostAddress, int port)
+    {
+        SetUpClient (hostAddress, port);
+        isServer = false;
+    }
 
-	/*
+    /*
 	 *  return port number of current server listen to
 	 */
-	public int GetPort(){
-		return NetworkServer.listenPort;
-	}
+    public int GetPort ()
+    {
+        return NetworkServer.listenPort;
+    }
 
-	/*
+    /*
 	 * getter method for isServer
 	 */
-	public bool isAServer(){
-		return isServer;
-	}
+    public bool isAServer ()
+    {
+        return isServer;
+    }
 
-	/*
+    /*
 	 * getter method for mClient
 	 */
-	public NetworkClient GetmClient(){
-		//Debug.Log (mClient.connection);
-		return mClient;
-	}
+    public NetworkClient GetmClient ()
+    {
+        //Debug.Log (mClient.connection);
+        return mClient;
+    }
 
     /*
      * set up the server, which is a local server and
@@ -206,8 +197,8 @@ public class GameController : MonoBehaviour
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
-		NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnServerRecieveLobbyMsg);
+        NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+            OnServerRecieveLobbyMsg);
         NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
             OnUpdateDamagedHp);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
@@ -216,8 +207,9 @@ public class GameController : MonoBehaviour
             OnServerGetPlayerDeath);
         NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
             OnReplyPlayerDeath);
-		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
-			OnServerRecieveEnterLobbyMsg);
+        NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+            OnServerRecieveEnterLobbyMsg);
+        NetworkServer.RegisterHandler (Messages.isReadyMsg, OnServerReceiveReady);
         isStart = false;
     }
 
@@ -228,54 +220,18 @@ public class GameController : MonoBehaviour
     public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
-        mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-            OnClientReceivePlayerPosition);
-        mClient.RegisterHandler (MsgType.Connect, OnConnected);
-        mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
-        mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
-        mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
-        mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
-        mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
-        mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
-            OnClientReceivedPlayerDeath);
-		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
-			OnClientRecieveEnterLobbyMsg);
+        RegisterClientHandler ();
         mClient.Connect (address, PORT);
         isStart = false;
     }
 
-	public void SetUpClient (string address, int port)
-	{
-		mClient = new NetworkClient ();
-		mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-			OnClientReceivePlayerPosition);
-		mClient.RegisterHandler (MsgType.Connect, OnConnected);
-		mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
-		mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
-		mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
-		mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
-		mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
-		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
-			OnClientReceivedPlayerDeath);
-		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
-			OnClientRecieveEnterLobbyMsg);
-		mClient.Connect (address, port);
-		isStart = false;
-	}
+    public void SetUpClient (string address, int port)
+    {
+        mClient = new NetworkClient ();
+        RegisterClientHandler ();
+        mClient.Connect (address, port);
+        isStart = false;
+    }
 
     /*
      * set up local client
@@ -283,100 +239,116 @@ public class GameController : MonoBehaviour
     public void SetUpLocalClient ()
     {
         mClient = ClientScene.ConnectLocalServer ();
-        mClient.RegisterHandler (MsgType.Connect, OnConnected);
+        RegisterClientHandler ();
+        isStart = false;
+    }
+
+    /*
+     * register handler for client
+     */
+    void RegisterClientHandler ()
+    {
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnClientReceivePlayerPosition);
+        mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
+        mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+            OnClientRecieveLobbyMsg);
+        mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+            OnRecieveLeftLobby);
+        mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+            OnRecieveStartGameMessage);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
-			OnClientRecieveEnterLobbyMsg);
-        isStart = false;
+        mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+            OnClientRecieveEnterLobbyMsg);
+        mClient.RegisterHandler (Messages.isReadyMsg, OnClientReceiveReady);
     }
 
-	/*
+    /*
 	 * diconnect from current server
 	 */
-	public void Disconnect(){
-		mClient.Disconnect();
-	}
+    public void Disconnect ()
+    {
+        mClient.Disconnect ();
+    }
 
-	/*
+    /*
 	 * on server recieve lobby message
 	 */
-	public void OnServerRecieveLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnServerRecieveLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve lobby message
 	 */
-	public void OnClientRecieveLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnClientRecieveLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve lobby message
 	 */
-	public void OnClientRecieveEnterLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnClientRecieveEnterLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnClientRecieveEnterLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnClientRecieveEnterLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on server recieve lobby message
 	 */
-	public void OnServerRecieveEnterLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnServerRecieveEnterLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnServerRecieveEnterLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnServerRecieveEnterLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve left lobby message
 	 */
-	public void OnRecieveLeftLobby(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnRecieveLeftLobby (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve start
 	 */
-	public void OnRecieveStartGameMessage(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnRecieveStartGameMessage (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
     /*
      * after connected to the server, the client send a message to
@@ -385,18 +357,66 @@ public class GameController : MonoBehaviour
     void OnConnected (NetworkMessage msg)
     {
         Debug.Log ("connected to server");
-		// instance is null if not in lobby main
+        // instance is null if not in lobby main
 
-		if (AviationLobbyMain.s_instance != null) {
-			Debug.Log("entering lobby");
-			AviationLobbyMain.s_instance.OnEnterLobby ();
-		}
-		//Debug.Log(NetworkServer.connections.Count);
+        if (AviationLobbyMain.s_instance != null) {
+            Debug.Log ("entering lobby");
+            AviationLobbyMain.s_instance.OnEnterLobby ();
+        }
+        //Debug.Log(NetworkServer.connections.Count);
 
         // -1 in id means not allocated
         //        Messages.NewPlayerMessage newPlayer = new
         //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
         //        mClient.Send (MsgType.AddPlayer, newPlayer);
+    }
+
+    /*
+     * when start game, server first send a message to inform the scene change
+     * then after scene change, client send a ready message, then server would
+     * reply the ready message so that the client would be able to create
+     * the player
+     */
+    public void StartGame ()
+    {
+        // this function just simply add all connections to the ready list
+        // once receive the ready message, the sender would be removed from 
+        // the ready list, so that server will know that everyone is ready
+        foreach (NetworkConnection conn in NetworkServer.connections) {
+            readyList.Add (conn.connectionId);
+        }
+    }
+
+    /*
+     * client send the ready message to the server
+     */
+    void ClientReady ()
+    {
+        mClient.Send (Messages.isReadyMsg, null);
+    }
+
+    /*
+     * server receive client's ready message
+     */
+    void OnServerReceiveReady (NetworkMessage msg)
+    {
+        int connId = msg.conn.connectionId;
+        if (readyList.Contains (connId)) {
+            readyList.Remove (connId);
+        } else {
+            Debug.Log ("ready list don't contain :" + connId);
+        }
+        if (readyList.Count == 0) {
+            NetworkServer.SendToAll (Messages.isReadyMsg, null);
+        }
+    }
+
+    /*
+     * when client receive ready message, it create the player
+     */
+    void OnClientReceiveReady (NetworkMessage msg)
+    {
+        CreatePlayer ();
     }
 
     /*
