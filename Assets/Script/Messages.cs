@@ -69,8 +69,8 @@ public class Messages
         }
 
         public LoadPlayerMessage (int id, string username, Vector3 pos,
-                                 Quaternion rot, int level, int exp, float hp, float maxHp,
-                                 int weaponNumber, int ammo)
+                                  Quaternion rot, int level, int exp, float hp, float maxHp,
+                                  int weaponNumber, int ammo)
         {
             this.id = id;
             this.username = username;
@@ -102,7 +102,7 @@ public class Messages
         }
 
         public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
-                                int enemyIndex, int level, float damagedHp, float maxHp)
+                                 int enemyIndex, int level, float damagedHp, float maxHp)
         {
             this.id = id;
             this.pos = pos;
@@ -252,52 +252,79 @@ public class Messages
         }
     }
 
-	/*
+    /*
+     * the message class used to send the chat string
+     */
+    public class ChatMessage : MessageBase
+    {
+        public string sender;
+        public string message;
+        public const short msgId = 109;
+
+        public ChatMessage (string sender, string message)
+        {
+            this.sender = sender;
+            this.message = message;
+        }
+
+        public ChatMessage ()
+        {
+        }
+    }
+
+    /*
 	 * message used to tell server about client when client enter or in lobby
 	 * this message will be triggered after connection established
 	 */
-	public class PlayerLobbyMessage : MessageBase
-	{
-		public int connectionId;
-		public string playerName;
-		public bool isReady;
-		public const short msgId = 198; 
+    public class PlayerLobbyMessage : MessageBase
+    {
+        public int connectionId;
+        public string playerName;
+        public bool isReady;
+        public const short msgId = 198;
 
-		public PlayerLobbyMessage(int connId, string name,bool readiness){
-			this.connectionId = connId;
-			this.playerName = name;
-			this.isReady = readiness;
-		}
+        public PlayerLobbyMessage (int connId, string name, bool readiness)
+        {
+            this.connectionId = connId;
+            this.playerName = name;
+            this.isReady = readiness;
+        }
 
-		//default constructor
-		public PlayerLobbyMessage(){
+        //default constructor
+        public PlayerLobbyMessage ()
+        {
 			
-		}
-	}
+        }
+    }
 
-	public class PlayerLeftLobbyMessage : MessageBase{
-		public int connectionId;
-		public bool isServer;
-		public const short msgId = 199;
+    public class PlayerLeftLobbyMessage : MessageBase
+    {
+        public int connectionId;
+        public bool isServer;
+        public const short msgId = 199;
 
-		public PlayerLeftLobbyMessage(int connId,bool isServer){
-			this.connectionId = connId;
-			this.isServer = isServer;
-		}
+        public PlayerLeftLobbyMessage (int connId, bool isServer)
+        {
+            this.connectionId = connId;
+            this.isServer = isServer;
+        }
 
-		//defalut constructor
-		public PlayerLeftLobbyMessage(){
+        //defalut constructor
+        public PlayerLeftLobbyMessage ()
+        {
 		
-		}
-	}
+        }
+    }
 
-	public class LobbyStartGameMessage : MessageBase{
+    public class LobbyStartGameMessage : MessageBase
+    {
 
-		public const short msgId = 200;
+        public const short msgId = 200;
 
-		//default constructor
-		public LobbyStartGameMessage(){
+        //default constructor
+        public LobbyStartGameMessage ()
+        {
 	
-		}
-	}
+        }
+    }
 }

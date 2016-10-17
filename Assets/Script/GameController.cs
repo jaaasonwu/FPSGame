@@ -4,6 +4,7 @@
  */
 
 using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Networking;
 using UnityStandardAssets.Characters.FirstPerson;
 using System.Collections;
@@ -76,8 +77,8 @@ public class GameController : MonoBehaviour
 
     // Update is called once per frame
     void Update ()
-	{
-		if (isStart) {
+    {
+        if (isStart) {
             SetUpNetwork ();
         }
         if (mClient != null && !addedPlayer) {
@@ -85,7 +86,7 @@ public class GameController : MonoBehaviour
                 CreatePlayer ();
             }
         }
-        if (!addedPlayer && isServer && NetworkServer.connections.Count >= 2) {
+        if (!addedPlayer && isServer && NetworkServer.connections.Count >= 1) {
             CreatePlayer ();
         }
         if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
@@ -150,38 +151,43 @@ public class GameController : MonoBehaviour
         //}
     }
 
-	public void StartAsLocalServer(){
-		SetUpServer ();
-		SetUpLocalClient ();
-		isServer = true;
-	}
+    public void StartAsLocalServer ()
+    {
+        SetUpServer ();
+        SetUpLocalClient ();
+        isServer = true;
+    }
 
-	public void StartAsJoinClient(string hostAddress,int port){
-		SetUpClient (hostAddress,port);
-		isServer = false;
-	}
+    public void StartAsJoinClient (string hostAddress, int port)
+    {
+        SetUpClient (hostAddress, port);
+        isServer = false;
+    }
 
-	/*
+    /*
 	 *  return port number of current server listen to
 	 */
-	public int GetPort(){
-		return NetworkServer.listenPort;
-	}
+    public int GetPort ()
+    {
+        return NetworkServer.listenPort;
+    }
 
-	/*
+    /*
 	 * getter method for isServer
 	 */
-	public bool isAServer(){
-		return isServer;
-	}
+    public bool isAServer ()
+    {
+        return isServer;
+    }
 
-	/*
+    /*
 	 * getter method for mClient
 	 */
-	public NetworkClient GetmClient(){
-		//Debug.Log (mClient.connection);
-		return mClient;
-	}
+    public NetworkClient GetmClient ()
+    {
+        //Debug.Log (mClient.connection);
+        return mClient;
+    }
 
     /*
      * set up the server, which is a local server and
@@ -190,19 +196,7 @@ public class GameController : MonoBehaviour
     public void SetUpServer ()
     {
         NetworkServer.Listen (PORT);
-        NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-            OnServerReceivePlayerPosition);
-        NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
-		NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnServerRecieveLobbyMsg);
-        NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
-            OnUpdateDamagedHp);
-        NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
-            OnReplyEnemyDeath);
-        NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
-            OnServerGetPlayerDeath);
-        NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
-            OnReplyPlayerDeath);
+        RegisterServerHandler ();
         isStart = false;
     }
 
@@ -213,50 +207,18 @@ public class GameController : MonoBehaviour
     public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
-        mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-            OnClientReceivePlayerPosition);
-        mClient.RegisterHandler (MsgType.Connect, OnConnected);
-        mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
-        mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
-        mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
-        mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
-        mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
-        mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-        mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
-            OnClientReceivedPlayerDeath);
+        RegisterClientHandler ();
         mClient.Connect (address, PORT);
         isStart = false;
     }
 
-	public void SetUpClient (string address, int port)
-	{
-		mClient = new NetworkClient ();
-		mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
-			OnClientReceivePlayerPosition);
-		mClient.RegisterHandler (MsgType.Connect, OnConnected);
-		mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
-		mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
-		mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
-		mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
-		mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
-		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
-			OnClientReceivedPlayerDeath);
-		mClient.Connect (address, port);
-		isStart = false;
-	}
+    public void SetUpClient (string address, int port)
+    {
+        mClient = new NetworkClient ();
+        RegisterClientHandler ();
+        mClient.Connect (address, port);
+        isStart = false;
+    }
 
     /*
      * set up local client
@@ -264,76 +226,113 @@ public class GameController : MonoBehaviour
     public void SetUpLocalClient ()
     {
         mClient = ClientScene.ConnectLocalServer ();
+        RegisterClientHandler ();
+        isStart = false;
+    }
+
+    /*
+     * Handler for server
+     */
+    void RegisterServerHandler ()
+    {
+        NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
+            OnServerReceivePlayerPosition);
+        NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
+        NetworkServer.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+            OnServerRecieveLobbyMsg);
+        NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
+            OnUpdateDamagedHp);
+        NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
+            OnReplyEnemyDeath);
+        NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
+            OnServerGetPlayerDeath);
+        NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
+            OnReplyPlayerDeath);
+        NetworkServer.RegisterHandler (Messages.ChatMessage.msgId,
+            OnServerReceiveChatMessage);
+    }
+
+    /*
+     * Handler for client
+     */
+    void RegisterClientHandler ()
+    {
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
-		mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
-			OnClientRecieveLobbyMsg);
-		mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
-			OnRecieveLeftLobby);
-		mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
-			OnRecieveStartGameMessage);
+        mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
+            OnClientRecieveLobbyMsg);
+        mClient.RegisterHandler (Messages.PlayerLeftLobbyMessage.msgId,
+            OnRecieveLeftLobby);
+        mClient.RegisterHandler (Messages.LobbyStartGameMessage.msgId,
+            OnRecieveStartGameMessage);
         mClient.RegisterHandler (Messages.NewEnemyMessage.msgId, OnSpawnEnemy);
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-        isStart = false;
+        mClient.RegisterHandler (Messages.ChatMessage.msgId, 
+            OnClientReceiveChatMessage);
     }
 
-	/*
+    /*
 	 * diconnect from current server
 	 */
-	public void Disconnect(){
-		mClient.Disconnect();
-	}
+    public void Disconnect ()
+    {
+        mClient.Disconnect ();
+    }
 
-	/*
+    /*
 	 * on server recieve lobby message
 	 */
-	public void OnServerRecieveLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnServerRecieveLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve lobby message
 	 */
-	public void OnClientRecieveLobbyMsg(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnClientRecieveLobbyMsg (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve left lobby message
 	 */
-	public void OnRecieveLeftLobby(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnRecieveLeftLobby (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
-	/*
+    /*
 	 * on client recieve start
 	 */
-	public void OnRecieveStartGameMessage(NetworkMessage msg){
-		if (AviationInLobby.s_Lobby != null) {
-			AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
-		} else {
-			Debug.Log ("lobby not exist");
-		}
-	}
+    public void OnRecieveStartGameMessage (NetworkMessage msg)
+    {
+        if (AviationInLobby.s_Lobby != null) {
+            AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
+        } else {
+            Debug.Log ("lobby not exist");
+        }
+    }
 
     /*
      * after connected to the server, the client send a message to
@@ -342,13 +341,13 @@ public class GameController : MonoBehaviour
     void OnConnected (NetworkMessage msg)
     {
         Debug.Log ("connected to server");
-		// instance is null if not in lobby main
+        // instance is null if not in lobby main
 
-		if (AviationLobbyMain.s_instance != null) {
-			Debug.Log("entering lobby");
-			AviationLobbyMain.s_instance.OnEnterLobby ();
-		}
-		//Debug.Log(NetworkServer.connections.Count);
+//        if (AviationLobbyMain.s_instance != null) {
+//            Debug.Log ("entering lobby");
+//            AviationLobbyMain.s_instance.OnEnterLobby ();
+//        }
+        //Debug.Log(NetworkServer.connections.Count);
 
         // -1 in id means not allocated
         //        Messages.NewPlayerMessage newPlayer = new
@@ -1003,6 +1002,38 @@ public class GameController : MonoBehaviour
         if (diedPlayers [reply.playerId].Count == 0) {
             diedPlayers.Remove (reply.playerId);
         }
+    }
+
+    // client press the send button and would call this function
+    public void SendChatMessage ()
+    {
+        Text t = GameObject.FindGameObjectWithTag ("ChatText").GetComponent<Text> ();
+        string message = t.text;
+        t.text = "";
+        Messages.ChatMessage chatMsg = 
+            new Messages.ChatMessage (username, message);
+        mClient.Send (Messages.ChatMessage.msgId, chatMsg);
+    }
+
+    /*
+     * after server received message from client, it just propagate it to 
+     * all clients
+     */
+    void OnServerReceiveChatMessage (NetworkMessage msg)
+    {
+        Messages.ChatMessage chatMsg = 
+            msg.ReadMessage<Messages.ChatMessage> ();
+        NetworkServer.SendToAll (Messages.ChatMessage.msgId, chatMsg);
+    }
+
+    // when client received chat message send by server, it replace the text
+    // in the ReceivedChat slot
+    void OnClientReceiveChatMessage (NetworkMessage msg)
+    {
+        Messages.ChatMessage chatMsg = 
+            msg.ReadMessage<Messages.ChatMessage> ();
+        Text t = GameObject.FindGameObjectWithTag ("ReceivedChat").GetComponent<Text> ();
+        t.text = chatMsg.sender + " : " + chatMsg.message;
     }
 }
 
