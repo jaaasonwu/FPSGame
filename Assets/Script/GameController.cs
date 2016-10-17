@@ -229,7 +229,9 @@ public class GameController : MonoBehaviour
     {
         mClient = new NetworkClient ();
         RegisterClientHandler ();
+        hostAddress = address;
         mClient.Connect (address, port);
+        Debug.Log ("Connected");
         isStart = false;
     }
 
@@ -251,6 +253,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnClientReceivePlayerPosition);
         mClient.RegisterHandler (MsgType.Connect, OnConnected);
+        mClient.RegisterHandler (MsgType.Error, OnConnectionFailed);
         mClient.RegisterHandler (MsgType.AddPlayer, OnClientAddPlayer);
         mClient.RegisterHandler (Messages.NewPlayerMessage.ownerMsgId, OnOwner);
         mClient.RegisterHandler (Messages.PlayerLobbyMessage.msgId,
@@ -363,12 +366,15 @@ public class GameController : MonoBehaviour
             Debug.Log ("entering lobby");
             AviationLobbyMain.s_instance.OnEnterLobby ();
         }
-        //Debug.Log(NetworkServer.connections.Count);
+    }
 
-        // -1 in id means not allocated
-        //        Messages.NewPlayerMessage newPlayer = new
-        //            Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
-        //        mClient.Send (MsgType.AddPlayer, newPlayer);
+    /*
+     * connection failed handler
+     */
+    void OnConnectionFailed (NetworkMessage msg)
+    {
+        Debug.Log ("client connect to server failed");
+        mClient.Connect (hostAddress, PORT);
     }
 
     /*
@@ -408,6 +414,7 @@ public class GameController : MonoBehaviour
         }
         if (readyList.Count == 0) {
             NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
+            allReady = true;
         }
     }
 
