@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
@@ -64,14 +65,11 @@ public class GameController : MonoBehaviour
 
     void Start ()
     {
-        GameObject[] spawnPoints =
-            GameObject.FindGameObjectsWithTag ("SpawnPoint");
-        for (int i = 0; i < spawnPoints.Length; i++) {
-            enemySpawnPoints.Add (spawnPoints [i].transform.position);
-        }
 
-        sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
-        isServer = sharedData.isServer;
+
+        //sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
+        //isServer = sharedData.isServer;
+        DontDestroyOnLoad(gameObject);
     }
 
     // Update is called once per frame
@@ -85,12 +83,26 @@ public class GameController : MonoBehaviour
                 CreatePlayer ();
             }
         }
+        if (!addedPlayer)
+        {
+            Scene s = SceneManager.GetActiveScene();
+            if (s.name == "Map01" && s.isLoaded)
+            {
+                GameObject[] spawnPoints = 
+                    GameObject.FindGameObjectsWithTag("SpawnPoint");
+                for (int i = 0; i < spawnPoints.Length; i++)
+                {
+                    enemySpawnPoints.Add(spawnPoints[i].transform.position);
+                }
+                CreatePlayer();
+            }
+        }
         //if (!addedPlayer && isServer && NetworkServer.connections.Count >= 1) {
         //    CreatePlayer();
         //}
-        if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
-            CreatePlayer ();
-        }
+        //if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
+        //    CreatePlayer ();
+        //}
         if (Input.GetKeyDown (KeyCode.L)) {
             Load ();
         }
@@ -121,6 +133,7 @@ public class GameController : MonoBehaviour
 
     void CreatePlayer ()
     {
+        Debug.Log(SceneManager.GetActiveScene().name);
         Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
         mClient.Send (MsgType.AddPlayer, newPlayer);

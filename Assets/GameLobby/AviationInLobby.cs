@@ -85,7 +85,7 @@ public class AviationInLobby : MonoBehaviour {
 		// set newPlayer 
 		newPlayer.connectionId = connId;
 		newPlayer.isReady = false;
-		if (networkManager.isAServer ()) {
+		if (connId == 0) {
 			newPlayer.isHost = true;
 		} else {
 			newPlayer.isHost = false;

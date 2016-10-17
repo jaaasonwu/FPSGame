@@ -23,7 +23,6 @@ public class AviationLobbyManager : MonoBehaviour {
 		currPanel = mainPanel;
 		lobbyPanel.SetActive (false);
 		GetComponent<Canvas>().enabled = true;
-		DontDestroyOnLoad(gameObject);
 	}
 
 	/*
