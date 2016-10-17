@@ -37,4 +37,12 @@ public class UIController : MonoBehaviour {
         pauseMenu.GetComponent<Canvas>().enabled = false;
         inGame.GetComponent<Canvas>().enabled = true;
     }
+
+    public void onSavePressed()
+    {
+        GameController controller = GameObject.Find("GameController")
+            .GetComponent<GameController>();
+        controller.Save();
+
+    }
 }

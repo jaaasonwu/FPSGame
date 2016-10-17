@@ -34,7 +34,7 @@ public class StartSwitchScene : MonoBehaviour
      */
     public void StartMulti ()
     {
-        SceneManager.LoadScene ("Map01");
+        SceneManager.LoadScene ("Lobby");
         sharedData.isServer = false;
     }
 }

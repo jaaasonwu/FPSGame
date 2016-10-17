@@ -49,70 +49,6 @@ public class Messages
         }
     }
 
-    // Message used when a player is loaded from the file system
-    public class LoadPlayerMessage : MessageBase
-    {
-        public int id;
-        public string username;
-        public Vector3 pos;
-        public Quaternion rot;
-        public int level;
-        public int exp;
-        public float hp;
-        public float maxHp;
-        public int weaponNumber;
-        public int ammo;
-        public const short msgId = 110;
-        // default constructor
-        public LoadPlayerMessage ()
-        {
-        }
-
-        public LoadPlayerMessage (int id, string username, Vector3 pos,
-                                  Quaternion rot, int level, int exp, float hp, float maxHp,
-                                  int weaponNumber, int ammo)
-        {
-            this.id = id;
-            this.username = username;
-            this.pos = pos;
-            this.rot = rot;
-            this.level = level;
-            this.exp = exp;
-            this.hp = hp;
-            this.maxHp = maxHp;
-            this.weaponNumber = weaponNumber;
-            this.ammo = ammo;
-        }
-    }
-
-    public class LoadEnemyMessage : MessageBase
-    {
-        public int id;
-        public Vector3 pos;
-        public Quaternion rot;
-        public int enemyIndex;
-        public int level;
-        public float damagedHp;
-        public float maxHp;
-        public const short msgId = 111;
-
-        //default constructor
-        public LoadEnemyMessage ()
-        {
-        }
-
-        public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
-                                 int enemyIndex, int level, float damagedHp, float maxHp)
-        {
-            this.id = id;
-            this.pos = pos;
-            this.rot = rot;
-            this.enemyIndex = enemyIndex;
-            this.level = level;
-            this.damagedHp = damagedHp;
-            this.maxHp = maxHp;
-        }
-    }
         
     // message used to tell the client to spawn an enemy
     public class NewEnemyMessage: MessageBase
@@ -272,6 +208,79 @@ public class Messages
         }
     }
 
+    // Message used when a player is loaded from the file system
+    public class LoadPlayerMessage : MessageBase
+    {
+        public int id;
+        public string username;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int level;
+        public int exp;
+        public float hp;
+        public float maxHp;
+        public int weaponNumber;
+        public int ammo;
+        public const short msgId = 110;
+        // default constructor
+        public LoadPlayerMessage ()
+        {
+        }
+
+        public LoadPlayerMessage (int id, string username, Vector3 pos,
+                                      Quaternion rot, int level, int exp, float hp, float maxHp,
+                                      int weaponNumber, int ammo)
+        {
+            this.id = id;
+            this.username = username;
+            this.pos = pos;
+            this.rot = rot;
+            this.level = level;
+            this.exp = exp;
+            this.hp = hp;
+            this.maxHp = maxHp;
+            this.weaponNumber = weaponNumber;
+            this.ammo = ammo;
+        }
+    }
+
+    public class LoadEnemyMessage : MessageBase
+    {
+        public int id;
+        public Vector3 pos;
+        public Quaternion rot;
+        public int enemyIndex;
+        public int level;
+        public float damagedHp;
+        public float maxHp;
+        public const short msgId = 111;
+
+        //default constructor
+        public LoadEnemyMessage ()
+        {
+        }
+
+        public LoadEnemyMessage (int id, Vector3 pos, Quaternion rot,
+                                     int enemyIndex, int level, float damagedHp, float maxHp)
+        {
+            this.id = id;
+            this.pos = pos;
+            this.rot = rot;
+            this.enemyIndex = enemyIndex;
+            this.level = level;
+            this.damagedHp = damagedHp;
+            this.maxHp = maxHp;
+        }
+    }
+
+    /*
+     * message to tell the server or client that it is ready
+     */
+    public class ReadyMessage : MessageBase
+    {
+        public const short msgId = 112;
+    }
+
     /*
 	 * message used to tell server about client when client enter or in lobby
 	 * this message will be triggered after connection established
@@ -312,6 +321,25 @@ public class Messages
         //defalut constructor
         public PlayerLeftLobbyMessage ()
         {
+
+        }
+    }
+
+    public class PlayerEnterLobbyMessage : MessageBase
+    {
+        public int connectionId;
+        public string playerName;
+        public const short msgId = 200;
+
+        public PlayerEnterLobbyMessage (int connId, string playerName)
+        {
+            this.connectionId = connId;
+            this.playerName = playerName;
+        }
+
+        //defalut constructor
+        public PlayerEnterLobbyMessage ()
+        {
 		
         }
     }
@@ -319,7 +347,7 @@ public class Messages
     public class LobbyStartGameMessage : MessageBase
     {
 
-        public const short msgId = 200;
+        public const short msgId = 201;
 
         //default constructor
         public LobbyStartGameMessage ()

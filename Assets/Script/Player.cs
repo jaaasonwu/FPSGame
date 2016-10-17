@@ -99,7 +99,7 @@ public class Player : MonoBehaviour, ICharactor
             NextWeapon ();
         }
 
-        if (Input.GetButton ("Fire1")) {
+        if (CrossPlatformInputManager.GetButton ("Fire2")) {
             Attack ();
         }
 
