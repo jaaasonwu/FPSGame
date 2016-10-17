@@ -113,7 +113,8 @@ public class Player : MonoBehaviour, ICharactor
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
                     Quaternion.Euler (transform.rotation.eulerAngles -
-                    transform.localRotation.eulerAngles));
+                    transform.localRotation.eulerAngles),
+                    level, exp, hp, maxHp, weaponNumber, ammo);
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;

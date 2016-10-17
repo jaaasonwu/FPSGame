@@ -210,8 +210,6 @@ public class GameController : MonoBehaviour
 			OnServerRecieveLobbyMsg);
         NetworkServer.RegisterHandler (Messages.UpdateDamagedHp.msgId,
             OnUpdateDamagedHp);
-        NetworkServer.RegisterHandler(Messages.PlayerInfoMessage.msgId,
-            OnReceivePlayerInfo);
         NetworkServer.RegisterHandler (Messages.ReplyEnemyDeath.msgId,
             OnReplyEnemyDeath);
         NetworkServer.RegisterHandler (Messages.PlayerDieMessage.msgId,
@@ -470,7 +468,9 @@ public class GameController : MonoBehaviour
             return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
-        player.
+        Player playerScript = player.GetComponentInChildren<Player>();
+        playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
+            moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
     }
 
     /*
