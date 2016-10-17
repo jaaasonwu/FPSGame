@@ -67,6 +67,9 @@ public class GameController : MonoBehaviour
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
+    HostTopology topology;
+    const int MAX_CONNECTIONS = 4;
+
     void Start ()
     {
 
@@ -74,6 +77,12 @@ public class GameController : MonoBehaviour
         //sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
         //isServer = sharedData.isServer;
         DontDestroyOnLoad (gameObject);
+
+        //ConnectionConfig Config = new ConnectionConfig();
+        //Config.AddChannel(QosType.UnreliableFragmented);
+        //Config.AddChannel(QosType.Unreliable);
+        //Config.AddChannel(QosType.Reliable);
+        //topology = new HostTopology(Config, MAX_CONNECTIONS);
     }
 
     // Update is called once per frame
@@ -194,6 +203,7 @@ public class GameController : MonoBehaviour
     public void SetUpServer ()
     {
         NetworkServer.Listen (PORT);
+        //NetworkServer.Configure(topology);
         NetworkServer.RegisterHandler (Messages.PlayerMoveMessage.msgId,
             OnServerReceivePlayerPosition);
         NetworkServer.RegisterHandler (MsgType.AddPlayer, OnServerAddPlayer);
@@ -220,6 +230,7 @@ public class GameController : MonoBehaviour
     public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
+        //mClient.Configure(topology);
         RegisterClientHandler ();
         mClient.Connect (address, PORT);
         isStart = false;
@@ -228,6 +239,7 @@ public class GameController : MonoBehaviour
     public void SetUpClient (string address, int port)
     {
         mClient = new NetworkClient ();
+        //mClient.Configure(topology);
         RegisterClientHandler ();
         mClient.Connect (address, port);
         isStart = false;
@@ -501,6 +513,8 @@ public class GameController : MonoBehaviour
             Player playerScript = player.GetComponentInChildren<Player>();
             playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp,
                 moveMsg.hp, moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
+            Debug.Log(playerScript.id);
+            Debug.Log(playerScript.ammo);
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);

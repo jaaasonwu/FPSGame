@@ -114,7 +114,7 @@ public class Player : MonoBehaviour, ICharactor
                     id, transform.position - transform.localPosition,
                     Quaternion.Euler (transform.rotation.eulerAngles -
                     transform.localRotation.eulerAngles),
-                    level, exp, hp, maxHp, weaponNumber, ammo);
+                    level, exp, hp, maxHp, weaponNumber, currentWeapon.ammo);
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -299,7 +299,7 @@ public class Player : MonoBehaviour, ICharactor
         data.hp = hp;
         data.maxHp = maxHp;
         data.weaponNumber = weaponNumber;
-        data.ammo = currentWeapon.ammo;
+        data.ammo = ammo;
 
         return data;
     }
