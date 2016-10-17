@@ -18,6 +18,7 @@ public class AviationInLobby : MonoBehaviour {
 	// players inside lobby
 	public List<AviationLobbyPlayer> lobbyPlayers = new List<AviationLobbyPlayer>();
 	// local lobby player
+	public int localConnId;
 	private AviationLobbyPlayer localLobbyPlayer = null;
 	//layout group
 	public RectTransform playerListTransform;
@@ -62,9 +63,7 @@ public class AviationInLobby : MonoBehaviour {
 						new Messages.PlayerLobbyMessage (conn.connectionId,
 							p.playerName, p.isReady);
 					NetworkServer.SendToAll (Messages.PlayerLobbyMessage.msgId, msg);
-				} else {
-					Debug.Log ("Unexpected? server does not have this player");
-				}
+				} 
 			}
 		}
 		// thisif statement is from lobbyplayerlist
@@ -312,7 +311,7 @@ public class AviationInLobby : MonoBehaviour {
 			player.playerName = playerName;
 			player.isReady = isReady;
 			// set local lobby player 
-			if (connId == networkManager.GetmClient ().connection.connectionId) {
+			if (connId == localConnId) {
 				this.localLobbyPlayer = player;
 			}
 		} else {
@@ -329,6 +328,7 @@ public class AviationInLobby : MonoBehaviour {
 	public void OnServerRecieveLobbyMsg(NetworkMessage msg){
 		Messages.PlayerLobbyMessage newMsg = 
 			msg.ReadMessage<Messages.PlayerLobbyMessage> ();
+		newMsg.connectionId = msg.conn.connectionId;
 		// lets tell everyOne that this client has made some modification in lobby
 		NetworkServer.SendToAll(Messages.PlayerLobbyMessage.msgId,newMsg);
 
@@ -353,5 +353,22 @@ public class AviationInLobby : MonoBehaviour {
 	public void OnReciveStartGameMessage(NetworkMessage msg){
 		//switch scence one recieve this 
 		SceneManager.LoadScene(inGameScence);
+	}
+
+	/*
+	 *  on client recieve reply from server
+	 */
+	public void OnClientRecieveEnterLobbyMsg(NetworkMessage msg){
+		Messages.PlayerEnterLobbyMessage newMsg = 
+			msg.ReadMessage<Messages.PlayerEnterLobbyMessage> ();
+		this.localConnId = newMsg.connectionId;
+	}
+
+	public void OnServerRecieveEnterLobbyMsg(NetworkMessage msg){
+		Messages.PlayerEnterLobbyMessage enterMsg = 
+			msg.ReadMessage<Messages.PlayerEnterLobbyMessage> ();
+		enterMsg.connectionId = msg.conn.connectionId;
+		NetworkServer.SendToClient (msg.conn.connectionId,
+			Messages.PlayerEnterLobbyMessage.msgId, enterMsg);
 	}
 }

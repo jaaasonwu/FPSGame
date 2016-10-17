@@ -75,9 +75,9 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
 	{
-		if (isStart) {
-            SetUpNetwork ();
-        }
+		//if (isStart) {
+        //    SetUpNetwork ();
+        //}
         if (mClient != null && !addedPlayer) {
             if (Input.GetKeyDown (KeyCode.P)) {
                 CreatePlayer ();
@@ -216,6 +216,8 @@ public class GameController : MonoBehaviour
             OnServerGetPlayerDeath);
         NetworkServer.RegisterHandler (Messages.ReplyPlayerDeath.msgId,
             OnReplyPlayerDeath);
+		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+			OnServerRecieveEnterLobbyMsg);
         isStart = false;
     }
 
@@ -243,6 +245,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
+		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+			OnClientRecieveEnterLobbyMsg);
         mClient.Connect (address, PORT);
         isStart = false;
     }
@@ -267,6 +271,8 @@ public class GameController : MonoBehaviour
 		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
 		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
 			OnClientReceivedPlayerDeath);
+		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+			OnClientRecieveEnterLobbyMsg);
 		mClient.Connect (address, port);
 		isStart = false;
 	}
@@ -294,6 +300,8 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
+		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+			OnClientRecieveEnterLobbyMsg);
         isStart = false;
     }
 
@@ -321,6 +329,28 @@ public class GameController : MonoBehaviour
 	public void OnClientRecieveLobbyMsg(NetworkMessage msg){
 		if (AviationInLobby.s_Lobby != null) {
 			AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on client recieve lobby message
+	 */
+	public void OnClientRecieveEnterLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnClientRecieveEnterLobbyMsg (msg);
+		} else {
+			Debug.Log ("lobby not exist");
+		}
+	}
+
+	/*
+	 * on server recieve lobby message
+	 */
+	public void OnServerRecieveEnterLobbyMsg(NetworkMessage msg){
+		if (AviationInLobby.s_Lobby != null) {
+			AviationInLobby.s_Lobby.OnServerRecieveEnterLobbyMsg (msg);
 		} else {
 			Debug.Log ("lobby not exist");
 		}

@@ -287,13 +287,29 @@ public class Messages
 
 		//defalut constructor
 		public PlayerLeftLobbyMessage(){
+
+		}
+	}
+
+	public class PlayerEnterLobbyMessage : MessageBase{
+		public int connectionId;
+		public string playerName;
+		public const short msgId = 200;
+
+		public PlayerEnterLobbyMessage(int connId, string playerName){
+			this.connectionId = connId;
+			this.playerName = playerName;
+		}
+
+		//defalut constructor
+		public PlayerEnterLobbyMessage(){
 		
 		}
 	}
 
 	public class LobbyStartGameMessage : MessageBase{
 
-		public const short msgId = 200;
+		public const short msgId = 201;
 
 		//default constructor
 		public LobbyStartGameMessage(){
