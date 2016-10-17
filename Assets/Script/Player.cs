@@ -339,17 +339,6 @@ public class Player : MonoBehaviour, ICharactor
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + ammo;
     }
-
-    public void UpdatePlayerStatus(int level, int exp, float hp, float maxHp,
-        int weaponNumber, int ammo)
-    {
-        this.level = level;
-        this.exp = exp;
-        this.hp = hp;
-        this.maxHp = maxHp;
-        this.weaponNumber = weaponNumber;
-        this.ammo = ammo;
-    }
 }
 
 /*
