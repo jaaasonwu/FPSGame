@@ -448,6 +448,9 @@ public class GameController : MonoBehaviour
         if (msg.conn.connectionId != mClient.connection.connectionId) {
             player.transform.position = moveMsg.position;
             player.transform.rotation = moveMsg.rotation;
+            Player playerScript = player.GetComponentInChildren<Player>();
+            playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp,
+                moveMsg.hp, moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);
