@@ -245,7 +245,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
 			OnClientRecieveEnterLobbyMsg);
         mClient.Connect (address, PORT);
         isStart = false;
@@ -271,7 +271,7 @@ public class GameController : MonoBehaviour
 		mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
 		mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
 			OnClientReceivedPlayerDeath);
-		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
 			OnClientRecieveEnterLobbyMsg);
 		mClient.Connect (address, port);
 		isStart = false;
@@ -300,7 +300,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
-		NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
+		mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
 			OnClientRecieveEnterLobbyMsg);
         isStart = false;
     }

@@ -270,6 +270,7 @@ public class AviationInLobby : MonoBehaviour {
 				Debug.Log ("OnClickStart this should be server");
 				return;
 			}
+			gameFinder.StopBroadcast ();
 			NetworkServer.SendToAll (Messages.LobbyStartGameMessage.msgId, msg);
 		}
 	}
@@ -310,6 +311,7 @@ public class AviationInLobby : MonoBehaviour {
 			player = AddPlayer (connId);
 			player.playerName = playerName;
 			player.isReady = isReady;
+			Debug.Log (localConnId);
 			// set local lobby player 
 			if (connId == localConnId) {
 				this.localLobbyPlayer = player;
