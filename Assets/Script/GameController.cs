@@ -209,7 +209,7 @@ public class GameController : MonoBehaviour
             OnReplyPlayerDeath);
         NetworkServer.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
             OnServerRecieveEnterLobbyMsg);
-        NetworkServer.RegisterHandler (Messages.isReadyMsg, OnServerReceiveReady);
+        NetworkServer.RegisterHandler (Messages.ReadyMessage.msgId, OnServerReceiveReady);
         isStart = false;
     }
 
@@ -267,7 +267,7 @@ public class GameController : MonoBehaviour
             OnClientReceivedPlayerDeath);
         mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
             OnClientRecieveEnterLobbyMsg);
-        mClient.RegisterHandler (Messages.isReadyMsg, OnClientReceiveReady);
+        mClient.RegisterHandler (Messages.ReadyMessage.msgId, OnClientReceiveReady);
     }
 
     /*
@@ -392,7 +392,7 @@ public class GameController : MonoBehaviour
      */
     void ClientReady ()
     {
-        mClient.Send (Messages.isReadyMsg, null);
+        mClient.Send (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
     }
 
     /*
@@ -407,7 +407,7 @@ public class GameController : MonoBehaviour
             Debug.Log ("ready list don't contain :" + connId);
         }
         if (readyList.Count == 0) {
-            NetworkServer.SendToAll (Messages.isReadyMsg, null);
+            NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
         }
     }
 

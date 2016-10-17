@@ -257,7 +257,10 @@ public class Messages
     /*
      * message to tell the server or client that it is ready
      */
-    public const short isReadyMsg = 112;
+    public class ReadyMessage : MessageBase
+    {
+        public const short msgId = 112;
+    }
 
     /*
 	 * message used to tell server about client when client enter or in lobby
