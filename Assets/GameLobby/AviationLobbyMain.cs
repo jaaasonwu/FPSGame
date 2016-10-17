@@ -89,6 +89,9 @@ public class AviationLobbyMain : MonoBehaviour {
 		Debug.Log (mClient.isConnected);
 		// report the server that it has entered lobby
 		int connId = mClient.connection.connectionId;
+		Messages.PlayerEnterLobbyMessage msg1 =
+			new Messages.PlayerEnterLobbyMessage (connId, playerName.text);
+		mClient.Send (Messages.PlayerEnterLobbyMessage.msgId, msg1);
 		Messages.PlayerLobbyMessage msg = 
 			new Messages.PlayerLobbyMessage (connId, playerName.text, false);
 		mClient.Send (Messages.PlayerLobbyMessage.msgId, msg);
