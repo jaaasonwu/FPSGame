@@ -24,8 +24,7 @@ public class Messages
         public const short msgId = 100;
 
         public PlayerMoveMessage (int id, Vector3 position, Quaternion rotation,
-            int level, int exp, float hp, float maxHp, int weaponNumber,
-            int ammo)
+            int level, int exp, float hp, float maxHp, int weaponNumber, int ammo)
         {
             this.id = id;
             this.position = position;
@@ -36,6 +35,7 @@ public class Messages
             this.maxHp = maxHp;
             this.weaponNumber = weaponNumber;
             this.ammo = ammo;
+
         }
         // default constructor
         public PlayerMoveMessage ()
