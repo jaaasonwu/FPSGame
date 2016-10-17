@@ -85,9 +85,9 @@ public class GameController : MonoBehaviour
                 CreatePlayer ();
             }
         }
-        if (!addedPlayer && isServer && NetworkServer.connections.Count >= 2) {
-            CreatePlayer ();
-        }
+        //if (!addedPlayer && isServer && NetworkServer.connections.Count >= 1) {
+        //    CreatePlayer();
+        //}
         if (!addedPlayer && mClient != null && mClient.isConnected && !isServer) {
             CreatePlayer ();
         }

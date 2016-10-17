@@ -6,11 +6,11 @@ public class ShootButton : MonoBehaviour {
 
 	public void SetDownState()
     {
-        CrossPlatformInputManager.SetButtonDown("Fire1");
+        CrossPlatformInputManager.SetButtonDown("Fire2");
     }
 
     public void SetUpState()
     {
-        CrossPlatformInputManager.SetButtonUp("Fire1");
+        CrossPlatformInputManager.SetButtonUp("Fire2");
     }
 }
