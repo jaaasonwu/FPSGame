@@ -4,37 +4,67 @@ using UnityEngine;
 using System.Collections;
 using UnityEngine.SceneManagement;
 
-public class StartSwitchScene : MonoBehaviour
-{
-    SharedData sharedData;
-    // Use this for initialization
-    void Start ()
+public class StartSwitchScene : MonoBehaviour {
+    GameController controller;
+    public GameObject slotMenu;
+    public GameObject startMenu;
+
+    void Start()
     {
-        sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
+        controller = GameObject.Find("GameController").
+            GetComponent<GameController>();
     }
+	// Update is called once per frame
+	void Update () {
 	
-    // Update is called once per frame
-    void Update ()
-    {
-    }
+	}
 
     /*
      * The function used to start a single player session when the
      * corresponding button is pressed
      */
-    public void StartSingle ()
+    public void StartSingle()
     {
-        SceneManager.LoadScene ("Map01");
-        sharedData.isServer = true;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
     }
 
     /*
      * The function used to start a multiplayer session when the
      * corresponding button is pressed
      */
-    public void StartMulti ()
+    public void StartMulti()
     {
-        SceneManager.LoadScene ("Lobby");
-        sharedData.isServer = false;
+        SceneManager.LoadScene("Lobby");
+    }
+
+    public void OnLoadPressed()
+    {
+        slotMenu.SetActive(true);
+        startMenu.SetActive(false);
+    }
+
+    public void OnSlot1Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 1;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
+    }
+
+    public void OnSlot2Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 2;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
+    }
+
+    public void OnSlot3Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 3;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
     }
 }

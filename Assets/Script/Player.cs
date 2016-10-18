@@ -117,7 +117,8 @@ public class Player : MonoBehaviour, ICharactor
                 new Messages.PlayerMoveMessage (
                     id, transform.position - transform.localPosition,
                     Quaternion.Euler (transform.rotation.eulerAngles -
-                    transform.localRotation.eulerAngles));
+                    transform.localRotation.eulerAngles),
+                    level, exp, hp, maxHp, weaponNumber, currentWeapon.ammo);
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -167,7 +168,7 @@ public class Player : MonoBehaviour, ICharactor
 
     // Load the weapon and show it on screen. Meanwhile transfer the amount of
     // ammo
-    public void ShowWeapon (int weaponNumber)
+    void ShowWeapon (int weaponNumber)
     {
         weaponPrefab = Instantiate (weapons [weaponNumber]);
         weaponPrefab.transform.parent = gameObject.transform;
@@ -179,7 +180,6 @@ public class Player : MonoBehaviour, ICharactor
             Debug.Log ("bind ammo text");
             currentWeapon.bindAmmoText ();
         }
-
     }
 
     public void SetGameController (GameController controller)
@@ -279,16 +279,34 @@ public class Player : MonoBehaviour, ICharactor
 
     }
 
+    public void UpdateAmmo()
+    {
+        ammo = currentWeapon.ammo;
+    }
+
     /*
      * The function reads from the serialized data from the storage,
      * deserialize it and load it
      */
-    public void Load ()
+    public void Load (Messages.LoadPlayerMessage loadMessage)
     {
+        this.id = loadMessage.id;
+        this.username = loadMessage.username;
+        this.level = loadMessage.level;
+        this.exp = loadMessage.exp;
+        this.hp = loadMessage.hp;
+        this.maxHp = loadMessage.maxHp;
+        this.weaponNumber = loadMessage.weaponNumber;
+        this.ammo = loadMessage.ammo;
+    }
+
+    public void LocalLoad()
+    {
+        BindItems();
         healthSlider.value = hp;
         healthSlider.maxValue = maxHp;
-        Destroy (weaponPrefab);
-        ShowWeapon (weaponNumber);
+        Destroy(weaponPrefab);
+        ShowWeapon(weaponNumber);
     }
 
     /*
@@ -306,10 +324,22 @@ public class Player : MonoBehaviour, ICharactor
         data.hp = hp;
         data.maxHp = maxHp;
         data.weaponNumber = weaponNumber;
-        data.ammo = currentWeapon.ammo;
         data.isAttacking = isAttacking;
         data.isLocal = isLocal;
+        data.ammo = ammo;
+        
         return data;
+    }
+
+    public void UpdatePlayerStatus(int level, int exp, float hp, float maxHp,
+        int weaponNumber, int ammo)
+    {
+        this.level = level;
+        this.exp = exp;
+        this.hp = hp;
+        this.maxHp = maxHp;
+        this.weaponNumber = weaponNumber;
+        this.ammo = ammo;
     }
 
     /*
@@ -324,7 +354,7 @@ public class Player : MonoBehaviour, ICharactor
             swapButton.onClick.AddListener (NextWeapon);
         }
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
-        ammoText.text = "Ammo: " + currentWeapon.ammo;
+        ammoText.text = "Ammo: " + ammo;
     }
 
     /*
@@ -359,7 +389,6 @@ public class PlayerData
 {
     public int id;
     public String username;
-    public bool isLocal;
     public Vector3 pos;
     public Quaternion rot;
     public int level;

@@ -13,6 +13,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.IO;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
@@ -20,6 +21,7 @@ public class GameController : MonoBehaviour
     public string hostAddress;
     public GameObject playerPrefab;
     public string username;
+    public GameObject usernameInput;
     /*
     * prefabs of enemies
     * index 0 for cactus
@@ -39,15 +41,11 @@ public class GameController : MonoBehaviour
     // constantly send to server the dying message, until get server's reply
     public bool localPlayerDie = false;
     // for test
-
-    SharedData sharedData;
     public const int PORT = 8001;
     public bool isServer;
 
 
     //pirvate & protected fields
-    bool isStart = true;
-
     //player id counter, starts from 0
     int idCount = 0;
     Dictionary<int,GameObject> players = new Dictionary<int, GameObject> ();
@@ -63,26 +61,41 @@ public class GameController : MonoBehaviour
 
     // to show whether is the first time enter play scene
     bool inPlayScene = false;
+    // whether the player is in lobby when multiplayer
+    bool inLobbyScene = false;
     // indicate all clients is ready
     bool allReady = false;
     // indicate whether game is over
     bool gameOver = false;
+    // when the game is a load game
+    public bool isLoad = false;
+    // whether the loading process is finished
+    public bool loadFinished = true;
+    // which slot is the game loading
+    public int loadNumber = 0;
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
     void Start ()
     {
-
-
-        //sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
-        //isServer = sharedData.isServer;
         DontDestroyOnLoad (gameObject);
     }
 
     // Update is called once per frame
     void Update ()
     {
-
+        if (!inLobbyScene)
+        {
+            Scene s = SceneManager.GetActiveScene();
+            if (s.name == "Lobby" && s.isLoaded)
+            {
+                usernameInput = GameObject.Find("PlayerName");
+                usernameInput.GetComponent<InputField>().text =
+                    PlayerPrefs.GetString("username");
+                username = usernameInput.GetComponent<InputField>().text;
+                inLobbyScene = true;
+            }
+        }
         // first time in play scene
         if (!inPlayScene) {
             Scene s = SceneManager.GetActiveScene ();
@@ -122,11 +135,12 @@ public class GameController : MonoBehaviour
         }
     }
 
-    void CreatePlayer ()
+    public void CreatePlayer ()
     {
         Debug.Log (SceneManager.GetActiveScene ().name);
         Messages.NewPlayerMessage newPlayer = new
-                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20),
+                    username);
         mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
@@ -200,6 +214,7 @@ public class GameController : MonoBehaviour
         NetworkServer.Listen (PORT);
         RegisterServerHandler ();
         isStart = false;
+
     }
 
     /*
@@ -209,19 +224,19 @@ public class GameController : MonoBehaviour
     public void SetUpClient (string address)
     {
         mClient = new NetworkClient ();
+        //mClient.Configure(topology);
         RegisterClientHandler ();
         mClient.Connect (address, PORT);
-        isStart = false;
     }
 
     public void SetUpClient (string address, int port)
     {
         mClient = new NetworkClient ();
+        //mClient.Configure(topology);
         RegisterClientHandler ();
         hostAddress = address;
         mClient.Connect (address, port);
         Debug.Log ("Connected");
-        isStart = false;
     }
 
     /*
@@ -231,7 +246,6 @@ public class GameController : MonoBehaviour
     {
         mClient = ClientScene.ConnectLocalServer ();
         RegisterClientHandler ();
-        isStart = false;
     }
 
     /*
@@ -280,6 +294,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler(Messages.LoadEnemyMessage.msgId, OnLoadEnemy);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
         mClient.RegisterHandler (Messages.ChatMessage.msgId, 
@@ -429,6 +444,11 @@ public class GameController : MonoBehaviour
             Debug.Log ("ready list don't contain :" + connId);
         }
         if (readyList.Count == 0) {
+            if (isLoad)
+            {
+                Load();
+                return;
+            }
             NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
             allReady = true;
         }
@@ -456,6 +476,8 @@ public class GameController : MonoBehaviour
                 Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
         playerClone.GetComponentInChildren<Player> ().id = idCount;
+        playerClone.GetComponentInChildren<Player>().username =
+            newPlayerMsg.username;
         players [idCount] = playerClone;
         newPlayerMsg.id = idCount;
         idCount++;
@@ -523,6 +545,10 @@ public class GameController : MonoBehaviour
         if (msg.conn.connectionId != mClient.connection.connectionId) {
             player.transform.position = moveMsg.position;
             player.transform.rotation = moveMsg.rotation;
+            Player playerScript = player.GetComponentInChildren<Player>();
+            playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
+                moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
+            
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);
@@ -543,6 +569,9 @@ public class GameController : MonoBehaviour
             return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
+        Player playerScript = player.GetComponentInChildren<Player>();
+        playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
+            moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
     }
 
     /*
@@ -565,7 +594,10 @@ public class GameController : MonoBehaviour
             this);
         idCount++;
         foreach (GameObject player in players.Values) {
-            enemy.AddPlayer (player.GetComponentInChildren<Player> ());
+            if (player != null)
+            {
+                enemy.AddPlayer(player.GetComponentInChildren<Player>());
+            }
         }
         enemy.inServer = true;
         enemies [enemy.id] = enemyClone;
@@ -705,27 +737,29 @@ public class GameController : MonoBehaviour
     /*
      * save the state of all players and enemies
      */
-    public void Save ()
+    public void Save (int slotNumber)
     {
         if (isServer) {
-            SavePlayers ();
-            SaveEnemies ();
+            SavePlayers (slotNumber);
+            SaveEnemies (slotNumber);
         }
     }
 
     /*
      * Get the player data and serialize it
      */
-    void SavePlayers ()
+    void SavePlayers (int slotNumber)
     {
         XmlSerializer playerSer = new XmlSerializer (typeof(PlayerSaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
-            File.Delete (Application.persistentDataPath + "/playerinfo.dat");
+        if (File.Exists (Application.persistentDataPath +
+            "/playerinfo" + slotNumber + ".dat")) {
+            File.Delete (Application.persistentDataPath +
+                "/playerinfo" + slotNumber + ".dat");
         }
         file = File.Open (Application.persistentDataPath
-        + "/playerinfo.dat", FileMode.Create);
+        + "/playerinfo" + slotNumber + ".dat", FileMode.Create);
 
         // Create a new xml root
         PlayerSaving playerSaving = new PlayerSaving ();
@@ -734,6 +768,10 @@ public class GameController : MonoBehaviour
         // add data to the list of playerlist
         foreach (GameObject player in players.Values) {
             PlayerData data;
+            if (player == controlledPlayer)
+            {
+                player.GetComponentInChildren<Player>().UpdateAmmo();
+            }
             data = player.GetComponentInChildren<Player> ().GeneratePlayerData ();
             playerSaving.PlayerList.Add (data);
         }
@@ -745,15 +783,18 @@ public class GameController : MonoBehaviour
     /*
      * Get the enemy data and serialize it
      */
-    void SaveEnemies ()
+    void SaveEnemies (int slotNumber)
     {
         XmlSerializer enemySer = new XmlSerializer (typeof(EnemySaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists (Application.persistentDataPath + "/enemyinfo.dat")) {
-            File.Delete (Application.persistentDataPath + "/enemyinfo.dat");
+        if (File.Exists (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat")) {
+            File.Delete (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat");
         }
-        file = File.Open (Application.persistentDataPath + "/enemyinfo.dat",
+        file = File.Open (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat",
             FileMode.Create);
 
         // Create a new xml root
@@ -773,6 +814,7 @@ public class GameController : MonoBehaviour
 
     public void Load ()
     {
+        loadFinished = false;
         LoadPlayers ();
         LoadEnemies ();
     }
@@ -783,11 +825,12 @@ public class GameController : MonoBehaviour
      */
     void LoadPlayers ()
     {
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
+        if (File.Exists (Application.persistentDataPath + "/playerinfo" +
+            loadNumber + ".dat")) {
             // Read data from xml and deserialize it
             XmlSerializer serializer = new XmlSerializer (typeof(PlayerSaving));
             FileStream file = File.Open (Application.persistentDataPath +
-                              "/playerinfo.dat", FileMode.Open);
+                    "/playerinfo" + loadNumber + ".dat", FileMode.Open);
             PlayerSaving saving = (PlayerSaving)serializer.Deserialize (file);
 
             foreach (PlayerData data in saving.PlayerList) {
@@ -810,8 +853,7 @@ public class GameController : MonoBehaviour
                                              data.rot) as GameObject;
                 players [data.id] = playerClone;
                 Player player = playerClone.GetComponentInChildren<Player> ();
-                player = initializePlayerOnLoad (player, loadMessage);
-                player.Load ();
+                player.Load (loadMessage);
 
                 // Authenticate the player using the username and make the
                 // matching player the controlled player
@@ -823,6 +865,7 @@ public class GameController : MonoBehaviour
                     playerClone.GetComponentInChildren<Skybox> ().enabled = true;
                     playerClone.GetComponentInChildren<Player> ().isLocal = true;
                     playerClone.GetComponentInChildren<Player> ().SetGameController (this);
+                    player.LocalLoad();
                     controlledPlayer = playerClone;
                 }
 
@@ -830,6 +873,7 @@ public class GameController : MonoBehaviour
                 NetworkServer.SendToAll (Messages.LoadPlayerMessage.msgId,
                     loadMessage);
             }
+            file.Close();
         }
     }
 
@@ -939,36 +983,29 @@ public class GameController : MonoBehaviour
                                      loadMessage.rot) as GameObject;
         Player player = playerClone.GetComponentInChildren<Player> ();
         players [loadMessage.id] = playerClone;
-        player = initializePlayerOnLoad (player, loadMessage);
-        player.Load ();
-    }
-
-    /*
-     * This is the helper function to fill the player with the data in the
-     * LoadPlayer netgwork messagee
-     */
-    private Player initializePlayerOnLoad (Player player,
-                                           Messages.LoadPlayerMessage loadMessage)
-    {
-        player.id = loadMessage.id;
-        player.username = loadMessage.username;
-        player.level = loadMessage.level;
-        player.exp = loadMessage.exp;
-        player.hp = loadMessage.hp;
-        player.maxHp = loadMessage.maxHp;
-        player.weaponNumber = loadMessage.weaponNumber;
-        player.ammo = loadMessage.ammo;
-
-        return player;
+        player.Load (loadMessage);
+        if (loadMessage.username == username)
+        {
+            playerClone.GetComponent<FirstPersonController>().enabled = true;
+            playerClone.GetComponentInChildren<Camera>().enabled = true;
+            playerClone.GetComponentInChildren<AudioListener>().enabled = true;
+            playerClone.GetComponentInChildren<FlareLayer>().enabled = true;
+            playerClone.GetComponentInChildren<Skybox>().enabled = true;
+            playerClone.GetComponentInChildren<Player>().isLocal = true;
+            playerClone.GetComponentInChildren<Player>().SetGameController(this);
+            player.LocalLoad();
+            controlledPlayer = playerClone;
+        }
     }
 
     void LoadEnemies ()
     {
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
+        if (File.Exists (Application.persistentDataPath + "/enemyinfo" +
+            loadNumber + ".dat")) {
             // Read data from xml and deserialize it
             XmlSerializer serializer = new XmlSerializer (typeof(EnemySaving));
             FileStream file = File.Open (Application.persistentDataPath +
-                              "/enemyinfo.dat", FileMode.Open);
+                              "/enemyinfo" + loadNumber + ".dat", FileMode.Open);
             EnemySaving saving = (EnemySaving)serializer.Deserialize (file);
 
             foreach (EnemyData data in saving.EnemyList) {
@@ -1004,12 +1041,12 @@ public class GameController : MonoBehaviour
                     Player playerScript = player.GetComponentInChildren<Player> ();
                     enemy.AddPlayer (playerScript);
                 }
-
                 // Send the message to all clients
                 NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
                     loadMessage);
             }
-
+            file.Close();
+            loadFinished = true;
         }
     }
 
@@ -1042,6 +1079,7 @@ public class GameController : MonoBehaviour
             enemy.AddPlayer (playerScript);
         }
     }
+
 
     /*
     * server constantly call this function to broadcast the player's death

@@ -11,23 +11,24 @@ public class AviationLobbyMain : MonoBehaviour
     // singleton instance ......
     public static AviationLobbyMain s_instance = null;
     // gamecontroller is also responsible to act as a networkmanager
-    [SerializeField]private GameController networkManager;
+    GameController networkManager;
     //input fields (some are interact with buttons)
-    [SerializeField]private InputField addressToConnect;
     [SerializeField]private InputField playerName;
     [SerializeField]private InputField lobbyName;
     //game are found by GameFinder (its based on NetworkDiscovery)
     public GameFinder gameFinder;
     // list of server found by gamefinder
     public DiscoveredServerList serverList;
+    public InputField usernameInput;
 
     /*
 	 * lay out necessary stuffs when enable the panel
 	 */
     public void OnEnable ()
     {
+        networkManager = GameObject.Find("GameController").
+            GetComponent<GameController>();
         s_instance = this;
-        addressToConnect.onEndEdit.RemoveAllListeners ();
         playerName.onEndEdit.RemoveAllListeners ();
         serverList.OnMainPanelEnabled ();
     }
@@ -51,24 +52,6 @@ public class AviationLobbyMain : MonoBehaviour
         string lobbyN = lobbyName.text;
         gameFinder.SetBroadcastData (port, lobbyN, playerNum);
         gameFinder.StartAsServer ();
-    }
-
-    /*
-	 * allow client to join a selected game when click join buttom
-	 */
-    public void OnClickJoinGame ()
-    {
-        // stop listenning
-        gameFinder.ReInit ();
-        // try to connect to server else report and return
-        string address = addressToConnect.text;
-        int port = networkManager.GetPort ();
-        networkManager.StartAsJoinClient (address, port);
-
-        // connection succeed then get into lobby
-        if (!AviationLobbyManager.s_lobbyManager.MainToLobby ()) {
-            Debug.Log ("failed to switch panel");
-        }
     }
 
     /*
@@ -102,5 +85,11 @@ public class AviationLobbyMain : MonoBehaviour
         Messages.PlayerLobbyMessage msg = 
             new Messages.PlayerLobbyMessage (connId, playerName.text, false);
         mClient.Send (Messages.PlayerLobbyMessage.msgId, msg);
+    }
+
+    public void UpdateUsername()
+    {
+        string username = usernameInput.GetComponent<InputField>().text;
+        PlayerPrefs.SetString("username", username);
     }
 }
