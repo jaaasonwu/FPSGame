@@ -3,7 +3,8 @@ using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
-public class UIController : MonoBehaviour {
+public class UIController : MonoBehaviour
+{
     Button pause;
     Button resume;
 
@@ -17,62 +18,60 @@ public class UIController : MonoBehaviour {
 
 
     // Use this for initialization
-    void Start () {
-        pause = GameObject.Find("pause").GetComponent<Button>();
-        resume = GameObject.Find("resume").GetComponent<Button>();
-        pause.onClick.AddListener(onPausePressed);
-        resume.onClick.AddListener(onResumePressed);
+    void Start ()
+    {
+        pause = GameObject.Find ("pause").GetComponent<Button> ();
+        resume = GameObject.Find ("resume").GetComponent<Button> ();
+        pause.onClick.AddListener (onPausePressed);
+        resume.onClick.AddListener (onResumePressed);
 
-        pauseMenu = GameObject.Find("PauseMenu");
-        inGame = GameObject.Find("Ingame");
+        pauseMenu = GameObject.Find ("PauseMenu");
+        inGame = GameObject.Find ("Ingame");
 
-        controller = GameObject.Find("GameController")
-            .GetComponent<GameController>();
+        controller = GameObject.Find ("GameController")
+            .GetComponent<GameController> ();
     }
 	
-	// Update is called once per frame
-	void Update () {
+    // Update is called once per frame
+    void Update ()
+    {
 	
-	}
+    }
 
-    public void onPausePressed()
+    public void onPausePressed ()
     {
-        pauseMenu.GetComponent<Canvas>().enabled = true;
-        inGame.GetComponent<Canvas>().enabled = false;
+        pauseMenu.GetComponent<Canvas> ().enabled = true;
+        inGame.GetComponent<Canvas> ().enabled = false;
 
     }
 
-    public void onResumePressed()
+    public void onResumePressed ()
     {
-        pauseMenu.GetComponent<Canvas>().enabled = false;
-        inGame.GetComponent<Canvas>().enabled = true;
+        pauseMenu.GetComponent<Canvas> ().enabled = false;
+        inGame.GetComponent<Canvas> ().enabled = true;
     }
 
-    public void onSavePressed()
+    public void onSavePressed ()
     {
-        menuItems.SetActive(false);
-        slotMenu.SetActive(true);
+        menuItems.SetActive (false);
+        slotMenu.SetActive (true);
     }
 
-    public void OnSlotPressed(int index)
+    public void OnSlotPressed (int index)
     {
-        controller.Save(index);
-        slotMenu.SetActive(false);
-        menuItems.SetActive(true);
+        controller.Save (index);
+        slotMenu.SetActive (false);
+        menuItems.SetActive (true);
     }
 
-    public void OnQuitPressed()
+    public void OnQuitPressed ()
     {
-        controller = GameObject.Find("GameController").
-            GetComponent<GameController>();
-        controller.mClient.Disconnect();
-        SceneManager.LoadScene("WelcomeScreen");
-        Destroy(GameObject.Find("GameController"));
+        controller.ReturnToMainMenu ();
     }
 
-    public void OnSendPressed()
+    public void OnSendPressed ()
     {
-        controller.SendChatMessage();
+        controller.SendChatMessage ();
     }
 
 }

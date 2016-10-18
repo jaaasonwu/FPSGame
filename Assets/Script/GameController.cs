@@ -299,6 +299,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
             OnClientRecieveEnterLobbyMsg);
         mClient.RegisterHandler (Messages.ReadyMessage.msgId, OnClientReceiveReady);
+        mClient.RegisterHandler (MsgType.Disconnect, OnDisconnect);
     }
 
     /*
@@ -1201,6 +1202,39 @@ public class GameController : MonoBehaviour
             Destroy (enemy);
         } 
         enemies.Clear ();
+    }
+
+    void OnDisconnect (NetworkMessage msg)
+    {
+        Debug.Log ("disconnect");
+        ReturnToMainMenu ();
+    }
+
+    /*
+     * return to the welcome thing, clear every thing
+     */
+
+    public void ReturnToMainMenu ()
+    {
+        if (mClient != null)
+            mClient.Disconnect ();
+        if (NetworkServer.active) {
+            NetworkServer.Shutdown ();
+        }
+        players.Clear ();
+        enemies.Clear ();
+        mClient = null;
+        controlledPlayer = null;
+        watchedPlayer = null;
+        localPlayerDie = false;
+        inPlayScene = false;
+        inLobbyScene = false;
+        allReady = false;
+        gameOver = false;
+        isLoad = false;
+        loadFinished = true;
+        loadNumber = 0;
+        SceneManager.LoadScene ("WelcomeScreen");
     }
 }
 
