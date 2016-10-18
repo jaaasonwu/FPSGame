@@ -64,7 +64,7 @@ public class Player : MonoBehaviour, ICharactor
     
 
     // Use this for initialization
-    void Awake ()
+    void Start ()
     {
         level = 1;
         exp = 0;
@@ -176,6 +176,7 @@ public class Player : MonoBehaviour, ICharactor
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         currentWeapon.ammo = ammo;
         if (isLocal) {
+            Debug.Log ("bind ammo text");
             currentWeapon.bindAmmoText ();
         }
 

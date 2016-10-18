@@ -92,7 +92,6 @@ public class GameController : MonoBehaviour
                 for (int i = 0; i < spawnPoints.Length; i++) {
                     enemySpawnPoints.Add (spawnPoints [i].transform.position);
                 }
-                Debug.Log (mClient);
                 ClientReady ();
                 inPlayScene = true;
             }
@@ -508,6 +507,8 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<Player> ().username = username;
         player.GetComponentInChildren<Player> ().SetGameController (this);
         player.GetComponentInChildren<Player> ().BindItems ();
+        player.GetComponentInChildren<Player> ()
+            .ShowWeapon (player.GetComponentInChildren<Player> ().weaponNumber);
         controlledPlayer = player;
     }
 

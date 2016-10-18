@@ -104,8 +104,6 @@ public class ReplayManager : MonoBehaviour
         }
         playersInfo.Add (newPlayerInfo);
         enemiesInfo.Add (newEnemyInfo);
-        Debug.Log (playersInfo.Count);
-        Debug.Log (enemiesInfo.Count);
     }
 
     void Replay (int frame)
