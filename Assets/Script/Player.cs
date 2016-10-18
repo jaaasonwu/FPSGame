@@ -379,8 +379,8 @@ public class Player : MonoBehaviour, ICharactor
     public void ReplayLoad (Vector3 pos, Quaternion rot,
                             bool isAttacking, float hp, int weaponNumber)
     {
-        transform.position = pos;
-        transform.rotation = rot;
+        transform.parent.transform.position = pos;
+        transform.parent.transform.rotation = rot;
         this.isAttacking = isAttacking;
         this.hp = hp;
         if (this.weaponNumber != weaponNumber) {
