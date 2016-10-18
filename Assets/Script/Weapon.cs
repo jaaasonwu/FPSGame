@@ -22,7 +22,6 @@ public class Weapon : MonoBehaviour
     {
         gunLine = GetComponent<LineRenderer> ();
         shootableMask = LayerMask.GetMask ("Shootable");
-        ammoText = GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
     }
 
     // Update is called once per frame
@@ -36,6 +35,11 @@ public class Weapon : MonoBehaviour
         }
     }
 
+    public void bindAmmoText ()
+    {
+        ammoText = GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
+    }
+
     // The attack method called by player to show a line and cast a ray
     public void Attack ()
     {
@@ -43,7 +47,8 @@ public class Weapon : MonoBehaviour
         // shoot again
         if (timer >= attackInterval && ammo > 0) {
             ammo--;
-            ammoText.text = "Ammo: " + ammo;
+            if (ammoText != null)
+                ammoText.text = "Ammo: " + ammo;
 //            barrelEnd = GameObject.FindWithTag("BarrelEnd");
             timer = 0f;
 

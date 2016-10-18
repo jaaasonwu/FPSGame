@@ -93,14 +93,18 @@ public class Player : MonoBehaviour, ICharactor
     // Update is called once per frame
     void Update ()
     {
+        if (isAttacking) {
+            Attack ();
+        }
         if (!isLocal)
             return;
+        UnsetAttacking ();
         if (Input.GetKeyDown (KeyCode.Q)) {
             NextWeapon ();
         }
 
         if (CrossPlatformInputManager.GetButton ("Fire2")) {
-            Attack ();
+            SetAttacking ();
         }
 
         this.CheckBuffs ();
@@ -171,7 +175,9 @@ public class Player : MonoBehaviour, ICharactor
         weaponPrefab.transform.rotation = gameObject.transform.rotation;
         currentWeapon = weaponPrefab.GetComponent<Weapon> ();
         currentWeapon.ammo = ammo;
-
+        if (isLocal) {
+            currentWeapon.bindAmmoText ();
+        }
 
     }
 
@@ -300,7 +306,8 @@ public class Player : MonoBehaviour, ICharactor
         data.maxHp = maxHp;
         data.weaponNumber = weaponNumber;
         data.ammo = currentWeapon.ammo;
-
+        data.isAttacking = isAttacking;
+        data.isLocal = isLocal;
         return data;
     }
 
@@ -315,6 +322,30 @@ public class Player : MonoBehaviour, ICharactor
         swapButton.onClick.AddListener (NextWeapon);
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + currentWeapon.ammo;
+    }
+
+    /*
+     * used to load info from the replay
+     */
+    public void ReplayLoad (Vector3 pos, Quaternion rot,
+                            bool isAttacking, float hp, int weaponNumber)
+    {
+        transform.position = pos;
+        transform.rotation = rot;
+        this.isAttacking = isAttacking;
+        this.hp = hp;
+        if (this.weaponNumber != weaponNumber) {
+            this.weaponNumber = weaponNumber;
+            ShowWeapon (weaponNumber);
+        }
+        if (this.hp < 0) {
+            Death ();
+        }
+    }
+
+    public void Death ()
+    {
+        Destroy (gameObject);
     }
 }
 
@@ -334,4 +365,5 @@ public class PlayerData
     public float maxHp;
     public int weaponNumber;
     public int ammo;
+    public bool isAttacking;
 }

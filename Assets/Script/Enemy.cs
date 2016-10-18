@@ -54,6 +54,8 @@ public class Enemy : MonoBehaviour, ICharactor
     public bool isDead;
     public bool isAttacking;
     public bool inServer = false;
+    // indicate whether in replay
+    public bool inReplay = false;
 
     // private fields
 
@@ -85,6 +87,8 @@ public class Enemy : MonoBehaviour, ICharactor
 
     void Update ()
     {
+        if (inReplay)
+            return;
         bool update = false;
         if (updateCount >= updateRate) {
             update = true;
@@ -115,6 +119,7 @@ public class Enemy : MonoBehaviour, ICharactor
         if (update) {
             if (controller == null) {
                 Debug.Log ("null controller");
+                return;
             }
             // if the controlled player is dead
             if (controller.controlledPlayer == null) {
@@ -331,6 +336,20 @@ public class Enemy : MonoBehaviour, ICharactor
                 break;
             }
         }
+    }
+
+    /*
+     * load when in replay
+     */
+    public void ReplayLoad (EnemyData data)
+    {
+        transform.position = data.pos;
+        transform.rotation = data.rot;
+        this.isAttacking = data.isAttacking;
+        this.isDead = data.isDead;
+        this.isRunning = data.isRunning;
+        this.isWalking = data.isWalking;
+        this.isGettingHit = data.isGettingHit;
     }
 }
 

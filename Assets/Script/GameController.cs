@@ -65,6 +65,8 @@ public class GameController : MonoBehaviour
     bool inPlayScene = false;
     // indicate all clients is ready
     bool allReady = false;
+    // indicate whether game is over
+    bool gameOver = false;
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
@@ -98,7 +100,7 @@ public class GameController : MonoBehaviour
 
         // Generate enemy at a regular interval
         // only if all the player is ready
-        if (isServer && allReady && enemies.Count < enemyLimits) {
+        if (isServer && allReady && !gameOver && enemies.Count < enemyLimits) {
             if (generateCount >= enemyGenerationInterval) {
                 SpawnEnemy ();
                 generateCount = 0;
@@ -870,6 +872,11 @@ public class GameController : MonoBehaviour
                 .GetComponent<AudioListener> ().enabled = true;
             GameObject.FindGameObjectWithTag ("GameOverUI")
                 .GetComponent<Canvas> ().enabled = true;
+            // stop record
+            GameObject.FindGameObjectWithTag ("ReplayManager")
+                .GetComponent<ReplayManager> ().StopRecord ();
+            gameOver = true;
+            ClearAll ();
         } else {
             // else go to the camera of the first lived player in the player
             // list
@@ -1120,6 +1127,41 @@ public class GameController : MonoBehaviour
             msg.ReadMessage<Messages.ChatMessage> ();
         Text t = GameObject.FindGameObjectWithTag ("ReceivedChat").GetComponent<Text> ();
         t.text = chatMsg.sender + " : " + chatMsg.message;
+    }
+
+    /*
+     * get the array of player scripts
+     */
+    public Player[] GetPlayers ()
+    {
+        List<Player> playerScripts = new List<Player> ();
+        foreach (GameObject player in players.Values) {
+            playerScripts.Add (player.GetComponentInChildren<Player> ());
+        }
+        return playerScripts.ToArray ();
+    }
+
+    /*
+     * get the array of enemy scripts
+     */
+    public Enemy[] GetEnemies ()
+    {
+        List<Enemy> enemyScripts = new List<Enemy> ();
+        foreach (GameObject enemy in enemies.Values) {
+            enemyScripts.Add (enemy.GetComponent<Enemy> ());
+        }
+        return enemyScripts.ToArray ();
+    }
+
+    /*
+     * clear all things in the game controller
+     */
+    void ClearAll ()
+    {
+        foreach (GameObject enemy in enemies.Values) {
+            Destroy (enemy);
+        } 
+        enemies.Clear ();
     }
 }
 
