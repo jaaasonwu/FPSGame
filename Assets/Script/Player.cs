@@ -350,7 +350,10 @@ public class Player : MonoBehaviour, ICharactor
         this.weaponNumber = weaponNumber;
         this.ammo = ammo;
         this.isAttacking = isAttacking;
-        ShowWeapon (weaponNumber);
+        if (ammoText != null) {
+            ammoText.text = "Ammo :" + ammo;
+        }
+        SwitchWeapon (weaponNumber);
     }
 
     /*
@@ -392,6 +395,12 @@ public class Player : MonoBehaviour, ICharactor
     public void Death ()
     {
         Destroy (transform.parent.gameObject);
+    }
+
+    public void SwitchWeapon (int index)
+    {
+        Destroy (weaponPrefab);
+        ShowWeapon (index);
     }
 }
 

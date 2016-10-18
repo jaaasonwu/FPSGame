@@ -546,7 +546,6 @@ public class GameController : MonoBehaviour
             Player playerScript = player.GetComponentInChildren<Player> ();
             playerScript.UpdatePlayerStatus (moveMsg.level, moveMsg.exp, moveMsg.hp,
                 moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo, moveMsg.isAttacking);
-            
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
             moveMsg);
@@ -639,6 +638,10 @@ public class GameController : MonoBehaviour
             return;
         Messages.UpdateEnemyHate hateMsg =
             msg.ReadMessage<Messages.UpdateEnemyHate> ();
+        if (!enemies.ContainsKey (hateMsg.enemyId)) {
+            Debug.Log ("doesn't contain that enemy");
+            return;
+        }
         Enemy enemy = enemies [hateMsg.enemyId].GetComponent<Enemy> ();
         if (hateMsg.playerId == -1) {
             enemy.SetHatePlayer (null);
