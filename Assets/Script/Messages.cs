@@ -23,8 +23,9 @@ public class Messages
         public int ammo;
         public const short msgId = 100;
 
-        public PlayerMoveMessage (int id, Vector3 position, Quaternion rotation,
-            int level, int exp, float hp, float maxHp, int weaponNumber, int ammo)
+        public PlayerMoveMessage (int id, Vector3 position,
+            Quaternion rotation, int level, int exp, float hp, float maxHp,
+            int weaponNumber, int ammo)
         {
             this.id = id;
             this.position = position;
@@ -49,13 +50,15 @@ public class Messages
     {
         public Vector3 spawnPoint;
         public int id;
+        public string username;
         // when pass owner message, use this id
         public const short ownerMsgId = 101;
 
-        public NewPlayerMessage (int id, Vector3 spawnPoint)
+        public NewPlayerMessage (int id, Vector3 spawnPoint, string username)
         {
             this.id = id;
             this.spawnPoint = spawnPoint;
+            this.username = username;
         }
         // default constructor
         public NewPlayerMessage ()

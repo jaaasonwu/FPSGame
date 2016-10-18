@@ -90,9 +90,9 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        UpdateUsername();
         // first time in play scene
         if (!inPlayScene) {
+            UpdateUsername();
             Scene s = SceneManager.GetActiveScene ();
             if (s.name == "Map01" && s.isLoaded) {
                 GameObject[] spawnPoints = 
@@ -155,7 +155,8 @@ public class GameController : MonoBehaviour
     {
         Debug.Log (SceneManager.GetActiveScene ().name);
         Messages.NewPlayerMessage newPlayer = new
-                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20));
+                    Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20),
+                    username);
         mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
@@ -298,6 +299,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
+        mClient.RegisterHandler(Messages.LoadEnemyMessage.msgId, OnLoadEnemy);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
         mClient.RegisterHandler (Messages.PlayerEnterLobbyMessage.msgId,
@@ -438,12 +440,6 @@ public class GameController : MonoBehaviour
      */
     void OnServerReceiveReady (NetworkMessage msg)
     {
-        if (isLoad)
-        {
-            Load();
-            return;
-        }
-
         int connId = msg.conn.connectionId;
         if (readyList.Contains (connId)) {
             readyList.Remove (connId);
@@ -451,6 +447,11 @@ public class GameController : MonoBehaviour
             Debug.Log ("ready list don't contain :" + connId);
         }
         if (readyList.Count == 0) {
+            if (isLoad)
+            {
+                Load();
+                return;
+            }
             NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
             allReady = true;
         }
@@ -478,6 +479,8 @@ public class GameController : MonoBehaviour
                 Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
         playerClone.GetComponentInChildren<Player> ().id = idCount;
+        playerClone.GetComponentInChildren<Player>().username =
+            newPlayerMsg.username;
         players [idCount] = playerClone;
         newPlayerMsg.id = idCount;
         idCount++;
@@ -761,6 +764,10 @@ public class GameController : MonoBehaviour
         // add data to the list of playerlist
         foreach (GameObject player in players.Values) {
             PlayerData data;
+            if (player == controlledPlayer)
+            {
+                player.GetComponentInChildren<Player>().UpdateAmmo();
+            }
             data = player.GetComponentInChildren<Player> ().GeneratePlayerData ();
             playerSaving.PlayerList.Add (data);
         }
@@ -857,6 +864,7 @@ public class GameController : MonoBehaviour
                 NetworkServer.SendToAll (Messages.LoadPlayerMessage.msgId,
                     loadMessage);
             }
+            file.Close();
         }
     }
 
@@ -879,6 +887,18 @@ public class GameController : MonoBehaviour
         Player player = playerClone.GetComponentInChildren<Player> ();
         players [loadMessage.id] = playerClone;
         player.Load (loadMessage);
+        if (loadMessage.username == username)
+        {
+            playerClone.GetComponent<FirstPersonController>().enabled = true;
+            playerClone.GetComponentInChildren<Camera>().enabled = true;
+            playerClone.GetComponentInChildren<AudioListener>().enabled = true;
+            playerClone.GetComponentInChildren<FlareLayer>().enabled = true;
+            playerClone.GetComponentInChildren<Skybox>().enabled = true;
+            playerClone.GetComponentInChildren<Player>().isLocal = true;
+            playerClone.GetComponentInChildren<Player>().SetGameController(this);
+            player.LocalLoad();
+            controlledPlayer = playerClone;
+        }
     }
 
     void LoadEnemies ()
@@ -922,13 +942,13 @@ public class GameController : MonoBehaviour
                 foreach (GameObject player in players.Values) {
                     Player playerScript = player.GetComponentInChildren<Player> ();
                     enemy.AddPlayer (playerScript);
+
+                    // Send the message to all clients
+                    NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
+                        loadMessage);
                 }
-
-                // Send the message to all clients
-                NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
-                    loadMessage);
             }
-
+            file.Close();
         }
     }
 

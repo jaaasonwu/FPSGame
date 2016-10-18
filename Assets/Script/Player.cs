@@ -271,6 +271,11 @@ public class Player : MonoBehaviour, ICharactor
 
     }
 
+    public void UpdateAmmo()
+    {
+        ammo = currentWeapon.ammo;
+    }
+
     /*
      * The function reads from the serialized data from the storage,
      * deserialize it and load it
