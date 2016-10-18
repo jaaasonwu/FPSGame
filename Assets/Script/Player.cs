@@ -347,7 +347,7 @@ public class Player : MonoBehaviour, ICharactor
 
     public void Death ()
     {
-        Destroy (gameObject);
+        Destroy (transform.parent.gameObject);
     }
 }
 
