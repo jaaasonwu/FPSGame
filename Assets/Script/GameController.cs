@@ -538,6 +538,11 @@ public class GameController : MonoBehaviour
     {
         Messages.PlayerMoveMessage moveMsg =
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
+        if (!players.ContainsKey(moveMsg.id))
+        {
+            Debug.Log("Player not exist");
+            return;
+        }
         GameObject player = players [moveMsg.id];
         if (msg.conn.connectionId != mClient.connection.connectionId) {
             player.transform.position = moveMsg.position;
@@ -723,6 +728,7 @@ public class GameController : MonoBehaviour
             msg.ReadMessage<Messages.ReplyEnemyDeath> ();
         if (!diedEnemies.ContainsKey (reply.enemyId)) {
             Debug.Log ("Enemy Death Replied enemyId not exist!");
+            return;
         }
         diedEnemies [reply.enemyId].Remove (msg.conn.connectionId);
         // all client has replied
@@ -1126,6 +1132,7 @@ public class GameController : MonoBehaviour
             msg.ReadMessage<Messages.ReplyPlayerDeath> ();
         if (!diedPlayers.ContainsKey (reply.playerId)) {
             Debug.Log ("Player Death Replied enemyId not exist!");
+            return;
         }
         diedPlayers [reply.playerId].Remove (msg.conn.connectionId);
         if (diedPlayers [reply.playerId].Count == 0) {

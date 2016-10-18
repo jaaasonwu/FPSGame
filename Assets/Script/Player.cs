@@ -43,7 +43,7 @@ public class Player : MonoBehaviour, ICharactor
     public float hp;
     public float maxHp;
     public int weaponNumber;
-    public int ammo;
+    public int ammo = -1;
 
     // The boolean turns to true when the shoot button is hold
     public bool isAttacking;
@@ -71,7 +71,10 @@ public class Player : MonoBehaviour, ICharactor
         hp = 100;
         maxHp = 100;
         weaponNumber = 0;
-        ammo = 500;
+        if (ammo == -1)
+        {
+            ammo = 500;
+        }
         this.buffs = new List<Buff> ();
         if (weaponPrefab == null)
             ShowWeapon (weaponNumber);
@@ -81,7 +84,7 @@ public class Player : MonoBehaviour, ICharactor
         }
         if (ammoText != null)
         {
-            ammoText.text = ammo;
+            ammoText.text = "Ammo: " + ammo;
         }
         isAttacking = false;
         numAvailableWeapons = 3;
