@@ -71,19 +71,17 @@ public class Player : MonoBehaviour, ICharactor
         hp = 100;
         maxHp = 100;
         weaponNumber = 0;
-        if (ammo == -1)
-        {
+        if (ammo == -1) {
+            Debug.Log ("in");
             ammo = 500;
         }
         this.buffs = new List<Buff> ();
         if (weaponPrefab == null)
             ShowWeapon (weaponNumber);
-        if (healthSlider != null)
-        {
-            StartHealthSlider();
+        if (healthSlider != null) {
+            StartHealthSlider ();
         }
-        if (ammoText != null)
-        {
+        if (ammoText != null) {
             ammoText.text = "Ammo: " + ammo;
         }
         isAttacking = false;
@@ -129,7 +127,7 @@ public class Player : MonoBehaviour, ICharactor
                     id, transform.position - transform.localPosition,
                     Quaternion.Euler (transform.rotation.eulerAngles -
                     transform.localRotation.eulerAngles),
-                    level, exp, hp, maxHp, weaponNumber, currentWeapon.ammo);
+                    level, exp, hp, maxHp, weaponNumber, currentWeapon.ammo, isAttacking);
             mClient.Send (Messages.PlayerMoveMessage.msgId, moveMsg);
         }
         updateCount += Time.deltaTime;
@@ -290,7 +288,7 @@ public class Player : MonoBehaviour, ICharactor
 
     }
 
-    public void UpdateAmmo()
+    public void UpdateAmmo ()
     {
         ammo = currentWeapon.ammo;
     }
@@ -311,13 +309,13 @@ public class Player : MonoBehaviour, ICharactor
         this.ammo = loadMessage.ammo;
     }
 
-    public void LocalLoad()
+    public void LocalLoad ()
     {
-        BindItems();
+        BindItems ();
         healthSlider.value = hp;
         healthSlider.maxValue = maxHp;
-        Destroy(weaponPrefab);
-        ShowWeapon(weaponNumber);
+        Destroy (weaponPrefab);
+        ShowWeapon (weaponNumber);
     }
 
     /*
@@ -342,8 +340,8 @@ public class Player : MonoBehaviour, ICharactor
         return data;
     }
 
-    public void UpdatePlayerStatus(int level, int exp, float hp, float maxHp,
-        int weaponNumber, int ammo)
+    public void UpdatePlayerStatus (int level, int exp, float hp, float maxHp,
+                                    int weaponNumber, int ammo, bool isAttacking)
     {
         this.level = level;
         this.exp = exp;
@@ -351,6 +349,8 @@ public class Player : MonoBehaviour, ICharactor
         this.maxHp = maxHp;
         this.weaponNumber = weaponNumber;
         this.ammo = ammo;
+        this.isAttacking = isAttacking;
+        ShowWeapon (weaponNumber);
     }
 
     /*
@@ -367,7 +367,7 @@ public class Player : MonoBehaviour, ICharactor
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + ammo;
         if (currentWeapon != null)
-            currentWeapon.bindAmmoText();
+            currentWeapon.bindAmmoText ();
     }
 
     /*

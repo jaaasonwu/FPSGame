@@ -84,15 +84,13 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
-        if (!inLobbyScene)
-        {
-            Scene s = SceneManager.GetActiveScene();
-            if (s.name == "Lobby" && s.isLoaded)
-            {
-                usernameInput = GameObject.Find("PlayerName");
-                usernameInput.GetComponent<InputField>().text =
-                    PlayerPrefs.GetString("username");
-                username = usernameInput.GetComponent<InputField>().text;
+        if (!inLobbyScene) {
+            Scene s = SceneManager.GetActiveScene ();
+            if (s.name == "Lobby" && s.isLoaded) {
+                usernameInput = GameObject.Find ("PlayerName");
+                usernameInput.GetComponent<InputField> ().text =
+                    PlayerPrefs.GetString ("username");
+                username = usernameInput.GetComponent<InputField> ().text;
                 inLobbyScene = true;
             }
         }
@@ -140,7 +138,7 @@ public class GameController : MonoBehaviour
         Debug.Log (SceneManager.GetActiveScene ().name);
         Messages.NewPlayerMessage newPlayer = new
                     Messages.NewPlayerMessage (-1, new Vector3 (50, 1, 20),
-                    username);
+                                                  username);
         mClient.Send (MsgType.AddPlayer, newPlayer);
     }
 
@@ -293,7 +291,7 @@ public class GameController : MonoBehaviour
         mClient.RegisterHandler (Messages.UpdateEnemyHate.msgId, OnUpdateHate);
         mClient.RegisterHandler (Messages.EnemyDeathMessage.msgId, OnEnemyDeath);
         mClient.RegisterHandler (Messages.LoadPlayerMessage.msgId, OnLoadPlayer);
-        mClient.RegisterHandler(Messages.LoadEnemyMessage.msgId, OnLoadEnemy);
+        mClient.RegisterHandler (Messages.LoadEnemyMessage.msgId, OnLoadEnemy);
         mClient.RegisterHandler (Messages.PlayerDieMessage.msgId,
             OnClientReceivedPlayerDeath);
         mClient.RegisterHandler (Messages.ChatMessage.msgId, 
@@ -443,9 +441,8 @@ public class GameController : MonoBehaviour
             Debug.Log ("ready list don't contain :" + connId);
         }
         if (readyList.Count == 0) {
-            if (isLoad)
-            {
-                Load();
+            if (isLoad) {
+                Load ();
                 return;
             }
             NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
@@ -475,7 +472,7 @@ public class GameController : MonoBehaviour
                 Quaternion.Euler (new Vector3 (0, 0, 0)))
             as GameObject;
         playerClone.GetComponentInChildren<Player> ().id = idCount;
-        playerClone.GetComponentInChildren<Player>().username =
+        playerClone.GetComponentInChildren<Player> ().username =
             newPlayerMsg.username;
         players [idCount] = playerClone;
         newPlayerMsg.id = idCount;
@@ -538,18 +535,17 @@ public class GameController : MonoBehaviour
     {
         Messages.PlayerMoveMessage moveMsg =
             msg.ReadMessage<Messages.PlayerMoveMessage> ();
-        if (!players.ContainsKey(moveMsg.id))
-        {
-            Debug.Log("Player not exist");
+        if (!players.ContainsKey (moveMsg.id)) {
+            Debug.Log ("Player not exist");
             return;
         }
         GameObject player = players [moveMsg.id];
         if (msg.conn.connectionId != mClient.connection.connectionId) {
             player.transform.position = moveMsg.position;
             player.transform.rotation = moveMsg.rotation;
-            Player playerScript = player.GetComponentInChildren<Player>();
-            playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
-                moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
+            Player playerScript = player.GetComponentInChildren<Player> ();
+            playerScript.UpdatePlayerStatus (moveMsg.level, moveMsg.exp, moveMsg.hp,
+                moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo, moveMsg.isAttacking);
             
         }
         NetworkServer.SendToAll (Messages.PlayerMoveMessage.msgId,
@@ -571,9 +567,9 @@ public class GameController : MonoBehaviour
             return;
         player.transform.position = moveMsg.position;
         player.transform.rotation = moveMsg.rotation;
-        Player playerScript = player.GetComponentInChildren<Player>();
-        playerScript.UpdatePlayerStatus(moveMsg.level, moveMsg.exp, moveMsg.hp,
-            moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo);
+        Player playerScript = player.GetComponentInChildren<Player> ();
+        playerScript.UpdatePlayerStatus (moveMsg.level, moveMsg.exp, moveMsg.hp,
+            moveMsg.maxHp, moveMsg.weaponNumber, moveMsg.ammo, moveMsg.isAttacking);
     }
 
     /*
@@ -596,9 +592,8 @@ public class GameController : MonoBehaviour
             this);
         idCount++;
         foreach (GameObject player in players.Values) {
-            if (player != null)
-            {
-                enemy.AddPlayer(player.GetComponentInChildren<Player>());
+            if (player != null) {
+                enemy.AddPlayer (player.GetComponentInChildren<Player> ());
             }
         }
         enemy.inServer = true;
@@ -759,7 +754,7 @@ public class GameController : MonoBehaviour
         if (File.Exists (Application.persistentDataPath +
             "/playerinfo" + slotNumber + ".dat")) {
             File.Delete (Application.persistentDataPath +
-                "/playerinfo" + slotNumber + ".dat");
+            "/playerinfo" + slotNumber + ".dat");
         }
         file = File.Open (Application.persistentDataPath
         + "/playerinfo" + slotNumber + ".dat", FileMode.Create);
@@ -771,9 +766,8 @@ public class GameController : MonoBehaviour
         // add data to the list of playerlist
         foreach (GameObject player in players.Values) {
             PlayerData data;
-            if (player == controlledPlayer)
-            {
-                player.GetComponentInChildren<Player>().UpdateAmmo();
+            if (player == controlledPlayer) {
+                player.GetComponentInChildren<Player> ().UpdateAmmo ();
             }
             data = player.GetComponentInChildren<Player> ().GeneratePlayerData ();
             playerSaving.PlayerList.Add (data);
@@ -797,7 +791,7 @@ public class GameController : MonoBehaviour
             + slotNumber + ".dat");
         }
         file = File.Open (Application.persistentDataPath + "/enemyinfo"
-            + slotNumber + ".dat",
+        + slotNumber + ".dat",
             FileMode.Create);
 
         // Create a new xml root
@@ -833,7 +827,7 @@ public class GameController : MonoBehaviour
             // Read data from xml and deserialize it
             XmlSerializer serializer = new XmlSerializer (typeof(PlayerSaving));
             FileStream file = File.Open (Application.persistentDataPath +
-                    "/playerinfo" + loadNumber + ".dat", FileMode.Open);
+                              "/playerinfo" + loadNumber + ".dat", FileMode.Open);
             PlayerSaving saving = (PlayerSaving)serializer.Deserialize (file);
 
             foreach (PlayerData data in saving.PlayerList) {
@@ -868,7 +862,7 @@ public class GameController : MonoBehaviour
                     playerClone.GetComponentInChildren<Skybox> ().enabled = true;
                     playerClone.GetComponentInChildren<Player> ().isLocal = true;
                     playerClone.GetComponentInChildren<Player> ().SetGameController (this);
-                    player.LocalLoad();
+                    player.LocalLoad ();
                     controlledPlayer = playerClone;
                 }
 
@@ -876,7 +870,7 @@ public class GameController : MonoBehaviour
                 NetworkServer.SendToAll (Messages.LoadPlayerMessage.msgId,
                     loadMessage);
             }
-            file.Close();
+            file.Close ();
         }
     }
 
@@ -987,16 +981,15 @@ public class GameController : MonoBehaviour
         Player player = playerClone.GetComponentInChildren<Player> ();
         players [loadMessage.id] = playerClone;
         player.Load (loadMessage);
-        if (loadMessage.username == username)
-        {
-            playerClone.GetComponent<FirstPersonController>().enabled = true;
-            playerClone.GetComponentInChildren<Camera>().enabled = true;
-            playerClone.GetComponentInChildren<AudioListener>().enabled = true;
-            playerClone.GetComponentInChildren<FlareLayer>().enabled = true;
-            playerClone.GetComponentInChildren<Skybox>().enabled = true;
-            playerClone.GetComponentInChildren<Player>().isLocal = true;
-            playerClone.GetComponentInChildren<Player>().SetGameController(this);
-            player.LocalLoad();
+        if (loadMessage.username == username) {
+            playerClone.GetComponent<FirstPersonController> ().enabled = true;
+            playerClone.GetComponentInChildren<Camera> ().enabled = true;
+            playerClone.GetComponentInChildren<AudioListener> ().enabled = true;
+            playerClone.GetComponentInChildren<FlareLayer> ().enabled = true;
+            playerClone.GetComponentInChildren<Skybox> ().enabled = true;
+            playerClone.GetComponentInChildren<Player> ().isLocal = true;
+            playerClone.GetComponentInChildren<Player> ().SetGameController (this);
+            player.LocalLoad ();
             controlledPlayer = playerClone;
         }
     }
@@ -1048,7 +1041,7 @@ public class GameController : MonoBehaviour
                 NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
                     loadMessage);
             }
-            file.Close();
+            file.Close ();
             loadFinished = true;
         }
     }
