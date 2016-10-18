@@ -54,23 +54,9 @@ public class UIController : MonoBehaviour {
         slotMenu.SetActive(true);
     }
 
-    public void OnSlot1Pressed()
+    public void OnSlotPressed(int index)
     {
-        controller.Save(1);
-        slotMenu.SetActive(false);
-        menuItems.SetActive(true);
-    }
-
-    public void OnSlot2Pressed()
-    {
-        controller.Save(2);
-        slotMenu.SetActive(false);
-        menuItems.SetActive(true);
-    }
-
-    public void OnSlot3Pressed()
-    {
-        controller.Save(3);
+        controller.Save(index);
         slotMenu.SetActive(false);
         menuItems.SetActive(true);
     }
@@ -82,6 +68,11 @@ public class UIController : MonoBehaviour {
         controller.mClient.Disconnect();
         SceneManager.LoadScene("WelcomeScreen");
         Destroy(GameObject.Find("GameController"));
+    }
+
+    public void OnSendPressed()
+    {
+        controller.SendChatMessage();
     }
 
 }

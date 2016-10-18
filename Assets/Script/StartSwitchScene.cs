@@ -44,26 +44,10 @@ public class StartSwitchScene : MonoBehaviour {
         startMenu.SetActive(false);
     }
 
-    public void OnSlot1Pressed()
+    public void OnSlotPressed(int index)
     {
         controller.isLoad = true;
-        controller.loadNumber = 1;
-        controller.StartAsLocalServer();
-        SceneManager.LoadScene("Map01");
-    }
-
-    public void OnSlot2Pressed()
-    {
-        controller.isLoad = true;
-        controller.loadNumber = 2;
-        controller.StartAsLocalServer();
-        SceneManager.LoadScene("Map01");
-    }
-
-    public void OnSlot3Pressed()
-    {
-        controller.isLoad = true;
-        controller.loadNumber = 3;
+        controller.loadNumber = index;
         controller.StartAsLocalServer();
         SceneManager.LoadScene("Map01");
     }

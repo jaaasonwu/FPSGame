@@ -213,7 +213,6 @@ public class GameController : MonoBehaviour
     {
         NetworkServer.Listen (PORT);
         RegisterServerHandler ();
-        isStart = false;
 
     }
 
@@ -529,8 +528,6 @@ public class GameController : MonoBehaviour
         player.GetComponentInChildren<Player> ().username = username;
         player.GetComponentInChildren<Player> ().SetGameController (this);
         player.GetComponentInChildren<Player> ().BindItems ();
-        player.GetComponentInChildren<Player> ()
-            .ShowWeapon (player.GetComponentInChildren<Player> ().weaponNumber);
         controlledPlayer = player;
     }
 

@@ -73,7 +73,8 @@ public class Player : MonoBehaviour, ICharactor
         weaponNumber = 0;
         ammo = 500;
         this.buffs = new List<Buff> ();
-        ShowWeapon (weaponNumber);
+        if (weaponPrefab == null)
+            ShowWeapon (weaponNumber);
 
         isAttacking = false;
         numAvailableWeapons = 3;
@@ -355,6 +356,8 @@ public class Player : MonoBehaviour, ICharactor
         }
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + ammo;
+        if (currentWeapon != null)
+            currentWeapon.bindAmmoText();
     }
 
     /*
@@ -398,4 +401,5 @@ public class PlayerData
     public int weaponNumber;
     public int ammo;
     public bool isAttacking;
+    public bool isLocal;
 }
