@@ -15,7 +15,7 @@ public class AviationLobbyManager : MonoBehaviour
     //Panels in lobby
     [SerializeField]private GameObject mainPanel;
     [SerializeField]private GameObject lobbyPanel;
-    public GameController controller;
+    GameController controller;
     public GameObject slotMenu;
     // whether mainpanel or lobbypanel should be active in the scene
     private GameObject currPanel;
@@ -82,26 +82,10 @@ public class AviationLobbyManager : MonoBehaviour
         slotMenu.SetActive (true);
     }
 
-    public void onSlot1Pressed ()
+    public void onSlotPressed (int index)
     {
         controller.isLoad = true;
-        controller.loadNumber = 1;
-        slotMenu.SetActive (false);
-        lobbyPanel.SetActive (true);
-    }
-
-    public void onSlot2Pressed ()
-    {
-        controller.isLoad = true;
-        controller.loadNumber = 2;
-        slotMenu.SetActive (false);
-        lobbyPanel.SetActive (true);
-    }
-
-    public void onSlot3Pressed ()
-    {
-        controller.isLoad = true;
-        controller.loadNumber = 3;
+        controller.loadNumber = index;
         slotMenu.SetActive (false);
         lobbyPanel.SetActive (true);
     }
