@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class UIController : MonoBehaviour {
     Button pause;
@@ -43,6 +44,14 @@ public class UIController : MonoBehaviour {
         GameController controller = GameObject.Find("GameController")
             .GetComponent<GameController>();
         controller.Save();
+    }
 
+    public void OnQuitPressed()
+    {
+        GameController controller = GameObject.Find("GameController").
+            GetComponent<GameController>();
+        controller.mClient.Disconnect();
+        SceneManager.LoadScene("WelcomeScreen");
+        Destroy(controller);
     }
 }

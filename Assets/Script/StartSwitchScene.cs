@@ -5,12 +5,13 @@ using System.Collections;
 using UnityEngine.SceneManagement;
 
 public class StartSwitchScene : MonoBehaviour {
-    SharedData sharedData;
-	// Use this for initialization
-	void Start () {
-        sharedData = GameObject.Find("SharedData").GetComponent<SharedData>();
+    GameController controller;
+
+    void Start()
+    {
+        controller = GameObject.Find("GameController").
+            GetComponent<GameController>();
     }
-	
 	// Update is called once per frame
 	void Update () {
 	
@@ -22,8 +23,9 @@ public class StartSwitchScene : MonoBehaviour {
      */
     public void StartSingle()
     {
+        controller.SetUpServer();
+        controller.SetUpLocalClient();
         SceneManager.LoadScene("Map01");
-        sharedData.isServer = true;
     }
 
     /*
@@ -33,6 +35,5 @@ public class StartSwitchScene : MonoBehaviour {
     public void StartMulti()
     {
         SceneManager.LoadScene("Lobby");
-        sharedData.isServer = false;
     }
 }

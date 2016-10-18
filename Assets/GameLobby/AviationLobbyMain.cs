@@ -13,7 +13,6 @@ public class AviationLobbyMain : MonoBehaviour
     // gamecontroller is also responsible to act as a networkmanager
     [SerializeField]private GameController networkManager;
     //input fields (some are interact with buttons)
-    [SerializeField]private InputField addressToConnect;
     [SerializeField]private InputField playerName;
     [SerializeField]private InputField lobbyName;
     //game are found by GameFinder (its based on NetworkDiscovery)
@@ -27,7 +26,6 @@ public class AviationLobbyMain : MonoBehaviour
     public void OnEnable ()
     {
         s_instance = this;
-        addressToConnect.onEndEdit.RemoveAllListeners ();
         playerName.onEndEdit.RemoveAllListeners ();
         serverList.OnMainPanelEnabled ();
     }
@@ -51,24 +49,6 @@ public class AviationLobbyMain : MonoBehaviour
         string lobbyN = lobbyName.text;
         gameFinder.SetBroadcastData (port, lobbyN, playerNum);
         gameFinder.StartAsServer ();
-    }
-
-    /*
-	 * allow client to join a selected game when click join buttom
-	 */
-    public void OnClickJoinGame ()
-    {
-        // stop listenning
-        gameFinder.ReInit ();
-        // try to connect to server else report and return
-        string address = addressToConnect.text;
-        int port = networkManager.GetPort ();
-        networkManager.StartAsJoinClient (address, port);
-
-        // connection succeed then get into lobby
-        if (!AviationLobbyManager.s_lobbyManager.MainToLobby ()) {
-            Debug.Log ("failed to switch panel");
-        }
     }
 
     /*

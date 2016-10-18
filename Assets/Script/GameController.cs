@@ -20,7 +20,7 @@ public class GameController : MonoBehaviour
     public string hostAddress;
     public GameObject playerPrefab;
     public string username;
-    public Text usernameText;
+    public GameObject usernameInput;
     /*
     * prefabs of enemies
     * index 0 for cactus
@@ -40,8 +40,6 @@ public class GameController : MonoBehaviour
     // constantly send to server the dying message, until get server's reply
     public bool localPlayerDie = false;
     // for test
-
-    public Text LoadButtonText;
     public const int PORT = 8001;
     public bool isServer;
 
@@ -62,6 +60,8 @@ public class GameController : MonoBehaviour
 
     // to show whether is the first time enter play scene
     bool inPlayScene = false;
+    // whether the player is in lobby when multiplayer
+    bool inLobbyScene = false;
     // indicate all clients is ready
     bool allReady = false;
     // when the game is a load game
@@ -69,30 +69,28 @@ public class GameController : MonoBehaviour
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
-    HostTopology topology;
-    const int MAX_CONNECTIONS = 4;
-
     void Start ()
     {
-
-
-        //sharedData = GameObject.Find ("SharedData").GetComponent<SharedData> ();
-        //isServer = sharedData.isServer;
         DontDestroyOnLoad (gameObject);
-
-        //ConnectionConfig Config = new ConnectionConfig();
-        //Config.AddChannel(QosType.UnreliableFragmented);
-        //Config.AddChannel(QosType.Unreliable);
-        //Config.AddChannel(QosType.Reliable);
-        //topology = new HostTopology(Config, MAX_CONNECTIONS);
     }
 
     // Update is called once per frame
     void Update ()
     {
+        if (!inLobbyScene)
+        {
+            Scene s = SceneManager.GetActiveScene();
+            if (s.name == "Lobby" && s.isLoaded)
+            {
+                usernameInput = GameObject.Find("PlayerName");
+                usernameInput.GetComponent<InputField>().text =
+                    PlayerPrefs.GetString("username");
+                username = usernameInput.GetComponent<InputField>().text;
+                inLobbyScene = true;
+            }
+        }
         // first time in play scene
         if (!inPlayScene) {
-            UpdateUsername();
             Scene s = SceneManager.GetActiveScene ();
             if (s.name == "Map01" && s.isLoaded) {
                 GameObject[] spawnPoints = 
@@ -130,28 +128,13 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void ChangeIsLoaded()
+    public void UpdateUsername()
     {
-        if (isLoad == false)
-        {
-            isLoad = true;
-            LoadButtonText.text = "IsLoad";
-        } else
-        {
-            isLoad = false;
-            LoadButtonText.text = "NotLoad";
-        }
+        username = usernameInput.GetComponent<InputField>().text;
+        PlayerPrefs.SetString("username", username);
     }
 
-    void UpdateUsername()
-    {
-        if (usernameText != null && usernameText.text != username)
-        {
-            username = usernameText.text;
-        }
-    }
-
-    void CreatePlayer ()
+    public void CreatePlayer ()
     {
         Debug.Log (SceneManager.GetActiveScene ().name);
         Messages.NewPlayerMessage newPlayer = new
@@ -595,7 +578,10 @@ public class GameController : MonoBehaviour
             this);
         idCount++;
         foreach (GameObject player in players.Values) {
-            enemy.AddPlayer (player.GetComponentInChildren<Player> ());
+            if (player != null)
+            {
+                enemy.AddPlayer(player.GetComponentInChildren<Player>());
+            }
         }
         enemy.inServer = true;
         enemies [enemy.id] = enemyClone;
