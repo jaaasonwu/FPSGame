@@ -14,6 +14,7 @@ public class AviationLobbyManager : MonoBehaviour {
 	//Panels in lobby
 	[SerializeField]private GameObject mainPanel;
 	[SerializeField]private GameObject lobbyPanel;
+    public GameObject slotMenu;
 	// whether mainpanel or lobbypanel should be active in the scene
 	private GameObject currPanel;
 
@@ -65,4 +66,10 @@ public class AviationLobbyManager : MonoBehaviour {
 		}
 		return false;
 	}
+
+    public void onLoadPressed()
+    {
+        lobbyPanel.SetActive(false);
+        slotMenu.SetActive(true);
+    }
 }

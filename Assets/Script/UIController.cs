@@ -10,6 +10,7 @@ public class UIController : MonoBehaviour {
     GameObject pauseMenu;
     GameObject inGame;
 
+
 	// Use this for initialization
 	void Start () {
         pause = GameObject.Find("pause").GetComponent<Button>();
@@ -54,4 +55,5 @@ public class UIController : MonoBehaviour {
         SceneManager.LoadScene("WelcomeScreen");
         Destroy(controller);
     }
+
 }
