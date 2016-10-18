@@ -132,12 +132,6 @@ public class GameController : MonoBehaviour
         }
     }
 
-    public void UpdateUsername()
-    {
-        username = usernameInput.GetComponent<InputField>().text;
-        PlayerPrefs.SetString("username", username);
-    }
-
     public void CreatePlayer ()
     {
         Debug.Log (SceneManager.GetActiveScene ().name);
@@ -940,11 +934,10 @@ public class GameController : MonoBehaviour
                 foreach (GameObject player in players.Values) {
                     Player playerScript = player.GetComponentInChildren<Player> ();
                     enemy.AddPlayer (playerScript);
-
-                    // Send the message to all clients
-                    NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
-                        loadMessage);
                 }
+                // Send the message to all clients
+                NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
+                    loadMessage);
             }
             file.Close();
             loadFinished = true;

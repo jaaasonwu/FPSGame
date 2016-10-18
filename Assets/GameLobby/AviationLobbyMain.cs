@@ -19,6 +19,7 @@ public class AviationLobbyMain : MonoBehaviour
     public GameFinder gameFinder;
     // list of server found by gamefinder
     public DiscoveredServerList serverList;
+    public InputField usernameInput;
 
     /*
 	 * lay out necessary stuffs when enable the panel
@@ -84,5 +85,11 @@ public class AviationLobbyMain : MonoBehaviour
         Messages.PlayerLobbyMessage msg = 
             new Messages.PlayerLobbyMessage (connId, playerName.text, false);
         mClient.Send (Messages.PlayerLobbyMessage.msgId, msg);
+    }
+
+    public void UpdateUsername()
+    {
+        string username = usernameInput.GetComponent<InputField>().text;
+        PlayerPrefs.SetString("username", username);
     }
 }
