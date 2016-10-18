@@ -11,7 +11,7 @@ public class AviationLobbyMain : MonoBehaviour
     // singleton instance ......
     public static AviationLobbyMain s_instance = null;
     // gamecontroller is also responsible to act as a networkmanager
-    [SerializeField]private GameController networkManager;
+    GameController networkManager;
     //input fields (some are interact with buttons)
     [SerializeField]private InputField playerName;
     [SerializeField]private InputField lobbyName;
@@ -25,6 +25,8 @@ public class AviationLobbyMain : MonoBehaviour
 	 */
     public void OnEnable ()
     {
+        networkManager = GameObject.Find("GameController").
+            GetComponent<GameController>();
         s_instance = this;
         playerName.onEndEdit.RemoveAllListeners ();
         serverList.OnMainPanelEnabled ();

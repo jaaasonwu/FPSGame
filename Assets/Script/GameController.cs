@@ -65,7 +65,9 @@ public class GameController : MonoBehaviour
     // indicate all clients is ready
     bool allReady = false;
     // when the game is a load game
-    bool isLoad = false;
+    public bool isLoad = false;
+    // which slot is the game loading
+    public int loadNumber = 0;
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
@@ -721,27 +723,29 @@ public class GameController : MonoBehaviour
     /*
      * save the state of all players and enemies
      */
-    public void Save ()
+    public void Save (int slotNumber)
     {
         if (isServer) {
-            SavePlayers ();
-            SaveEnemies ();
+            SavePlayers (slotNumber);
+            SaveEnemies (slotNumber);
         }
     }
 
     /*
      * Get the player data and serialize it
      */
-    void SavePlayers ()
+    void SavePlayers (int slotNumber)
     {
         XmlSerializer playerSer = new XmlSerializer (typeof(PlayerSaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
-            File.Delete (Application.persistentDataPath + "/playerinfo.dat");
+        if (File.Exists (Application.persistentDataPath +
+            "/playerinfo" + slotNumber + ".dat")) {
+            File.Delete (Application.persistentDataPath +
+                "/playerinfo" + slotNumber + ".dat");
         }
         file = File.Open (Application.persistentDataPath
-        + "/playerinfo.dat", FileMode.Create);
+        + "/playerinfo" + slotNumber + ".dat", FileMode.Create);
 
         // Create a new xml root
         PlayerSaving playerSaving = new PlayerSaving ();
@@ -765,15 +769,18 @@ public class GameController : MonoBehaviour
     /*
      * Get the enemy data and serialize it
      */
-    void SaveEnemies ()
+    void SaveEnemies (int slotNumber)
     {
         XmlSerializer enemySer = new XmlSerializer (typeof(EnemySaving));
         FileStream file;
         // ensure the old save file is deleted
-        if (File.Exists (Application.persistentDataPath + "/enemyinfo.dat")) {
-            File.Delete (Application.persistentDataPath + "/enemyinfo.dat");
+        if (File.Exists (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat")) {
+            File.Delete (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat");
         }
-        file = File.Open (Application.persistentDataPath + "/enemyinfo.dat",
+        file = File.Open (Application.persistentDataPath + "/enemyinfo"
+            + slotNumber + ".dat",
             FileMode.Create);
 
         // Create a new xml root
@@ -803,11 +810,12 @@ public class GameController : MonoBehaviour
      */
     void LoadPlayers ()
     {
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
+        if (File.Exists (Application.persistentDataPath + "/playerinfo" +
+            loadNumber + ".dat")) {
             // Read data from xml and deserialize it
             XmlSerializer serializer = new XmlSerializer (typeof(PlayerSaving));
             FileStream file = File.Open (Application.persistentDataPath +
-                              "/playerinfo.dat", FileMode.Open);
+                    "/playerinfo" + loadNumber + ".dat", FileMode.Open);
             PlayerSaving saving = (PlayerSaving)serializer.Deserialize (file);
 
             foreach (PlayerData data in saving.PlayerList) {
@@ -889,11 +897,12 @@ public class GameController : MonoBehaviour
 
     void LoadEnemies ()
     {
-        if (File.Exists (Application.persistentDataPath + "/playerinfo.dat")) {
+        if (File.Exists (Application.persistentDataPath + "/enemyinfo" +
+            loadNumber + ".dat")) {
             // Read data from xml and deserialize it
             XmlSerializer serializer = new XmlSerializer (typeof(EnemySaving));
             FileStream file = File.Open (Application.persistentDataPath +
-                              "/enemyinfo.dat", FileMode.Open);
+                              "/enemyinfo" + loadNumber + ".dat", FileMode.Open);
             EnemySaving saving = (EnemySaving)serializer.Deserialize (file);
 
             foreach (EnemyData data in saving.EnemyList) {

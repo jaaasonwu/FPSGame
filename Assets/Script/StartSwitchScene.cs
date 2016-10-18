@@ -6,6 +6,8 @@ using UnityEngine.SceneManagement;
 
 public class StartSwitchScene : MonoBehaviour {
     GameController controller;
+    public GameObject slotMenu;
+    public GameObject startMenu;
 
     void Start()
     {
@@ -23,8 +25,7 @@ public class StartSwitchScene : MonoBehaviour {
      */
     public void StartSingle()
     {
-        controller.SetUpServer();
-        controller.SetUpLocalClient();
+        controller.StartAsLocalServer();
         SceneManager.LoadScene("Map01");
     }
 
@@ -35,5 +36,35 @@ public class StartSwitchScene : MonoBehaviour {
     public void StartMulti()
     {
         SceneManager.LoadScene("Lobby");
+    }
+
+    public void OnLoadPressed()
+    {
+        slotMenu.SetActive(true);
+        startMenu.SetActive(false);
+    }
+
+    public void OnSlot1Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 1;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
+    }
+
+    public void OnSlot2Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 2;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
+    }
+
+    public void OnSlot3Pressed()
+    {
+        controller.isLoad = true;
+        controller.loadNumber = 3;
+        controller.StartAsLocalServer();
+        SceneManager.LoadScene("Map01");
     }
 }

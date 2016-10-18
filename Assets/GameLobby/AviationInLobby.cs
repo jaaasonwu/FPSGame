@@ -15,7 +15,7 @@ public class AviationInLobby : MonoBehaviour
     // gamefinder is inherit from NetworkDiscovery
     public GameFinder gameFinder;
     // gamecontroller also act as networkManager
-    [SerializeField]private GameController networkManager;
+    private GameController networkManager;
     // players inside lobby
     public List<AviationLobbyPlayer> lobbyPlayers = new List<AviationLobbyPlayer> ();
     // local lobby player
@@ -35,6 +35,8 @@ public class AviationInLobby : MonoBehaviour
 
     public void OnEnable ()
     {
+        networkManager = GameObject.Find("GameController").
+            GetComponent<GameController>();
         s_Lobby = this;
         playerListLayout = playerListTransform.GetComponent<VerticalLayoutGroup> ();
         if (networkManager.isAServer ()) {
