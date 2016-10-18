@@ -66,6 +66,8 @@ public class GameController : MonoBehaviour
     bool allReady = false;
     // when the game is a load game
     public bool isLoad = false;
+    // whether the loading process is finished
+    public bool loadFinished = true;
     // which slot is the game loading
     public int loadNumber = 0;
     // to show all the client in connection is ready
@@ -800,6 +802,7 @@ public class GameController : MonoBehaviour
 
     public void Load ()
     {
+        loadFinished = false;
         LoadPlayers ();
         LoadEnemies ();
     }
@@ -944,6 +947,7 @@ public class GameController : MonoBehaviour
                 }
             }
             file.Close();
+            loadFinished = true;
         }
     }
 
