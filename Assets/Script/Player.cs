@@ -318,8 +318,10 @@ public class Player : MonoBehaviour, ICharactor
     public void BindItems ()
     {
         StartHealthSlider ();
-        swapButton = GameObject.Find ("swap").GetComponent<Button> ();
-        swapButton.onClick.AddListener (NextWeapon);
+        if (isLocal) {
+            swapButton = GameObject.Find ("swap").GetComponent<Button> ();
+            swapButton.onClick.AddListener (NextWeapon);
+        }
         ammoText = (Text)GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
         ammoText.text = "Ammo: " + currentWeapon.ammo;
     }

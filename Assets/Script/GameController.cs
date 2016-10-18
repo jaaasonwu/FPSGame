@@ -850,6 +850,9 @@ public class GameController : MonoBehaviour
         }
         // change the main camera
         if (controlledPlayer != null && controlledPlayer.GetComponentInChildren<Player> ().id == playerId) {
+            // stop record
+            GameObject.FindGameObjectWithTag ("ReplayManager")
+                .GetComponent<ReplayManager> ().StopRecord ();
             Destroy (controlledPlayer);
             controlledPlayer = null;
             GameObject.Find ("Ingame").SetActive (false);
@@ -872,9 +875,6 @@ public class GameController : MonoBehaviour
                 .GetComponent<AudioListener> ().enabled = true;
             GameObject.FindGameObjectWithTag ("GameOverUI")
                 .GetComponent<Canvas> ().enabled = true;
-            // stop record
-            GameObject.FindGameObjectWithTag ("ReplayManager")
-                .GetComponent<ReplayManager> ().StopRecord ();
             gameOver = true;
             ClearAll ();
         } else {
