@@ -75,7 +75,14 @@ public class Player : MonoBehaviour, ICharactor
         this.buffs = new List<Buff> ();
         if (weaponPrefab == null)
             ShowWeapon (weaponNumber);
-
+        if (healthSlider != null)
+        {
+            StartHealthSlider();
+        }
+        if (ammoText != null)
+        {
+            ammoText.text = ammo;
+        }
         isAttacking = false;
         numAvailableWeapons = 3;
         updateCount = 0;
