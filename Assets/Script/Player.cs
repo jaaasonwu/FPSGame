@@ -68,11 +68,12 @@ public class Player : MonoBehaviour, ICharactor
     {
         level = 1;
         exp = 0;
-        hp = 100;
+        if (hp == -1) {
+            hp = 100;
+        }
         maxHp = 100;
         weaponNumber = 0;
         if (ammo == -1) {
-            Debug.Log ("in");
             ammo = 500;
         }
         this.buffs = new List<Buff> ();

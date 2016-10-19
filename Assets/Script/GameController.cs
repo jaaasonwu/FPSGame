@@ -444,6 +444,7 @@ public class GameController : MonoBehaviour
         if (readyList.Count == 0) {
             if (isLoad) {
                 Load ();
+                allReady = true;
                 return;
             }
             NetworkServer.SendToAll (Messages.ReadyMessage.msgId, new Messages.ReadyMessage ());
@@ -1007,10 +1008,11 @@ public class GameController : MonoBehaviour
             FileStream file = File.Open (Application.persistentDataPath +
                               "/enemyinfo" + loadNumber + ".dat", FileMode.Open);
             EnemySaving saving = (EnemySaving)serializer.Deserialize (file);
-
+            // remember the maximum id
+            int maxId = 0;
             foreach (EnemyData data in saving.EnemyList) {
                 // prepare the message to be send to clients to initialize
-                // the loaded player
+                // the loaded enemy
                 Messages.LoadEnemyMessage loadMessage =
                     new Messages.LoadEnemyMessage (
                         data.id,
@@ -1027,6 +1029,9 @@ public class GameController : MonoBehaviour
                                             data.pos,
                                             data.rot) as GameObject;
                 enemies [data.id] = enemyClone;
+                if (data.id > maxId) {
+                    maxId = data.id;
+                }
                 Enemy enemy = enemyClone.GetComponent<Enemy> ();
                 enemy.Initialize (loadMessage.id,
                     loadMessage.enemyIndex,
@@ -1045,6 +1050,7 @@ public class GameController : MonoBehaviour
                 NetworkServer.SendToAll (Messages.LoadEnemyMessage.msgId,
                     loadMessage);
             }
+            idCount = maxId + 1;
             file.Close ();
             loadFinished = true;
         }
