@@ -1241,6 +1241,7 @@ public class GameController : MonoBehaviour
         loadFinished = true;
         loadNumber = 0;
         SceneManager.LoadScene ("WelcomeScreen");
+        Destroy (this.gameObject);
     }
 }
 
