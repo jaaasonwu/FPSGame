@@ -7,10 +7,10 @@ using System.Collections.Generic;
 // our lobbyManager are used to manage scence change inside lobby
 // this script has patially referenced by Network lobby in asset store
 // lobbyManager which handle the function across lobby and main
-public class AviationLobbyManager : MonoBehaviour
+public class LobbyManager : MonoBehaviour
 {
     //this is a singleton object
-    public static AviationLobbyManager s_lobbyManager;
+    public static LobbyManager s_lobbyManager;
 
     //Panels in lobby
     [SerializeField]private GameObject mainPanel;

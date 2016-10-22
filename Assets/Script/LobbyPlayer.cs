@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 
 // created by Jia Yi Bai jiab1@student.unimelb.edu.au
 // lobby player should able to do ui control in lobby
-public class AviationLobbyPlayer : MonoBehaviour {
+public class LobbyPlayer : MonoBehaviour {
 	//networkManager is contained in GameController
 	public int connectionId;
 

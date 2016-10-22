@@ -6,10 +6,10 @@ using UnityEngine.Networking;
 
 // created by Jia Yi Bai jiab1@student.unimelb.edu.au
 // this script contains functionality of all buttoms or input filed in Main Panel
-public class AviationLobbyMain : MonoBehaviour
+public class LobbyMain : MonoBehaviour
 {
     // singleton instance ......
-    public static AviationLobbyMain s_instance = null;
+    public static LobbyMain s_instance = null;
     // gamecontroller is also responsible to act as a networkmanager
     GameController networkManager;
     //input fields (some are interact with buttons)
@@ -40,7 +40,7 @@ public class AviationLobbyMain : MonoBehaviour
         networkManager.StartAsLocalServer ();
 
         //if connection succceed switch from main to Lobby
-        if (!AviationLobbyManager.s_lobbyManager.MainToLobby ()) {
+        if (!LobbyManager.s_lobbyManager.MainToLobby ()) {
             Debug.Log ("failed to switch panel");
         }
 
@@ -66,7 +66,7 @@ public class AviationLobbyMain : MonoBehaviour
         Debug.Log (address + " : " + port);
         networkManager.StartAsJoinClient (address, port);
 
-        AviationLobbyManager.s_lobbyManager.MainToLobby ();
+        LobbyManager.s_lobbyManager.MainToLobby ();
     }
 
     /*

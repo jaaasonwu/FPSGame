@@ -318,8 +318,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnServerRecieveLobbyMsg (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnServerRecieveLobbyMsg (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -330,8 +330,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnClientRecieveLobbyMsg (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnClientRecieveLobbyMsg (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -342,8 +342,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnClientRecieveEnterLobbyMsg (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnClientRecieveEnterLobbyMsg (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnClientRecieveEnterLobbyMsg (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -354,8 +354,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnServerRecieveEnterLobbyMsg (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnServerRecieveEnterLobbyMsg (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnServerRecieveEnterLobbyMsg (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -366,8 +366,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnRecieveLeftLobby (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnRecieveLeftLobby (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnRecieveLeftLobby (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -378,8 +378,8 @@ public class GameController : MonoBehaviour
 	 */
     public void OnRecieveStartGameMessage (NetworkMessage msg)
     {
-        if (AviationInLobby.s_Lobby != null) {
-            AviationInLobby.s_Lobby.OnReciveStartGameMessage (msg);
+        if (InLobby.s_Lobby != null) {
+            InLobby.s_Lobby.OnReciveStartGameMessage (msg);
         } else {
             Debug.Log ("lobby not exist");
         }
@@ -394,9 +394,9 @@ public class GameController : MonoBehaviour
         Debug.Log ("connected to server");
         // instance is null if not in lobby main
 
-        if (AviationLobbyMain.s_instance != null) {
+        if (LobbyMain.s_instance != null) {
             Debug.Log ("entering lobby");
-            AviationLobbyMain.s_instance.OnEnterLobby ();
+            LobbyMain.s_instance.OnEnterLobby ();
         }
     }
 

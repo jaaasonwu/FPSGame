@@ -40,9 +40,9 @@ public class DiscoveredServerEntry : MonoBehaviour {
 	}
 
 	/*
-	 * this is using aviationlobbymain's listener
+	 * this is using lobbymain's listener
 	 */
 	public void OnClickJoinGame(){
-		AviationLobbyMain.s_instance.OnClickJoinFoundGame(this);
+		LobbyMain.s_instance.OnClickJoinFoundGame(this);
 	}
 }

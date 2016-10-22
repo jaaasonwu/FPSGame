@@ -8,19 +8,19 @@ using UnityEngine.SceneManagement;
 
 // created by Jia Yi Bai jiab1@student.unimelb.edu.au
 // this script contains lobby functions for all player inside lobby
-public class AviationInLobby : MonoBehaviour
+public class InLobby : MonoBehaviour
 {
     // lobby should be singleton when entered
-    public static AviationInLobby s_Lobby = null;
+    public static InLobby s_Lobby = null;
     // gamefinder is inherit from NetworkDiscovery
     public GameFinder gameFinder;
     // gamecontroller also act as networkManager
     private GameController networkManager;
     // players inside lobby
-    public List<AviationLobbyPlayer> lobbyPlayers = new List<AviationLobbyPlayer> ();
+    public List<LobbyPlayer> lobbyPlayers = new List<LobbyPlayer> ();
     // local lobby player
     public int localConnId;
-    private AviationLobbyPlayer localLobbyPlayer = null;
+    private LobbyPlayer localLobbyPlayer = null;
     //layout group
     public RectTransform playerListTransform;
     private VerticalLayoutGroup playerListLayout;
@@ -51,7 +51,7 @@ public class AviationInLobby : MonoBehaviour
         // it has to be connected to stay in lobby panel
         /* not working correctly 
 		if (!networkManager.GetmClient ().isConnected) {
-			AviationLobbyManager.s_lobbyManager.LobbyToMain ();
+			LobbyManager.s_lobbyManager.LobbyToMain ();
 		}
 		*/
 
@@ -62,7 +62,7 @@ public class AviationInLobby : MonoBehaviour
             // also check for connection by keep sending all player the lobby clients info
             foreach (NetworkConnection conn in NetworkServer.connections) {
                 // server add the player when client connect so tell other clients with the name
-                AviationLobbyPlayer p = FindInLobbyById (conn.connectionId);
+                LobbyPlayer p = FindInLobbyById (conn.connectionId);
                 if (p != null) {
                     Messages.PlayerLobbyMessage msg = 
                         new Messages.PlayerLobbyMessage (conn.connectionId,
@@ -83,10 +83,10 @@ public class AviationInLobby : MonoBehaviour
     /*
 	 * add lobby player to display
 	 */
-    public AviationLobbyPlayer AddPlayer (int connId)
+    public LobbyPlayer AddPlayer (int connId)
     {
-        AviationLobbyPlayer newPlayer = 
-            Instantiate (lobbyPlayerEntryPrefab).GetComponent<AviationLobbyPlayer> ();
+        LobbyPlayer newPlayer = 
+            Instantiate (lobbyPlayerEntryPrefab).GetComponent<LobbyPlayer> ();
         // set newPlayer 
         newPlayer.connectionId = connId;
         newPlayer.isReady = false;
@@ -103,7 +103,7 @@ public class AviationInLobby : MonoBehaviour
     /*
 	 * remove lobby player from display 
 	 */
-    public void RemovePlayer (AviationLobbyPlayer player)
+    public void RemovePlayer (LobbyPlayer player)
     {
         if (!lobbyPlayers.Contains (player)) {
             lobbyPlayers.Remove (player);
@@ -135,9 +135,9 @@ public class AviationInLobby : MonoBehaviour
 	 * check whether the networkconnectionId is in lobbyplayer
 	 * return null if not found
 	 */
-    public AviationLobbyPlayer FindInLobbyById (int connId)
+    public LobbyPlayer FindInLobbyById (int connId)
     {
-        foreach (AviationLobbyPlayer p in lobbyPlayers) {
+        foreach (LobbyPlayer p in lobbyPlayers) {
             if (p.connectionId == connId) {
                 return p;
             }
@@ -151,7 +151,7 @@ public class AviationInLobby : MonoBehaviour
 	 */
     private void CheckDisconnection ()
     {
-        foreach (AviationLobbyPlayer p in lobbyPlayers) {
+        foreach (LobbyPlayer p in lobbyPlayers) {
 
             bool isFound = false;
 
@@ -187,7 +187,7 @@ public class AviationInLobby : MonoBehaviour
 
             bool isAlreadyAdded = false;
 
-            foreach (AviationLobbyPlayer p in lobbyPlayers) {
+            foreach (LobbyPlayer p in lobbyPlayers) {
                 if (p.connectionId == conn.connectionId) {
                     isAlreadyAdded = true;
                     break;
@@ -203,7 +203,7 @@ public class AviationInLobby : MonoBehaviour
     /*
 	 * when click remove player
 	 */
-    public void OnClickRemvoe (AviationLobbyPlayer p)
+    public void OnClickRemvoe (LobbyPlayer p)
     {
         if (!lobbyPlayers.Contains (p)) {
             return;
@@ -269,7 +269,7 @@ public class AviationInLobby : MonoBehaviour
             networkManager.Disconnect ();
         }
         // connection succeed then get into lobby
-        AviationLobbyManager.s_lobbyManager.LobbyToMain ();
+        LobbyManager.s_lobbyManager.LobbyToMain ();
     }
 
     /*
@@ -300,7 +300,7 @@ public class AviationInLobby : MonoBehaviour
 	 */
     private bool AllReady ()
     {
-        foreach (AviationLobbyPlayer p in lobbyPlayers) {
+        foreach (LobbyPlayer p in lobbyPlayers) {
             if (p.isHost) {
                 //bypass
                 continue;
@@ -327,7 +327,7 @@ public class AviationInLobby : MonoBehaviour
 
         //Debug.Log ("Recieve Lobby Msg");
         //as i recieved the message find the one who edit it by it then modify it
-        AviationLobbyPlayer player = FindInLobbyById (connId);
+        LobbyPlayer player = FindInLobbyById (connId);
         if (player == null) {
             //enter lobby message
             player = AddPlayer (connId);
@@ -367,7 +367,7 @@ public class AviationInLobby : MonoBehaviour
     {
         Messages.PlayerLeftLobbyMessage newMsg = 
             msg.ReadMessage<Messages.PlayerLeftLobbyMessage> ();
-        AviationLobbyPlayer p = FindInLobbyById (newMsg.connectionId);			
+        LobbyPlayer p = FindInLobbyById (newMsg.connectionId);			
         if (p != null) {
             RemovePlayer (p);
         }
