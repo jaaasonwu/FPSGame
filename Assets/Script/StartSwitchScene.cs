@@ -1,4 +1,8 @@
-﻿// created by JiaCheng Wu, jiachengw@student.unimelb.edu.au
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * This handles the UI interaction in the main menu
+ */
 
 using UnityEngine;
 using System.Collections;
@@ -14,10 +18,6 @@ public class StartSwitchScene : MonoBehaviour {
         controller = GameObject.Find("GameController").
             GetComponent<GameController>();
     }
-	// Update is called once per frame
-	void Update () {
-	
-	}
 
     /*
      * The function used to start a single player session when the
@@ -38,12 +38,18 @@ public class StartSwitchScene : MonoBehaviour {
         SceneManager.LoadScene("Lobby");
     }
 
+    /*
+     * The button creates a slot menu to let users choose to load a saved game
+     */
     public void OnLoadPressed()
     {
         slotMenu.SetActive(true);
         startMenu.SetActive(false);
     }
 
+    /*
+     * Handles the button in the slot menu
+     */
     public void OnSlotPressed(int index)
     {
         controller.isLoad = true;

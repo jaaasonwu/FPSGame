@@ -1,4 +1,10 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * This class handles the behavior of weapons
+ */
+
+using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 
@@ -35,12 +41,17 @@ public class Weapon : MonoBehaviour
         }
     }
 
+    /*
+     * bind the text showing ammo to the weapon
+     */
     public void bindAmmoText ()
     {
         ammoText = GameObject.FindGameObjectWithTag ("AmmoText").GetComponent<Text> ();
     }
 
-    // The attack method called by player to show a line and cast a ray
+    /*
+     * The attack method called by player to show a line and cast a ray
+     */
     public void Attack ()
     {
         // When the attack interval is passed and the player is allowed to
@@ -49,7 +60,6 @@ public class Weapon : MonoBehaviour
             ammo--;
             if (ammoText != null)
                 ammoText.text = "Ammo: " + ammo;
-//            barrelEnd = GameObject.FindWithTag("BarrelEnd");
             timer = 0f;
 
             // Set the line renderer to make the line visible

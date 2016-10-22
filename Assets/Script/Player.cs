@@ -1,6 +1,10 @@
-// created by JiaCheng Wu, jiachengw@student.unimelb.edu.au
-// modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
-// Modified by Haoyu Zhai, zhaih@student.unimelb.edu.au
+/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ * Modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
+ * Modified by Haoyu Zhai, zhaih@student.unimelb.edu.au
+ *
+ * This class defines the player behavior and update data regarding to players
+ */
 
 using UnityEngine;
 using UnityEngine.Networking;
@@ -12,11 +16,9 @@ using System;
 using System.IO;
 using UnityEngine.UI;
 using System.Xml;
+
 using System.Xml.Serialization;
 
-/*
- * This class defines the player behavior and update data regarding to players
- */
 public class Player : MonoBehaviour, ICharactor
 {
     // remeber to change DamageUpByRatio to change all weapon damage when
@@ -289,14 +291,14 @@ public class Player : MonoBehaviour, ICharactor
 
     }
 
+    // When saving, update the ammo in player with the ammo in weapon
     public void UpdateAmmo ()
     {
         ammo = currentWeapon.ammo;
     }
 
     /*
-     * The function reads from the serialized data from the storage,
-     * deserialize it and load it
+     * Synchronize the player data with the message
      */
     public void Load (Messages.LoadPlayerMessage loadMessage)
     {
@@ -310,6 +312,9 @@ public class Player : MonoBehaviour, ICharactor
         this.ammo = loadMessage.ammo;
     }
 
+    /*
+    /* update the player items
+     */
     public void LocalLoad ()
     {
         BindItems ();
@@ -341,8 +346,11 @@ public class Player : MonoBehaviour, ICharactor
         return data;
     }
 
+    /*
+     * update the player data witht the input
+     */
     public void UpdatePlayerStatus (int level, int exp, float hp, float maxHp,
-                                    int weaponNumber, int ammo, bool isAttacking)
+                       int weaponNumber, int ammo, bool isAttacking)
     {
         this.level = level;
         this.exp = exp;

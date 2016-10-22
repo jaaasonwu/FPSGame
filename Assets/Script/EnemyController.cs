@@ -1,4 +1,12 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Haoyu Zhai, zhaih@student.unimelb.edu.au
+ * Modified by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * The class controls the the spawn and behavior of the enemy. It also sends
+ * and handles the message regarding to enemies
+ */
+
+using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine.Networking;

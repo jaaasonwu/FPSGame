@@ -1,4 +1,11 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * This class handles the saving and loading of game state. It also handles
+ * the messages about saving and loading
+ */
+
+using UnityEngine;
 using System.Collections;
 using System.Xml.Serialization;
 using System.IO;
@@ -145,6 +152,10 @@ public class SaveLoad : MonoBehaviour {
         }
     }
 
+    /*
+     * Load all the enemies from the file system and send the message
+     * to all clients connected to the server
+     */
     public void LoadEnemies(int loadNumber)
     {
         if (File.Exists(Application.persistentDataPath + "/enemyinfo" +
@@ -238,7 +249,9 @@ public class SaveLoad : MonoBehaviour {
     }
 
 
-
+    /*
+     * The function being called when client receives the LoadEnemy message
+     */
     public void OnLoadEnemy(NetworkMessage msg)
     {
         // if it is the local player, the player is already initialized

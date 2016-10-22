@@ -1,6 +1,9 @@
-﻿/*
- Created by Haoyu Zhai zhaih@student.unimelb.edu.au
- the overall game controller
+﻿/* 
+ * Created by Haoyu Zhai, zhaih@student.unimelb.edu.au
+ * Modified by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ * Modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
+ *
+ * This is the main program of the game
  */
 
 using UnityEngine;
@@ -53,8 +56,8 @@ public class GameController : MonoBehaviour
 
 
     //pirvate & protected fields
+    //number of already generated enemy
     float generateCount = 0;
-
     // to show whether is the first time enter play scene
     bool inPlayScene = false;
     // whether the player is in lobby when multiplayer
@@ -70,12 +73,14 @@ public class GameController : MonoBehaviour
     // to show all the client in connection is ready
     List<int> readyList = new List<int> ();
 
+    // Other classes used from outside
     SaveLoad saveLoad;
     EnemyController enemyController;
     PlayerController playerController;
 
     void Start ()
     {
+        // find the outside classes used
         saveLoad = GetComponent<SaveLoad>();
         enemyController = GetComponent<EnemyController>();
         playerController = GetComponent<PlayerController>();
@@ -85,6 +90,7 @@ public class GameController : MonoBehaviour
     // Update is called once per frame
     void Update ()
     {
+        // check if already enters the lobby scene. If yes, get the username
         if (!inLobbyScene) {
             Scene s = SceneManager.GetActiveScene ();
             if (s.name == "Lobby" && s.isLoaded) {
@@ -134,6 +140,9 @@ public class GameController : MonoBehaviour
         }
     }
 
+    /* 
+     * server sends a message indicating creation of a player
+     */
     public void CreatePlayer ()
     {
         Debug.Log (SceneManager.GetActiveScene ().name);
@@ -151,21 +160,14 @@ public class GameController : MonoBehaviour
         if (isServer) {
             SetUpServer ();
             SetUpLocalClient ();
-            //CreatePlayer();
         } else {
             SetUpClient (hostAddress);
         }
-        //if (Input.GetKeyDown (KeyCode.I)) {
-        //    SetUpServer ();
-        //    SetUpLocalClient ();
-        //    isServer = true;
-        //}
-        //if (Input.GetKeyDown (KeyCode.O)) {
-        //    SetUpClient (hostAddress);
-        //    isServer = false;
-        //}
     }
 
+    /* 
+     * When single player, set up a server and a local client
+     */
     public void StartAsLocalServer ()
     {
         SetUpServer ();
@@ -173,6 +175,9 @@ public class GameController : MonoBehaviour
         isServer = true;
     }
 
+    /* 
+     * When multiplayer, set up a server and a local client
+     */
     public void StartAsJoinClient (string hostAddress, int port)
     {
         SetUpClient (hostAddress, port);
@@ -476,8 +481,10 @@ public class GameController : MonoBehaviour
         }
     }
 
-    
 
+    /* 
+     * when loading a game, call this function to initialze the game state
+     */
     public void Load ()
     {
         loadFinished = false;

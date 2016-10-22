@@ -1,4 +1,9 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * This class is for sample testing
+ */
+using UnityEngine;
 using System.Collections;
 
 public class TriggerEnter : MonoBehaviour {

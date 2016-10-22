@@ -1,4 +1,10 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * Set the resolution of the camera
+ */
+
+using UnityEngine;
 using System.Collections;
 
 public class SetResolution : MonoBehaviour {

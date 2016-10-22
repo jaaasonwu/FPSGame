@@ -1,4 +1,13 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Haoyu Zhai, zhaih@student.unimelb.edu.au
+ * Modified by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ * Modified by Jia Yi Bai, jiab1@student.unimelb.edu.au
+ *
+ * This class controls the behavior of the player and sends and handles 
+ * messages about player
+ */
+
+using UnityEngine;
 using System.Collections;
 using UnityEngine.Networking;
 using UnityStandardAssets.Characters.FirstPerson;
@@ -234,8 +243,6 @@ public class PlayerController : MonoBehaviour {
             diedPlayers[dieMsg.playerId].Add(conn.connectionId);
         }
     }
-
-
 
 
     /*

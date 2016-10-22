@@ -1,4 +1,9 @@
-﻿using UnityEngine;
+﻿/* 
+ * Created by Jiacheng Wu, jiachengw@student.unimelb.edu.au
+ *
+ * Controls the in game pause menu
+ */
+using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
