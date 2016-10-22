@@ -61,6 +61,7 @@ public class Enemy : MonoBehaviour, ICharactor
 
     // network client
     GameController controller;
+    EnemyController enemyController;
     // record which player damage how much
     Dictionary<int,float> damageList = new Dictionary<int,float> ();
     // attack time count
@@ -81,6 +82,8 @@ public class Enemy : MonoBehaviour, ICharactor
 
     void Start ()
     {
+        controller = GameObject.Find("GameController").GetComponent<GameController>();
+        enemyController = controller.GetComponent<EnemyController>();
         hatedPlayer = null;
         attackCount = 0;
     }
@@ -287,7 +290,7 @@ public class Enemy : MonoBehaviour, ICharactor
         }
         if (totalDamage >= hp) {
             // tell server to send death message
-            controller.EnemyDie (this.id);
+            enemyController.EnemyDie (this.id);
         }
     }
 
