@@ -44,7 +44,7 @@ public class Player : MonoBehaviour, ICharactor
     public int exp;
     public float hp;
     public float maxHp;
-    public int weaponNumber;
+    public int weaponNumber = 0;
     public int ammo = -1;
 
     // The boolean turns to true when the shoot button is hold
@@ -180,7 +180,7 @@ public class Player : MonoBehaviour, ICharactor
 
     // Load the weapon and show it on screen. Meanwhile transfer the amount of
     // ammo
-    void ShowWeapon (int weaponNumber)
+    public void ShowWeapon (int weaponNumber)
     {
         weaponPrefab = Instantiate (weapons [weaponNumber]);
         weaponPrefab.transform.parent = gameObject.transform;
@@ -347,7 +347,7 @@ public class Player : MonoBehaviour, ICharactor
     }
 
     /*
-     * update the player data witht the input
+     * update the player data with the input
      */
     public void UpdatePlayerStatus (int level, int exp, float hp, float maxHp,
                        int weaponNumber, int ammo, bool isAttacking)
