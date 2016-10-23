@@ -47,6 +47,8 @@ public class Enemy : MonoBehaviour, ICharactor
     public bool isMelee;
     // update rate for enemy
     public float updateRate = 1f;
+    // born point
+    public Vector3 spawnPoint;
     // below is the booleans that control the animation
     public bool isWalking;
     public bool isRunning;
@@ -68,8 +70,6 @@ public class Enemy : MonoBehaviour, ICharactor
     float attackCount;
     // attack method
     IEnemyAttack attackMethod;
-    // born point
-    Vector3 spawnPoint;
     // the players
     List<Player> players = new List<Player> ();
     // the varible that to record the last position of the enemy,
@@ -82,8 +82,8 @@ public class Enemy : MonoBehaviour, ICharactor
 
     void Start ()
     {
-        controller = GameObject.Find("GameController").GetComponent<GameController>();
-        enemyController = controller.GetComponent<EnemyController>();
+        controller = GameObject.Find ("GameController").GetComponent<GameController> ();
+        enemyController = controller.GetComponent<EnemyController> ();
         hatedPlayer = null;
         attackCount = 0;
     }
