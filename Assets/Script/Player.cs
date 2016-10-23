@@ -60,7 +60,7 @@ public class Player : MonoBehaviour, ICharactor
     private Text ammoText;
     float updateCount;
     GameObject weaponPrefab;
-    Weapon currentWeapon;
+    public Weapon currentWeapon;
     const int NUM_WEAPONS = 3;
     GameController controller;
     
@@ -94,7 +94,7 @@ public class Player : MonoBehaviour, ICharactor
 
     }
 
-    void StartHealthSlider ()
+	public void StartHealthSlider ()
     {
         healthSlider = (Slider)GameObject.FindGameObjectWithTag ("HealthSlider").GetComponent<Slider> ();
         healthSlider.maxValue = maxHp;
