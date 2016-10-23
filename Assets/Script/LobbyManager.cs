@@ -76,13 +76,13 @@ public class LobbyManager : MonoBehaviour
         return false;
     }
 
-    public void onLoadPressed ()
+    public void OnLoadPressed ()
     {
         lobbyPanel.SetActive (false);
         slotMenu.SetActive (true);
     }
 
-    public void onSlotPressed (int index)
+    public void OnSlotPressed (int index)
     {
         controller.isLoad = true;
         controller.loadNumber = index;
