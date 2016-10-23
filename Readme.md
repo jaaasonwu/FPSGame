@@ -21,7 +21,8 @@ unity
 
 #### To run test
 Go to any scene and go to Window->Editor Test Runner and run the tests in the
-Test Runner, the player test, enemy test and item test is written by us.    
+Test Runner, the player test, enemy test and item test is written by us.
+The test scripts is located in Assets/Editor 
 
 #### Introduction
 The deliverable for this project will be an first-person shooter game on  
